@@ -1,72 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Location Finder</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spy Location GPS</title>
   <style>
-    #map {
-      height: 400px;
-      width: 100%;
+    /* ukuran peta */
+    #mapid {
+      height: 100%;
+    }
+    .jumbotron {
+      height: 100%;
+      border-radius: 0;
+    }
+    body {
+      background-color: #ebe7e1;
     }
   </style>
 </head>
 <body>
-  <h1>Location Finder</h1>
-  <button onclick="getLocation()">Get Location</button>
-  <div id="map"></div>
+  <div class="row">
+    <!-- class row digunakan sebelum membuat column -->
+    <div class="col-4">
+      <!-- ukuruan layar dengan bootstrap adalah 12 kolom, bagian kiri dibuat sebesar 4 kolom-->
+      <div class="jumbotron">
+        <!-- untuk membuat semacam container berwarna abu -->
+        <h1>Add Location</h1>
+        <hr>
+        <form action="proses.php" method="post">
+          <div class="form-group">
+            <label for="exampleFormControlInput1">Latitude, Longitude</label>
+            <input type="text" class="form-control" id="latlong" name="latlong">
+          </div>
+          <div class="form-group">
+            <label for="exampleFormControlInput1">Nama Tempat</label>
+            <input type="text" class="form-control" name="nama_tempat">
+          </div>
+          <div class="form-group">
+            <label for="exampleFormControlInput1">Kategori Tempat</label>
+            <select class="form-control" name="kategori" id="">
+              <option value="">--Kategori Tempat--</option>
+              <option value="rumah makan">Rumah Makan</option>
+              <option value="pom bensin">Pom Bensin</option>
+              <option value="Fasilitas Umum">Fasilitas Umum</option>
+              <option value="Pasar/Mall">Pasar/Mall</option>
+              <option value="rumah sakit">Rumah Sakit</option>
+              <option value="Sekolah">Sekolah</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="exampleFormControlInput1">Keterangan</label>
+            <textarea class="form-control" name="keterangan" cols="30" rows="5"></textarea>
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-info">Add</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="col-8">
+      <!-- ukuruan layar dengan bootstrap adalah 12 kolom, bagian kiri dibuat sebesar 4 kolom-->
+      <!-- peta akan ditampilkan dengan id = mapid -->
+      <div id="mapid"></div>
+    </div>
+  </div>
 
-  <script>
-    var map;
+  <!-- script untuk mendapatkan posisi gps dengan javascript -->
+  <!-- sumber: https://www.hostnic.id/blog/tutorial/mendapatkan-posisi-gps-dengan-php-dan-javascript/ -->
+  <!-- sumber: https://www.sistemit.com/cara-mengaktifkan-lokasi-gps-di-web-php/ -->
+  <!-- sumber: https://code.google.com/p/geo-location-javascript/downloads/list -->
+  <!-- sumber: https://developers.google.com/maps/documentation/staticmaps/ -->
 
-    function initMap(latitude, longitude) {
-      var location = { lat: latitude, lng: longitude };
-      map = new google.maps.Map(document.getElementById('map'), {
-        center: location,
-        zoom: 14
-      });
+  <script src=”geo-min.js” type=”text/javascript” charset=”utf-8″></script> 
+  <script> 
+    if (geo_position_js.init ()) { 
+      geo_position_js.getCurrentPosition (success_callback,error_callback, {enableHighAccuracy:true}); 
+    } 
+    else { 
+      div_isi=document.getElementById (“div_isi”); 
+      div_isi.innerHTML =”Tidak ada fungsi geolocation”; 
+    } 
 
-      var marker = new google.maps.Marker({
-        position: location,
-        map: map
-      });
+    function success_callback (p) { 
+      latitude=p.coords.latitude ; 
+      longitude=p.coords.longitude; 
+      pesan='posisi:'+latitude+','+longitude; 
+      pesan = pesan + "<br/>"; 
+      pesan = pesan + '<img src=”https://maps.googleapis.com/maps/api/staticmap?size=400×400&zoom=13&markers=color:red%7Clabel:C%7C'+latitude +','+longitude+'”/>'; 
+      div_isi=document.getElementById (“div_isi”); 
+      //alert (pesan); 
+      div_isi.innerHTML =pesan; 
 
-      // Kirim lokasi ke file PHP
-      var xhttp = new XMLHttpRequest();
-      xhttp.open('POST', 'save_location.php', true);
-      xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-      xhttp.send('latitude=' + latitude + '&longitude=' + longitude);
-    }
+      // menampilkan koordinat di input latlong
+      document.getElementById("latlong").value = latitude + "," + longitude;
 
-    function getLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showPosition, showError);
-      } else {
-        alert('Geolocation is not supported by this browser.');
-      }
-    }
+      // menyimpan data lokasi ke file.php
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "file.php", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.send("lat="+latitude+"&lng="+longitude);
+    } 
 
-    function showPosition(position) {
-      var latitude = position.coords.latitude;
-      var longitude = position.coords.longitude;
-      initMap(latitude, longitude);
-    }
+    function error_callback (p) { 
+      div_isi=document.getElementById (“div_isi”); 
+      div_isi.innerHTML ='error='+p.message; 
+    } 
+  </script> 
 
-    function showError(error) {
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          alert('User denied the request for Geolocation.');
-          break;
-        case error.POSITION_UNAVAILABLE:
-          alert('Location information is unavailable.');
-          break;
-        case error.TIMEOUT:
-          alert('The request to get user location timed out.');
-          break;
-        case error.UNKNOWN_ERROR:
-          alert('An unknown error occurred.');
-          break;
-      }
-    }
-  </script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
 </body>
 </html>
