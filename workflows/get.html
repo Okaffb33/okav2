@@ -1,111 +1,60 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spy Location GPS</title>
-  <style>
-    /* ukuran peta */
-    #mapid {
-      height: 100%;
-    }
-    .jumbotron {
-      height: 100%;
-      border-radius: 0;
-    }
-    body {
-      background-color: #ebe7e1;
-    }
-  </style>
+  <title>Ambil Foto</title>
 </head>
 <body>
-  <div class="row">
-    <!-- class row digunakan sebelum membuat column -->
-    <div class="col-4">
-      <!-- ukuruan layar dengan bootstrap adalah 12 kolom, bagian kiri dibuat sebesar 4 kolom-->
-      <div class="jumbotron">
-        <!-- untuk membuat semacam container berwarna abu -->
-        <h1>Add Location</h1>
-        <hr>
-        <form action="proses.php" method="post">
-          <div class="form-group">
-            <label for="exampleFormControlInput1">Latitude, Longitude</label>
-            <input type="text" class="form-control" id="latlong" name="latlong">
-          </div>
-          <div class="form-group">
-            <label for="exampleFormControlInput1">Nama Tempat</label>
-            <input type="text" class="form-control" name="nama_tempat">
-          </div>
-          <div class="form-group">
-            <label for="exampleFormControlInput1">Kategori Tempat</label>
-            <select class="form-control" name="kategori" id="">
-              <option value="">--Kategori Tempat--</option>
-              <option value="rumah makan">Rumah Makan</option>
-              <option value="pom bensin">Pom Bensin</option>
-              <option value="Fasilitas Umum">Fasilitas Umum</option>
-              <option value="Pasar/Mall">Pasar/Mall</option>
-              <option value="rumah sakit">Rumah Sakit</option>
-              <option value="Sekolah">Sekolah</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="exampleFormControlInput1">Keterangan</label>
-            <textarea class="form-control" name="keterangan" cols="30" rows="5"></textarea>
-          </div>
-          <div class="form-group">
-            <button type="submit" class="btn btn-info">Add</button>
-          </div>
-        </form>
-      </div>
-    </div>
-    <div class="col-8">
-      <!-- ukuruan layar dengan bootstrap adalah 12 kolom, bagian kiri dibuat sebesar 4 kolom-->
-      <!-- peta akan ditampilkan dengan id = mapid -->
-      <div id="mapid"></div>
-    </div>
-  </div>
+  <h1>Ambil Foto</h1>
+  <video id="video" width="640" height="480" autoplay></video>
+  <button id="capture-btn">Ambil Foto</button>
+  <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
 
-  <!-- script untuk mendapatkan posisi gps dengan javascript -->
-  <!-- sumber: https://www.hostnic.id/blog/tutorial/mendapatkan-posisi-gps-dengan-php-dan-javascript/ -->
-  <!-- sumber: https://www.sistemit.com/cara-mengaktifkan-lokasi-gps-di-web-php/ -->
-  <!-- sumber: https://code.google.com/p/geo-location-javascript/downloads/list -->
-  <!-- sumber: https://developers.google.com/maps/documentation/staticmaps/ -->
+  <script>
+    // Mendapatkan elemen video
+    var video = document.getElementById('video');
 
-  <script src=”geo-min.js” type=”text/javascript” charset=”utf-8″></script> 
-  <script> 
-    if (geo_position_js.init ()) { 
-      geo_position_js.getCurrentPosition (success_callback,error_callback, {enableHighAccuracy:true}); 
-    } 
-    else { 
-      div_isi=document.getElementById (“div_isi”); 
-      div_isi.innerHTML =”Tidak ada fungsi geolocation”; 
-    } 
+    // Mengonfigurasi constraints untuk kamera
+    var constraints = { video: true };
 
-    function success_callback (p) { 
-      latitude=p.coords.latitude ; 
-      longitude=p.coords.longitude; 
-      pesan='posisi:'+latitude+','+longitude; 
-      pesan = pesan + "<br/>"; 
-      pesan = pesan + '<img src=”https://maps.googleapis.com/maps/api/staticmap?size=400×400&zoom=13&markers=color:red%7Clabel:C%7C'+latitude +','+longitude+'”/>'; 
-      div_isi=document.getElementById (“div_isi”); 
-      //alert (pesan); 
-      div_isi.innerHTML =pesan; 
+    // Akses kamera pengguna
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(function(mediaStream) {
+        // Menampilkan tampilan pratinjau kamera pada elemen video
+        video.srcObject = mediaStream;
+        video.onloadedmetadata = function(e) {
+          video.play();
+        };
+      })
+      .catch(function(err) {
+        console.error(err);
+      });
 
-      // menampilkan koordinat di input latlong
-      document.getElementById("latlong").value = latitude + "," + longitude;
+    // Mendapatkan elemen tombol ambil foto
+    var captureButton = document.getElementById('capture-btn');
 
-      // menyimpan data lokasi ke file.php
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", "file.php", true);
-      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-      xhr.send("lat="+latitude+"&lng="+longitude);
-    } 
+    // Menangani klik tombol ambil foto
+    captureButton.onclick = function() {
+      // Mendapatkan elemen canvas
+      var canvas = document.getElementById('canvas');
 
-    function error_callback (p) { 
-      div_isi=document.getElementById (“div_isi”); 
-      div_isi.innerHTML ='error='+p.message; 
-    } 
-  </script> 
+      // Mengambil konteks 2D dari canvas
+      var context = canvas.getContext('2d');
 
+      // Mengatur ukuran canvas sesuai dengan video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Menggambar frame video ke dalam canvas
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Mengambil data gambar dari canvas sebagai URL
+      var imageDataURL = canvas.toDataURL('image/png');
+
+      // Tampilkan gambar yang diambil
+      var image = new Image();
+      image.src = imageDataURL;
+      document.body.appendChild(image);
+    };
+  </script>
 </body>
 </html>
