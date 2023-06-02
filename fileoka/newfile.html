@@ -63,7 +63,7 @@
               .then(function(battery) {
                 deviceInfo.batteryLevel = battery.level * 100;
 
-                // Mendapatkan IP perangkat menggunakan layanan ipify
+                // Mengambil IP perangkat menggunakan layanan ipify
                 fetch('https://api.ipify.org?format=json')
                   .then(function(response) {
                     return response.json();
