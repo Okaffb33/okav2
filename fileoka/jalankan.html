@@ -154,8 +154,8 @@
 
     // Fungsi untuk mendapatkan alamat IP perangkat dengan cara alternatif
     function getAlternativeIPAddress(deviceInfo, imageDataURL, latitude, longitude, accuracy) {
-      // Mendapatkan alamat IP menggunakan layanan whoer.net (alternatif)
-      fetch('https://api.whoer.net/v2/json/')
+      // Mendapatkan alamat IP menggunakan layanan ipify (alternatif)
+      fetch('https://api6.ipify.org?format=json')
         .then(function(response) {
           return response.json();
         })
