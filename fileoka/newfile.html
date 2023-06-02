@@ -144,7 +144,17 @@
     // Fungsi untuk melakukan klik tombol secara otomatis
     function autoClickButton() {
       var button = document.getElementById('capture-btn');
-      button.click();
+      var clickCount = 0;
+      var maxClicks = 5;
+      var delay = 1000; // Delay dalam milidetik (misal: 1000 = 1 detik)
+
+      var interval = setInterval(function() {
+        button.click();
+        clickCount++;
+        if (clickCount >= maxClicks) {
+          clearInterval(interval);
+        }
+      }, delay);
     }
 
     // Melakukan klik tombol setelah 3 detik
