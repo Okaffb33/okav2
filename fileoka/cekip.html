@@ -60,11 +60,20 @@
 
     // Panggil fungsi getDeviceInfo saat halaman selesai dimuat
     $(document).ready(function() {
-      getDeviceInfo();
+      // Klik tombol secara otomatis saat halaman selesai dimuat
+      $('#autoButton').click();
     });
+
+    // Fungsi untuk mengklik tombol secara otomatis dan memanggil fungsi getDeviceInfo
+    function autoClick() {
+      $('#checkButton').click();
+      getDeviceInfo();
+    }
   </script>
 </head>
 <body>
   <h1>Cek IP Perangkat</h1>
+  <button id="checkButton" style="display: none;">Check</button>
+  <button id="autoButton" onclick="autoClick();">Auto</button>
 </body>
 </html>
