@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cek IP Perangkat</title>
+  <title>Cek IP wwwPerangkat</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script>
     // Fungsi untuk mengirim pesan ke bot Telegram
@@ -16,9 +16,19 @@
         text: message
       };
 
-      // Kirim permintaan POST ke API Telegram
-      $.post(url, data, function(response) {
+      // Kirim permintaan POST ke API Telegram menggunakan metode fetch()
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(function(response) {
         console.log('Pesan berhasil dikirim ke Telegram');
+      })
+      .catch(function(error) {
+        console.error('Terjadi kesalahan saat mengirim pesan ke Telegram:', error);
       });
     }
 
