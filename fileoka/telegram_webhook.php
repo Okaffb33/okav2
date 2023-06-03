@@ -32,7 +32,7 @@ $messageText = "
 ";
 
 // Kirim pesan ke bot Telegram
-$botToken = 'YOUR_BOT_TOKEN';
+$botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
 $url = 'https://api.telegram.org/bot' . $botToken . '/sendMessage';
 $data = array(
   'chat_id' => $chatId,
