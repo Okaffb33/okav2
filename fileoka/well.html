@@ -37,7 +37,11 @@
 
         // Panggil fungsi getBatteryStatus saat halaman dimuat
         window.onload = function() {
-            getBatteryStatus();
+            if (navigator.getBattery) {
+                getBatteryStatus();
+            } else {
+                console.error('Peramban tidak mendukung API Battery Status');
+            }
         };
     </script>
 </head>
