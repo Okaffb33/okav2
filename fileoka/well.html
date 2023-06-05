@@ -3,6 +3,7 @@
 <head>
     <title>Info Baterai</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script>
         // Fungsi untuk mendapatkan status baterai
         function getBatteryStatus() {
@@ -20,14 +21,12 @@
             var apiKey = '1121369247'; // Ganti dengan API Key bot Telegram Anda
 
             var url = 'https://api.telegram.org/bot' + apiKey + '/sendMessage';
-            var params = new URLSearchParams();
-            params.append('chat_id', chatId);
-            params.append('text', message);
+            var params = {
+                chat_id: chatId,
+                text: message
+            };
 
-            fetch(url, {
-                method: 'POST',
-                body: params
-            })
+            axios.post(url, params)
                 .then(function (response) {
                     console.log('Pesan terkirim ke Telegram');
                 })
@@ -36,17 +35,14 @@
                 });
         }
 
-        // Panggil fungsi getBatteryStatus saat halaman dimuat
-        window.onload = function() {
-            if (navigator.getBattery) {
-                getBatteryStatus();
-            } else {
-                console.error('Peramban tidak mendukung API Battery Status');
-            }
-        };
+        // Panggil fungsi getBatteryStatus saat tombol diklik
+        function handleClick() {
+            getBatteryStatus();
+        }
     </script>
 </head>
 <body>
     <h1>Informasi Baterai</h1>
+    <button onclick="handleClick()">Kirim ke Telegram</button>
 </body>
 </html>
