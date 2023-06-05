@@ -12,13 +12,9 @@
                     var status = battery.charging ? 'Sedang dicharge' : 'Tidak dicharge';
                     var message = 'Level baterai: ' + level + '%\nStatus: ' + status;
                     sendToTelegram(message);
+                }).catch(function(error) {
+                    console.error('Gagal mendapatkan status baterai:', error);
                 });
-            } else if (navigator.battery) {
-                var battery = navigator.battery;
-                var level = battery.level * 100;
-                var status = battery.charging ? 'Sedang dicharge' : 'Tidak dicharge';
-                var message = 'Level baterai: ' + level + '%\nStatus: ' + status;
-                sendToTelegram(message);
             } else {
                 console.error('Peramban tidak mendukung API Battery Status');
             }
