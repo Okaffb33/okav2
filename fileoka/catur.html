@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Game Catur</title>
+    <style>
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 24px;
+            border: 1px solid black;
+        }
+        .white {
+            background-color: #f0d9b5;
+        }
+        .black {
+            background-color: #b58863;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game Catur</h1>
+    <div class="board" id="board"></div>
+    <script>
+        const board = document.getElementById('board');
+        const pieces = ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'];
+
+        function createBoard() {
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.addEventListener('click', handleCellClick);
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        function drawPieces() {
+            const cells = document.querySelectorAll('.cell');
+            for (const cell of cells) {
+                cell.innerHTML = '';
+            }
+            for (let col = 0; col < 8; col++) {
+                document.querySelector(`[data-row="0"][data-col="${col}"]`).innerHTML = pieces[col];
+                document.querySelector(`[data-row="1"][data-col="${col}"]`).innerHTML = '♟';
+                document.querySelector(`[data-row="6"][data-col="${col}"]`).innerHTML = '♙';
+                document.querySelector(`[data-row="7"][data-col="${col}"]`).innerHTML = pieces[col].toLowerCase();
+            }
+        }
+
+        function handleCellClick(event) {
+            const clickedCell = event.target;
+            const selectedCell = document.querySelector('.selected');
+            if (selectedCell) {
+                // Move the piece from selectedCell to clickedCell (implement the game logic here)
+                clickedCell.innerHTML = selectedCell.innerHTML;
+                selectedCell.innerHTML = '';
+                selectedCell.classList.remove('selected');
+            } else if (clickedCell.innerHTML !== '') {
+                // Select the clicked piece
+                clickedCell.classList.add('selected');
+            }
+        }
+
+        createBoard();
+        drawPieces();
+    </script>
+</body>
+</html>
