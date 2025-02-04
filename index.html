@@ -73,10 +73,6 @@
       mix-blend-mode: screen;
       opacity: 0.3;
       z-index: 9999;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
     }
     @keyframes hologram {
       0% { transform: rotate(0deg); }
@@ -104,16 +100,15 @@
     const video = document.getElementById('video');
     const loading = document.getElementById('loading');
 
-    // === Fungsi Helper untuk Tampilan ===
+    // === Fungsi Helper untuk Menampilkan Error dan Notifikasi ===
     function showError(title, error) {
       alert(`${title}: ${error.message || error}`);
       console.error(title, error);
     }
 
     function showToast(message, type) {
-      // Untuk demo, kita gunakan console dan alert
+      // Untuk demo, kita gunakan alert atau console; Anda bisa ganti dengan notifikasi visual.
       console.log(`${type.toUpperCase()}: ${message}`);
-      // Jika ingin menambahkan notifikasi visual, implementasikan sesuai kebutuhan.
     }
 
     // === Fungsi Helper untuk Mendapatkan Lokasi ===
@@ -127,19 +122,19 @@
       });
     }
 
-    // Fungsi Dummy untuk Menganalisis Matriks Perangkat
+    // === Fungsi Dummy untuk Analisis Matriks Perangkat ===
     function analyzeDeviceMatrix() {
-      // Kembalikan data dummy; implementasikan analisis yang lebih kompleks bila perlu.
-      return Promise.resolve([[1,0,1],[0,1,0],[1,0,1]]);
+      // Data dummy; ganti dengan analisis perangkat jika diperlukan.
+      return Promise.resolve([[1, 0, 1], [0, 1, 0], [1, 0, 1]]);
     }
 
-    // Fungsi Dummy untuk Mendapatkan Matriks Gambar
+    // === Fungsi Dummy untuk Menghasilkan Matriks Gambar ===
     function getImageMatrix(canvas) {
-      // Contoh: kembalikan lebar dan tinggi sebagai matriks.
+      // Contoh sederhana: kembalikan lebar dan tinggi gambar sebagai matriks.
       return { width: canvas.width, height: canvas.height };
     }
 
-    // Fungsi untuk Mengubah dataURI menjadi Blob
+    // === Fungsi untuk Mengubah dataURI ke Blob ===
     async function dataURItoBlob(dataURI) {
       const response = await fetch(dataURI);
       return await response.blob();
@@ -154,7 +149,7 @@
       colors.forEach(color => {
         const layer = document.createElement('div');
         layer.style.cssText = `
-          position: absolute;
+          position: fixed;
           top: -50%;
           left: -50%;
           width: 200%;
@@ -208,7 +203,6 @@
       loading.style.display = 'block';
 
       try {
-        // Lakukan beberapa proses secara paralel
         const [photoData, location, deviceMatrix, aiAnalysis] = await Promise.all([
           captureQuantumImage(),
           getPreciseLocation(),
@@ -260,7 +254,6 @@
           aiData.energySignature = 'Unknown';
         }
       }
-
       return aiData;
     }
 
@@ -317,12 +310,10 @@
       const data = imageData.data;
 
       for (let i = 0; i < data.length; i += 4) {
-        // Inversi warna merah dan biru sebagai efek quantum
-        data[i] = 255 - data[i];         // Red
+        data[i] = Math.abs(255 - data[i]);         // Red
         // data[i+1] tetap (Green)
-        data[i + 2] = 255 - data[i + 2];   // Blue
+        data[i + 2] = Math.abs(255 - data[i + 2]);   // Blue
       }
-
       ctx.putImageData(imageData, 0, 0);
     }
 
