@@ -257,9 +257,12 @@
     // Inisialisasi kamera
     async function initCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }
-        });
+        // Tentukan constraints: jika device mobile, gunakan kamera depan (user), jika tidak gunakan kamera environment
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+        const constraints = {
+          video: { facingMode: isMobile ? 'user' : 'environment' }
+        };
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
         currentStream = stream;
         document.body.appendChild(createHologramEffect());
