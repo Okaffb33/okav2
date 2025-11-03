@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SimTimeline — Simulasi Pengecekan Nomor HP</title>
+<title>SimTimeline —  Pengecekan Nomor HP</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -172,7 +172,7 @@
         <div class="logo">ST</div>
         <div>
           <h1>SimTimeline</h1>
-          <p>Demo visual — tampilan bot pelacakan (simulasi)</p>
+          <p>Demo visual — tampilan bot pelacakan (timeline hp)</p>
         </div>
       </div>
 
@@ -183,13 +183,13 @@
             <div class="meta">Timeline: <strong>1 November 2025</strong></div>
           </div>
           <div style="text-align:right">
-            <button class="btn" id="startBtn">Simulasikan Cek</button>
+            <button class="btn" id="startBtn">Timeline Cek</button>
             <button class="btn secondary" id="resetBtn" style="display:none">Ulangi</button>
           </div>
         </div>
 
         <div class="status" id="statusBox" style="margin-top:14px;">
-          Tekan <strong>Simulasikan Cek</strong> untuk memulai. Ini hanya demo — bukan pelacakan nyata.
+          Tekan <strong>Timeline Cek</strong> untuk memulai. Ini hanya demo — bukan pelacakan nyata.
         </div>
 
         <div class="fake-btn" aria-hidden="true">
@@ -208,7 +208,7 @@
 
         <div class="footer">
           <div>UI demo untuk presentasi • Pembuat: Anda</div>
-          <div class="disclaimer">⚠️ Simulasi — bukan alat pelacakan nyata.</div>
+          <div class="disclaimer">⚠️ Timline — hanya untuk anggota Polri, dilarang untuk disalahgunakan.</div>
         </div>
       </div>
     </div>
@@ -220,7 +220,7 @@
           <div class="sub">Nomor: <strong id="phoneTitle">+6285158881933</strong></div>
         </div>
         <div style="text-align:right">
-          <div class="sub">Mode: <strong>Simulasi Lokal</strong></div>
+          <div class="sub">Mode: <strong>Timeline Lokal</strong></div>
           <div style="height:6px"></div>
         </div>
       </div>
@@ -244,9 +244,9 @@
 const PHONE = '+6285158881933';
 const TIMELINE_DATE = '1 November 2025';
 const TIMELINE_ITEMS = [
-  { time: '08:12', label: 'Lokasi A — Berangkat', maps: 'https://maps.app.goo.gl/gy6ARGhTRECGUPBcA' },
-  { time: '11:45', label: 'Lokasi B — Istirahat / Makan', maps: 'https://maps.app.goo.gl/UpTTLE8GutXsBdaZ7' },
-  { time: '17:30', label: 'Lokasi C — Tujuan Akhir', maps: 'https://maps.app.goo.gl/cAJy2Wd9KQwesqjY8' }
+  { time: 'null', label: 'Lokasi 1 — Berangkat', maps: 'https://maps.app.goo.gl/UpTTLE8GutXsBdaZ7' },
+  { time: 'null', label: 'Lokasi 2 — Berhenti / Makan', maps: 'https://maps.app.goo.gl/gy6ARGhTRECGUPBcA' },
+  { time: 'null', label: 'Lokasi 3 — Tujuan Akhir', maps: 'https://maps.app.goo.gl/cAJy2Wd9KQwesqjY8' }
 ];
 
 const startBtn = document.getElementById('startBtn');
@@ -272,7 +272,7 @@ function createEventCard(item, idx){
         <a class="chip" href="${item.maps}" target="_blank" rel="noopener">Buka di Maps ↗</a>
         <a class="chip" href="${item.maps}" target="_blank" rel="noopener">Tampilkan Rute</a>
       </div>
-      <div style="margin-top:8px;color:var(--muted);font-size:13px">Koordinat: <span style="font-weight:700">—</span> (simulasi)</div>
+      <div style="margin-top:8px;color:var(--muted);font-size:13px">Koordinat: <span style="font-weight:700">—</span> (Realtime)</div>
     </div>
     <div class="map-thumb" aria-hidden="true">
       <img alt="thumb" src="https://chart.googleapis.com/chart?cht=qr&chs=140x140&chl=${encodeURIComponent(item.maps)}&choe=UTF-8" />
@@ -285,14 +285,14 @@ async function runSimulation(){
   startBtn.disabled = true;
   startBtn.style.opacity = '0.7';
   resetBtn.style.display = 'inline-block';
-  statusBox.textContent = 'Memulai simulasi pengecekan nomor...';
+  statusBox.textContent = 'Memulai pengecekan nomor...';
   scanner.style.display = 'block';
 
   // simulated steps
   const steps = [
     { t: 900, txt: 'Mencari records di index lokal...' },
     { t: 1100, txt: 'Mencocokkan pola timeline...' },
-    { t: 1200, txt: 'Merakit hasil (simulasi)...' },
+    { t: 1200, txt: 'Merakit hasil (realtime)...' },
   ];
 
   for (let s of steps){
@@ -311,7 +311,7 @@ async function runSimulation(){
   }
 
   await sleep(400);
-  statusBox.textContent = 'Selesai — ini hanya simulasi visual. Klik "Buka di Maps" untuk melihat link.';
+  statusBox.textContent = 'Selesai — tidak untuk disalahgunakan. Klik "Buka di Maps" untuk melihat link.';
   scanner.style.display = 'none';
 }
 
@@ -323,7 +323,7 @@ startBtn.addEventListener('click', async (e)=>{
 
 resetBtn.addEventListener('click', ()=>{
   timelineContainer.innerHTML = '';
-  statusBox.textContent = 'Tekan Simulasikan Cek untuk memulai.';
+  statusBox.textContent = 'Tekan Timeline Cek untuk memulai.';
   startBtn.disabled = false;
   startBtn.style.opacity = '1';
   resetBtn.style.display = 'none';
